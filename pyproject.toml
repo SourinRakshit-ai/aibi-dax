@@ -1,0 +1,33 @@
+[project]
+name = "aibi-dax"
+version = "0.1.0"
+description = "DAX expression analysis: complexity metrics, anti-pattern detection, per-model ranking"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Sourin Rakshit" }]
+keywords = ["dax", "powerbi", "analysis", "lint"]
+
+[project.urls]
+Homepage = "https://github.com/SourinRakshit-ai/aibi-dax"
+Changelog = "https://github.com/SourinRakshit-ai/aibi-dax/blob/main/CHANGELOG.md"
+Issues = "https://github.com/SourinRakshit-ai/aibi-dax/issues"
+
+[project.scripts]
+dxa = "aibi_dax.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest", "mypy", "ruff"]
+docs = ["mkdocs-material"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.mypy]
+disallow_untyped_defs = true
+disallow_any_generics = true
+warn_return_any = true
