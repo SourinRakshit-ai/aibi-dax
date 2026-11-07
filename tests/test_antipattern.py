@@ -60,6 +60,13 @@ def test_all_rules_cover_clean_expression():
         assert rule(clean) is None
 
 
+def test_lowercase_function_flags_mistyped_names():
+    assert antipattern.lowercase_function("sum('Sales'[Amount])") is not None
+    assert antipattern.lowercase_function('CONCATENATEX(S, "split(x)")') is None  # inside string
+    assert antipattern.lowercase_function("SUM('S'[col (weird)])") is None  # inside brackets
+    assert antipattern.lowercase_function("SUM('Sales'[Amount])") is None
+
+
 def test_values_with_hasonevalue_needs_both_calls():
     pair = "IF(HASONEVALUE('S'[k]), VALUES('S'[k]), \"multi\")"
     solo = "IF(HASONEVALUE('S'[k]), 1, \"multi\")"

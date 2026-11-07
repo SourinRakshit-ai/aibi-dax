@@ -134,6 +134,23 @@ def values_with_hasonevalue(expr: str) -> str | None:
     return None
 
 
+_LOWER_CALL_RE = re.compile(r"\b[a-z][a-z0-9_]*\s*\(")
+
+
+def lowercase_function(expr: str) -> str | None:
+    """DAX has no lowercase callable identifiers, so a bare lowercase word
+    before ( is almost always a mistyped function name.
+
+    String literals and bracketed columns are stripped first — they are the
+    two places real text like 'computed(x)' legitimately appears."""
+    stripped = re.sub(r'"[^"]*"|\'[^\']*\'', "", expr)
+    stripped = re.sub(r"\[[^\]]*\]", "", stripped)
+    match = _LOWER_CALL_RE.search(stripped)
+    if match:
+        return f"Lowercase function call {match.group(0).strip()} — DAX function names are written UPPERCASE."
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -145,4 +162,5 @@ ALL_RULES: list[Rule] = [
     all_first_argument,
     iferror_overuse,
     values_with_hasonevalue,
+    lowercase_function,
 ]
