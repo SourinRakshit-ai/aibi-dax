@@ -91,6 +91,31 @@ def concat_ampersand(expr: str) -> str | None:
     return None
 
 
+def earlier_var(expr: str) -> str | None:
+    """EARLIER is superseded by VAR capture — flat and type-checkable."""
+    if re.search(r"\bEARLIER\s*\(", expr, re.IGNORECASE):
+        return "EARLIER(...) is deprecated — capture the outer row with VAR and reference that variable."
+    return None
+
+
+_FIRST_ARG_ALL_RE = re.compile(
+    r"\b(?:CALCULATE|[A-Z]+X)\s*\(\s*(?:ALL\b|FILTER\s*\(\s*ALL\b)",
+    re.IGNORECASE,
+)
+
+
+def all_first_argument(expr: str) -> str | None:
+    """An iterator or CALCULATE aggregating directly over ALL /
+    FILTER(ALL(...)) walks every row through the filter machinery; a
+    boolean filter in CALCULATE prunes earlier and reads better."""
+    if _FIRST_ARG_ALL_RE.search(expr):
+        return (
+            "Aggregate over ALL(...)/FILTER(ALL(...)) as the first argument — "
+            "prefer a boolean filter (Table[Col] = value) inside CALCULATE."
+        )
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -98,4 +123,6 @@ ALL_RULES: list[Rule] = [
     blank_comparison,
     bare_all_table,
     concat_ampersand,
+    earlier_var,
+    all_first_argument,
 ]

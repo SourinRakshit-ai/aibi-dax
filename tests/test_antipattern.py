@@ -48,7 +48,18 @@ def test_concat_ampersand_redundancy():
     assert antipattern.concat_ampersand(good) is None
 
 
+def test_all_first_argument_flags_the_all_aggregate():
+    assert antipattern.all_first_argument("SUMX(ALL('Sales'), [Amount])") is not None
+    assert antipattern.all_first_argument("AVERAGEX(FILTER(ALL('T'), [q] > 0), [x])") is not None
+    assert antipattern.all_first_argument("CALCULATE([Amount], 'Sales'[Qty] > 0)") is None
+
+
 def test_all_rules_cover_clean_expression():
     clean = "SUM('Sales'[Amount])"
     for rule in antipattern.ALL_RULES:
         assert rule(clean) is None
+
+
+def test_earlier_var_flags_the_deprecated_call():
+    assert antipattern.earlier_var("CALCULATE([x], FILTER(T, EARLIER([k]) = [k]))") is not None
+    assert antipattern.earlier_var("VAR k = [x] RETURN k") is None
