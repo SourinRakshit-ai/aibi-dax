@@ -60,6 +60,18 @@ def test_all_rules_cover_clean_expression():
         assert rule(clean) is None
 
 
+def test_values_with_hasonevalue_needs_both_calls():
+    pair = "IF(HASONEVALUE('S'[k]), VALUES('S'[k]), \"multi\")"
+    solo = "IF(HASONEVALUE('S'[k]), 1, \"multi\")"
+    assert antipattern.values_with_hasonevalue(pair) is not None
+    assert antipattern.values_with_hasonevalue(solo) is None
+
+
+def test_iferror_overuse_advises_explicit_contracts():
+    assert antipattern.iferror_overuse('IFERROR([A] / [B], "n/a")') is not None
+    assert antipattern.iferror_overuse('DIVIDE([A], [B], "n/a")') is None
+
+
 def test_earlier_var_flags_the_deprecated_call():
     assert antipattern.earlier_var("CALCULATE([x], FILTER(T, EARLIER([k]) = [k]))") is not None
     assert antipattern.earlier_var("VAR k = [x] RETURN k") is None

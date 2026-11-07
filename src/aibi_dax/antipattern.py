@@ -116,6 +116,24 @@ def all_first_argument(expr: str) -> str | None:
     return None
 
 
+def iferror_overuse(expr: str) -> str | None:
+    """IFERROR masks model bugs behind silent blanks — an explicit error
+    contract (or DIVIDE's third argument) says what you mean."""
+    if re.search(r"\bIFERROR\s*\(", expr, re.IGNORECASE):
+        return "IFERROR wraps the whole expression — verify you want silent blank on failure; prefer DIVIDE's third argument or explicit guards."
+    return None
+
+
+_SELECTEDVALUE_RE = re.compile(r"HASONEVALUE\s*\(", re.IGNORECASE)
+
+
+def values_with_hasonevalue(expr: str) -> str | None:
+    """HASONEVALUE + VALUES is the long-form SELECTEDVALUE."""
+    if _SELECTEDVALUE_RE.search(expr) and re.search(r"\bVALUES\s*\(", expr, re.IGNORECASE):
+        return "HASONEVALUE + VALUES — replace the pair with SELECTEDVALUE for the same semantics in one call."
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -125,4 +143,6 @@ ALL_RULES: list[Rule] = [
     concat_ampersand,
     earlier_var,
     all_first_argument,
+    iferror_overuse,
+    values_with_hasonevalue,
 ]
