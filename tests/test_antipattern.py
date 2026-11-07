@@ -1,0 +1,54 @@
+"""Tests for the six anti-pattern rules."""
+
+from aibi_dax import antipattern
+
+
+def test_calculate_inside_iterator_flagged():
+    bad = "SUMX('Sales', CALCULATE([Amount]))"
+    assert antipattern.calculate_inside_iterator(bad) is not None
+
+
+def test_calculate_outside_iterator_clean():
+    good = "SUM('Sales'[Amount]) + CALCULATE([Amount])"
+    assert antipattern.calculate_inside_iterator(good) is None
+
+
+def test_calculate_after_iterator_paren_closes_is_fine():
+    nested = "IF(SUMX('Sales', 0) > 1, CALCULATE([Amount]), 0)"
+    assert antipattern.calculate_inside_iterator(nested) is None
+
+
+def test_too_many_ifs_skips_switch():
+    stair = "IF(a, 1, IF(b, 2, IF(c, 3, 4)))"
+    flat = "IF(a, 1, 2)"
+    assert antipattern.too_many_ifs(stair) is not None
+    assert antipattern.too_many_ifs(flat) is None
+
+
+def test_raw_division_and_divide_escape():
+    assert antipattern.raw_division("[A] / [B]") is not None
+    assert antipattern.raw_division('DIVIDE([A], [B], "n/a")') is None
+    assert antipattern.raw_division("path/no-slash") is not None
+
+
+def test_blank_comparison_prefers_isblank():
+    assert antipattern.blank_comparison("[x] = BLANK()") is not None
+    assert antipattern.blank_comparison("ISBLANK([x])") is None
+
+
+def test_bare_all_table_vs_filters_argument():
+    assert antipattern.bare_all_table("CALCULATE([x], ALL('Sales'))") is not None
+    assert antipattern.bare_all_table("CALCULATE([x], ALL('Sales', ALLSELECTED('S')))") is None
+
+
+def test_concat_ampersand_redundancy():
+    bad = 'CONCATENATEX(Sales, "Q" & [Month], "-")'
+    good = 'CONCATENATEX(Sales, [Month], "-")'
+    assert antipattern.concat_ampersand(bad) is not None
+    assert antipattern.concat_ampersand(good) is None
+
+
+def test_all_rules_cover_clean_expression():
+    clean = "SUM('Sales'[Amount])"
+    for rule in antipattern.ALL_RULES:
+        assert rule(clean) is None
