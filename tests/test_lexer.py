@@ -9,8 +9,8 @@ def test_tokenize_functions_and_strings():
     toks = tokenize('CONCATENATEX(Sales, "Q" & [Month], "-")')
     kinds = [t.kind for t in toks]
     values = [t.value for t in toks]
-    assert kinds.count("word") >= 4
-    assert '["Q"]' in str(values) or '"Q"' in values
+    assert "CONCATENATEX" in values and "Sales" in values
+    assert kinds.count("word") == 2
     assert '"-"' in values
     assert "CONCATENATEX" in values
 

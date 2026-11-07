@@ -28,7 +28,7 @@ def tokenize(expr: str) -> list[Token]:
     toks: list[Token] = []
     for match in _TOKEN_RE.finditer(expr):
         text = match.group(0)
-        if text.isspace() or (len(text) == 1 and not text.isgraph()):
+        if text.isspace() or (len(text) == 1 and not text.isprintable()):
             continue
         if text[:1] == '"' and text[-1:] == '"':
             kind = "string"
