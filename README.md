@@ -5,6 +5,12 @@ and per-model ranking. Companion to [aibi-toolkit](https://github.com/SourinRaks
 where the toolkit checks the model *around* your measures (naming, formats,
 hygiene), aibi-dax checks the expressions *inside* them.
 
+[![CI](https://github.com/SourinRakshit-ai/aibi-dax/actions/workflows/ci.yml/badge.svg)](https://github.com/SourinRakshit-ai/aibi-dax/actions/workflows/ci.yml)
+[![Lint](https://github.com/SourinRakshit-ai/aibi-dax/actions/workflows/lint.yml/badge.svg)](https://github.com/SourinRakshit-ai/aibi-dax/actions/workflows/lint.yml)
+[![Python](https://img.shields.io/badge/python-3.10–3.13-blue)](pyproject.toml)
+[![Types](https://img.shields.io/badge/mypy-strict-blue)](pyproject.toml)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](.github/workflows/lint.yml)
+
 ```bash
 pip install .
 dxa --version
