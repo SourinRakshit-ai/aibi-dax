@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1 - 2026-11-08
+
+- CLI: `--json` flag for `dxa rank` and `dxa lint-model` (machine-readable
+  payloads, same exit-code contract as the human output).
+- Lint: shared `ruff.toml` (line length 100, target py310) matching the
+  aibi-toolkit configuration.
+- Build: `coverage` Makefile target with pytest-cov added to the dev extras —
+  currently 97% on 37 tests.
+- Docs: CI/Lint/Python/Types/Ruff badges mirroring the toolkit's README row.
+
 ## 0.1.0 - 2026-11-08
 
 - First release of `dxa`, the DAX-analysis companion to aibi-toolkit.
