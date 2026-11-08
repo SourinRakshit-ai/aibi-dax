@@ -1,0 +1,58 @@
+"""Tests for the dxa CLI."""
+
+import json
+
+import pytest
+
+from aibi_dax.cli import main
+
+MODEL = {
+    "tables": [
+        {"name": "Sales", "measures": [
+            {"name": "Bad", "expression": "SUMX('Sales', CALCULATE([Amount]))"},
+            {"name": "Good", "expression": "SUM('Sales'[Amount])"},
+        ]},
+    ],
+}
+
+
+@pytest.fixture()
+def model_path(tmp_path):
+    p = tmp_path / "model.json"
+    p.write_text(json.dumps(MODEL), encoding="utf-8")
+    return str(p)
+
+
+def test_version():
+    with pytest.raises(SystemExit) as exc:
+        main(["--version"])
+    assert exc.value.code == 0
+
+
+def test_metrics_human_and_json(capsys):
+    assert main(["metrics", "SUM('Sales'[Amount])"]) == 0
+    plain = capsys.readouterr().out
+    assert "functions" in plain and "weight" in plain
+
+    assert main(["metrics", "SUM('Sales'[Amount])", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["metrics"]["functions"] == 1
+
+
+def test_rank_orders_measures(model_path, capsys):
+    assert main(["rank", model_path, "--top", "2"]) == 0
+    lines = capsys.readouterr().out.strip().splitlines()
+    assert "Sales.Bad" in lines[0]
+    assert len(lines) == 2
+
+
+def test_lint_clean_and_dirty(capsys):
+    assert main(["lint", "SUM('Sales'[Amount])"]) == 0
+    assert "no findings" in capsys.readouterr().out
+    assert main(["lint", "SUMX('Sales', CALCULATE([Amount]))"]) == 1
+    assert "CALCULATE" in capsys.readouterr().out
+
+
+def test_lint_model_exit_codes(model_path, capsys):
+    assert main(["lint-model", model_path]) == 1
+    assert "Sales.Bad:" in capsys.readouterr().out
