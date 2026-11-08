@@ -1,11 +1,54 @@
 # aibi-dax
 
 *dxa* — DAX expression analysis: complexity metrics, anti-pattern detection
-and per-model ranking. Companion to [aibi-toolkit](https://github.com/SourinRakshit-ai/aibi-toolkit)
-(model hygiene) — where the toolkit checks the model around your measures,
-aibi-dax checks the expressions inside them.
+and per-model ranking. Companion to [aibi-toolkit](https://github.com/SourinRakshit-ai/aibi-toolkit):
+where the toolkit checks the model *around* your measures (naming, formats,
+hygiene), aibi-dax checks the expressions *inside* them.
 
-## Status
+```bash
+pip install .
+dxa --version
+```
 
-Work in progress — the analysis core lands first (lexer, metrics, rules),
-the CLI and packaging polish follow.
+## Commands
+
+| Command                    | What it does                                   |
+| -------------------------- | ---------------------------------------------- |
+| `dxa metrics "EXPR"`       | token/function/depth/iterator counts + weight  |
+| `dxa metrics "EXPR" --json`| the same as a JSON payload                     |
+| `dxa rank model.json`      | heaviest measures first (`--top N` to limit)   |
+| `dxa lint "EXPR"`          | anti-pattern findings for one expression       |
+| `dxa lint-model model.json`| findings across every measure in a model dump  |
+
+Model dumps use the same JSON shape TMDL export produces — the shared schema
+of aibi-toolkit — so one file feeds both tools.
+
+## Anti-patterns detected
+
+1. `CALCULATE` inside a row iterator (`SUMX`, `AVERAGEX`, …)
+2. Three or more nested `IF` calls (→ `SWITCH(TRUE(), …)`)
+3. Raw `/` division (→ `DIVIDE`, which absorbs zero denominators)
+4. `= BLANK()` comparisons (→ `ISBLANK`)
+5. Bare `ALL(table)` as a filter eraser (→ `REMOVEFILTERS`)
+6. `&` concatenation inside `CONCATENATEX`
+7. `EARLIER(...)` (→ capture the outer row with `VAR`)
+8. `ALL`/`FILTER(ALL(...))` as an aggregate's first argument (→ boolean filters in `CALCULATE`)
+9. `IFERROR` overreach (→ explicit error contracts)
+10. `HASONEVALUE` + `VALUES` pairs (→ `SELECTEDVALUE`)
+11. Lowercase function calls (→ UPPERCASE form)
+
+## What the weight measures
+
+`weight = tokens + 3·functions + 5·depth + 20·iterators` — iterators cost the
+most because row context is where DAX quietly goes wrong.
+
+## Development
+
+```bash
+pip install -e ".[dev]"
+make test        # pytest
+make typecheck   # mypy --strict src/aibi_dax/
+make lint        # ruff check src/ tests/
+```
+
+MIT licensed. Roadmap lives in the issue tracker.
