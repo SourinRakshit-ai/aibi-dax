@@ -17,7 +17,7 @@ Issues = "https://github.com/SourinRakshit-ai/aibi-dax/issues"
 dxa = "aibi_dax.cli:main"
 
 [project.optional-dependencies]
-dev = ["pytest", "mypy", "ruff"]
+dev = ["pytest", "pytest-cov", "mypy", "ruff"]
 docs = ["mkdocs-material"]
 
 [build-system]
