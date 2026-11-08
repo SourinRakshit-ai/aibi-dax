@@ -1,0 +1,24 @@
+name: New rule proposal
+description: Suggest an anti-pattern rule (or another capability)
+labels: [enhancement]
+body:
+  - type: textarea
+    id: pattern
+    attributes:
+      label: The pattern
+      description: A real DAX expression showing the anti-pattern.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it's wrong
+      description: Link SQLBI/DAX Guide if possible.
+    validations:
+      required: true
+  - type: textarea
+    id: fix
+    attributes:
+      label: The preferred form
+    validations:
+      required: true

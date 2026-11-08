@@ -1,0 +1,28 @@
+name: Bug report
+description: Report a wrong finding or a crash
+labels: [bug]
+body:
+  - type: textarea
+    id: expr
+    attributes:
+      label: What happened?
+      description: Command pasted in full, plus the output.
+      placeholder: |
+        dxa lint "SUMX('Sales', CALCULATE([Amount]))"
+        - ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      description: For rule bugs — why is the flagged expression actually fine?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: dxa version
+      placeholder: "0.1.0"
+    validations:
+      required: true
