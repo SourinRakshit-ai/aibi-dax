@@ -46,6 +46,20 @@ def test_rank_orders_measures(model_path, capsys):
     assert len(lines) == 2
 
 
+def test_rank_json_payload(model_path, capsys):
+    assert main(["rank", model_path, "--top", "2", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload[0] == {"table": "Sales", "name": "Bad", "weight": payload[0]["weight"]}
+    assert payload[0]["weight"] > payload[1]["weight"]
+
+
+def test_lint_model_json_and_clean_exit(model_path, capsys, tmp_path):
+    assert main(["lint-model", model_path, "--json"]) == 1
+    found = json.loads(capsys.readouterr().out)
+    assert set(found) == {"Sales.Bad"}
+    assert isinstance(found["Sales.Bad"], list)
+
+
 def test_lint_clean_and_dirty(capsys):
     assert main(["lint", "SUM('Sales'[Amount])"]) == 0
     assert "no findings" in capsys.readouterr().out

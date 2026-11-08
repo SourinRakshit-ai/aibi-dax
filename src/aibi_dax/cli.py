@@ -27,13 +27,14 @@ def _build_parser() -> argparse.ArgumentParser:
     p_rank = sub.add_parser("rank", help="most complex measures of a model dump")
     p_rank.add_argument("model", help="path to model JSON")
     p_rank.add_argument("--top", type=int, default=10, help="how many to show")
+    p_rank.add_argument("--json", action="store_true", help="emit JSON")
 
     p_lint = sub.add_parser("lint", help="anti-pattern findings for one expression")
     p_lint.add_argument("expr", help="DAX expression, quoted")
 
-    sub.add_parser("lint-model", help="anti-pattern findings across a model dump").add_argument(
-        "model", help="path to model JSON"
-    )
+    p_lint_model = sub.add_parser("lint-model", help="anti-pattern findings across a model dump")
+    p_lint_model.add_argument("model", help="path to model JSON")
+    p_lint_model.add_argument("--json", action="store_true", help="emit JSON")
     return parser
 
 
@@ -53,8 +54,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "rank":
         rows = rank_measures(load_model(args.model), top=args.top)
-        for table, name, w in rows:
-            print(f"{w:6}  {table}.{name}")
+        if getattr(args, "json", False):
+            print(json.dumps([{"table": t, "name": n, "weight": w} for t, n, w in rows]))
+        else:
+            for table, name, w in rows:
+                print(f"{w:6}  {table}.{name}")
         return 0
 
     if args.command == "lint":
@@ -71,10 +75,13 @@ def main(argv: list[str] | None = None) -> int:
         if not found:
             print("model is clean")
             return 0
-        for key, msgs in found.items():
-            print(f"{key}:")
-            for msg in msgs:
-                print(f"  - {msg}")
+        if getattr(args, "json", False):
+            print(json.dumps(found))
+        else:
+            for key, msgs in found.items():
+                print(f"{key}:")
+                for msg in msgs:
+                    print(f"  - {msg}")
         return 1
 
     return 2  # unreachable: argparse requires a subcommand
