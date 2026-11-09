@@ -3,7 +3,7 @@
 ## Global
 
 ```
-dxa --version        # dxa 0.1.0
+dxa --version        # dxa 0.1.1
 dxa --help
 ```
 
@@ -13,16 +13,16 @@ Prints six aligned metrics plus the composite weight:
 
 ```
 $ dxa metrics "SUMX('Sales', CALCULATE([Amount]))"
-tokens      14
-lines        1
-chars       31
-functions    2
-depth        2
-iterators    1
-weight      57
+tokens      9
+lines       1
+chars       34
+functions   2
+depth       2
+iterators   1
+weight      45
 ```
 
-`--json` wraps the same payload: `{"metrics": {...}, "weight": 57}`.
+`--json` wraps the same payload: `{"metrics": {...}, "weight": 45}`.
 
 ## `dxa rank model.json [--top N]`
 
