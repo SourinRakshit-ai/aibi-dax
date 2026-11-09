@@ -8,9 +8,9 @@ regex compile side effects beyond module level.
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 
-from .parser import Binary, Call, Node, ParseError, Unary, parse
+from .parser import Binary, Call, ColumnRef, Ident, Node, ParseError, TableRef, Unary, parse
 
 # Iterator functions whose row context makes CALCULATE placement dangerous.
 ITERATORS = {"SUMX", "AVERAGEX", "MAXX", "MINX", "COUNTX", "COUNTAX", "CONCATENATEX"}
@@ -49,11 +49,41 @@ def calculate_inside_iterator(expr: str) -> str | None:
 
 
 def too_many_ifs(expr: str) -> str | None:
-    """Three or more IF( call sites: SWITCH(TRUE(), ...) is flatter."""
-    calls = len(re.findall(r"\bIF\s*\(", expr, re.IGNORECASE))
+    """Three or more IF( call sites: SWITCH(TRUE(), ...) is flatter.
+
+    Counted on the AST (Call nodes named IF); the legacy token regex serves
+    as fallback when the expression does not parse.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        calls = len(re.findall(r"\bIF\s*\(", expr, re.IGNORECASE))
+        return _ifs_finding(calls)
+    return _ifs_finding(_count_calls(tree, "IF"))
+
+
+def _ifs_finding(calls: int) -> str | None:
     if calls >= 3:
         return f"{calls} nested IF calls — SWITCH(TRUE(), ...) reads better and evaluates faster."
     return None
+
+
+def _count_calls(node: Node, name: str) -> int:
+    """Number of Call nodes with the given (case-insensitive) name."""
+    match node:
+        case Call(name=node_name, args=args):
+            hits = sum(_count_calls(a, name) for a in args)
+            return hits + (node_name.upper() == name)
+        case Binary(left=left, right=right):
+            return _count_calls(left, name) + _count_calls(right, name)
+        case Unary(operand=operand):
+            return _count_calls(operand, name)
+        case _:
+            return 0
+
+
+def _has_call(node: Node, name: str) -> bool:
+    return _count_calls(node, name) > 0
 
 
 def raw_division(expr: str) -> str | None:
@@ -71,17 +101,87 @@ def raw_division(expr: str) -> str | None:
 
 
 def blank_comparison(expr: str) -> str | None:
-    """`= BLANK()` misses semantics; ISBLANK expresses intent."""
-    if re.search(r"=\s*BLANK\s*\(", expr, re.IGNORECASE):
-        return "Compare with ISBLANK(x), not `x = BLANK()` — equality against BLANK is unreliable."
-    return None
+    """`= BLANK()` misses semantics; ISBLANK expresses intent.
+
+    AST-driven: any `=` comparison against a zero-argument BLANK() call on
+    either side; regex fallback when the expression does not parse.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        if re.search(r"=\s*BLANK\s*\(", expr, re.IGNORECASE):
+            return _BLANK_MSG
+        return None
+    return _BLANK_MSG if _eq_blank(tree) else None
+
+
+def _eq_blank(node: Node) -> bool:
+    """An `=` comparison with a zero-argument BLANK() call on either side."""
+    match node:
+        case Binary(op="=", left=left, right=right):
+            for side in (left, right):
+                match side:
+                    case Call(name="BLANK" | "blank", args=()):
+                        return True
+            return _eq_blank(left) or _eq_blank(right)
+        case Call(_, args):
+            return any(_eq_blank(a) for a in args)
+        case Binary(left=left, right=right):
+            return _eq_blank(left) or _eq_blank(right)
+        case Unary(operand=operand):
+            return _eq_blank(operand)
+        case _:
+            return False
+
+
+_BLANK_MSG = (
+    "Compare with ISBLANK(x), not `x = BLANK()` — equality against BLANK is unreliable."
+)
 
 
 def bare_all_table(expr: str) -> str | None:
-    """Single-argument ALL(table) used as a filter eraser — REMOVEFILTERS is unambiguous."""
-    if re.search(r"ALL\s*\(\s*'?[A-Za-z_][\w ]*'?\s*\)", expr):
-        return "Bare ALL(table) — REMOVEFILTERS(table) is clearer when you only want filters gone."
+    """Single-argument ALL(table) used as a filter eraser — REMOVEFILTERS is unambiguous.
+
+    AST-driven: an ALL call whose single argument is a table/column/identifier
+    reference; falls back to the legacy regex when the expression does not parse.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        if re.search(r"ALL\s*\(\s*'?[A-Za-z_][\w ]*'?\s*\)", expr):
+            return _ALL_MSG
+        return None
+    if _count_calls(tree, "ALL") == 0:
+        return None
+    # Confirm every ALL site in this tree has exactly one reference argument.
+    for node in _walk_calls(tree):
+        match node:
+            case Call(name="ALL" | "all", args=(arg,)) if isinstance(
+                arg, (TableRef, ColumnRef, Ident)
+            ):
+                return _ALL_MSG
     return None
+
+
+_ALL_MSG = (
+    "Bare ALL(table) — REMOVEFILTERS(table) is clearer when you only want filters gone."
+)
+
+
+def _walk_calls(node: Node) -> Iterator[Call]:
+    """Yield every Call node in the tree."""
+    match node:
+        case Call(_, args):
+            yield node
+            for a in args:
+                yield from _walk_calls(a)
+        case Binary(left=left, right=right):
+            yield from _walk_calls(left)
+            yield from _walk_calls(right)
+        case Unary(operand=operand):
+            yield from _walk_calls(operand)
+        case _:
+            return
 
 
 def concat_ampersand(expr: str) -> str | None:
@@ -120,10 +220,25 @@ def all_first_argument(expr: str) -> str | None:
 
 def iferror_overuse(expr: str) -> str | None:
     """IFERROR masks model bugs behind silent blanks — an explicit error
-    contract (or DIVIDE's third argument) says what you mean."""
-    if re.search(r"\bIFERROR\s*\(", expr, re.IGNORECASE):
-        return "IFERROR wraps the whole expression — verify you want silent blank on failure; prefer DIVIDE's third argument or explicit guards."
+    contract (or DIVIDE's third argument) says what you mean.
+
+    AST-driven; regex fallback when the expression does not parse.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        if re.search(r"\bIFERROR\s*\(", expr, re.IGNORECASE):
+            return _IFERROR_MSG
+        return None
+    if _has_call(tree, "IFERROR"):
+        return _IFERROR_MSG
     return None
+
+
+_IFERROR_MSG = (
+    "IFERROR wraps the whole expression — verify you want silent blank on failure; "
+    "prefer DIVIDE's third argument or explicit guards."
+)
 
 
 _SELECTEDVALUE_RE = re.compile(r"HASONEVALUE\s*\(", re.IGNORECASE)
