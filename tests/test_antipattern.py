@@ -82,3 +82,13 @@ def test_iferror_overuse_advises_explicit_contracts():
 def test_earlier_var_flags_the_deprecated_call():
     assert antipattern.earlier_var("CALCULATE([x], FILTER(T, EARLIER([k]) = [k]))") is not None
     assert antipattern.earlier_var("VAR k = [x] RETURN k") is None
+
+
+def test_nested_iterators_flags_depth_two():
+    assert antipattern.nested_iterators("SUMX('S', AVERAGEX('S', [x]))") is not None
+    assert antipattern.nested_iterators("SUMX('S', [x])") is None
+
+
+def test_nested_iterators_silent_on_parse_failure():
+    # Unreducible text must never crash the rule engine.
+    assert antipattern.nested_iterators("1 +") is None

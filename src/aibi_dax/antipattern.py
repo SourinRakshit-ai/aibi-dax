@@ -10,6 +10,8 @@ from __future__ import annotations
 import re
 from collections.abc import Callable
 
+from .parser import Binary, Call, Node, ParseError, Unary, parse
+
 # Iterator functions whose row context makes CALCULATE placement dangerous.
 ITERATORS = {"SUMX", "AVERAGEX", "MAXX", "MINX", "COUNTX", "COUNTAX", "CONCATENATEX"}
 
@@ -151,6 +153,41 @@ def lowercase_function(expr: str) -> str | None:
     return None
 
 
+def _iterator_depth(node: Node) -> int:
+    """How many row-iterator Calls sit on the deepest path of the tree."""
+    match node:
+        case Call(name=name, args=args):
+            child = max((_iterator_depth(a) for a in args), default=0)
+            return child + 1 if name.upper() in ITERATORS else child
+        case Binary(left=left, right=right):
+            return max(_iterator_depth(left), _iterator_depth(right))
+        case Unary(operand=operand):
+            return _iterator_depth(operand)
+        case _:
+            return 0
+
+
+def nested_iterators(expr: str) -> str | None:
+    """An iterator inside another iterator pays a context transition per
+    row — usually a VAR capture of the outer step computes the same result
+    for a fraction of the effort.
+
+    Expressions the parser cannot reduce fall back to None: the token-based
+    rules above still cover the text level.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    depth = _iterator_depth(tree)
+    if depth >= 2:
+        return (
+            f"{depth} iterators deep — every iterator row pays a context "
+            "transition; capture the outer step in a VAR and aggregate over it."
+        )
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -163,4 +200,5 @@ ALL_RULES: list[Rule] = [
     iferror_overuse,
     values_with_hasonevalue,
     lowercase_function,
+    nested_iterators,
 ]
