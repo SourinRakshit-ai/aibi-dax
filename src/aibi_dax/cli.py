@@ -5,11 +5,13 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from dataclasses import asdict
 
 from . import __version__
 from .complexity import rank_measures, report, weight
 from .lint import lint_expression, lint_model
 from .model_io import load_model
+from .parser import ParseError, parse
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -35,6 +37,10 @@ def _build_parser() -> argparse.ArgumentParser:
     p_lint_model = sub.add_parser("lint-model", help="anti-pattern findings across a model dump")
     p_lint_model.add_argument("model", help="path to model JSON")
     p_lint_model.add_argument("--json", action="store_true", help="emit JSON")
+
+    p_parse = sub.add_parser("parse", help="AST for one expression")
+    p_parse.add_argument("expr", help="DAX expression, quoted")
+    p_parse.add_argument("--json", action="store_true", help="emit JSON")
     return parser
 
 
@@ -83,6 +89,18 @@ def main(argv: list[str] | None = None) -> int:
                 for msg in msgs:
                     print(f"  - {msg}")
         return 1
+
+    if args.command == "parse":
+        try:
+            tree = parse(args.expr)
+        except ParseError as err:
+            print(f"dxa: parse error: {err}", file=sys.stderr)
+            return 2
+        if getattr(args, "json", False):
+            print(json.dumps(asdict(tree), indent=2))
+        else:
+            print(tree)
+        return 0
 
     return 2  # unreachable: argparse requires a subcommand
 

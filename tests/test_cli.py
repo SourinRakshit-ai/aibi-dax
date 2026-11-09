@@ -70,3 +70,16 @@ def test_lint_clean_and_dirty(capsys):
 def test_lint_model_exit_codes(model_path, capsys):
     assert main(["lint-model", model_path]) == 1
     assert "Sales.Bad:" in capsys.readouterr().out
+
+
+def test_parse_tree_as_json(capsys):
+    assert main(["parse", "1 + [A]", "--json"]) == 0
+    tree = json.loads(capsys.readouterr().out)
+    assert tree["op"] == "+"
+    assert tree["left"] == {"text": "1"}
+    assert tree["right"] == {"name": "A"}
+
+
+def test_parse_error_is_exit_two(capsys):
+    assert main(["parse", "1 +"]) == 2
+    assert "error" in capsys.readouterr().err.lower()
