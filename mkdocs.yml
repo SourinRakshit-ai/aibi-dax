@@ -1,0 +1,16 @@
+site_name: aibi-dax
+site_description: DAX expression analysis — complexity metrics, anti-pattern detection, per-model ranking
+repo_url: https://github.com/SourinRakshit-ai/aibi-dax
+repo_name: SourinRakshit-ai/aibi-dax
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+
+nav:
+  - Home: index.md
+  - CLI reference: CLI.md
+  - Anti-pattern rules: rules.md
+
+strict: true
