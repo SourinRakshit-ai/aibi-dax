@@ -7,7 +7,7 @@ test:
 	pytest -q
 
 coverage:
-	pytest --cov=src/aibi_dax --cov-report=term-missing -q
+	pytest --cov=src/aibi_dax --cov-report=term-missing --cov-fail-under=95 -q
 
 typecheck:
 	mypy --strict src/aibi_dax/
