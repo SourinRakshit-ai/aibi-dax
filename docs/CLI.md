@@ -49,3 +49,18 @@ $ dxa lint "IF(a, 1, IF(b, 2, IF(c, 3, [D]/0)))"
 ## `dxa lint-model model.json`
 
 Groups findings by `table.measure`, prints nothing and exits 0 for a clean model.
+Founds exit 1 with `- ` lines per finding; `--json` prints the findings map.
+
+## `dxa parse "EXPR"`
+
+Reduces the expression to an AST (recursive descent; exit 2 on a
+genuinely unparseable sequence):
+
+```
+$ dxa parse "1 + [A]" --json
+{
+  "op": "+",
+  "left": {"text": "1"},
+  "right": {"name": "A"}
+}
+```

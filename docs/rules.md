@@ -57,3 +57,9 @@ hazard with hidden separators.
 ### Lowercase function calls
 DAX function names are uppercase by convention — `sum(` is a typo until
 proven otherwise. Literal strings and bracketed columns are exempt.
+
+### Nested row iterators
+`SUMX('Sales', AVERAGEX('Sales', [x]))` pays a context transition per row
+for every iterator on the path. Capture the outer step in a `VAR` and
+aggregate over it. This rule runs over the parser AST — the tree is why it
+knows how deep the iterators stack.

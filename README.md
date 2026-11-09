@@ -42,6 +42,7 @@ of aibi-toolkit — so one file feeds both tools.
 9. `IFERROR` overreach (→ explicit error contracts)
 10. `HASONEVALUE` + `VALUES` pairs (→ `SELECTEDVALUE`)
 11. Lowercase function calls (→ UPPERCASE form)
+12. Nested row iterators (→ `VAR` capture of the outer step)
 
 ## What the weight measures
 
