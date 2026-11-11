@@ -75,7 +75,22 @@ class Unary:
     operand: Node
 
 
-Node = Literal | ColumnRef | TableRef | Ident | Call | Binary | Unary
+@dataclass(frozen=True)
+class Var:
+    """One `VAR name = value` assignment inside a block.
+
+    DAX chains several assignments before a single RETURN; a full block
+    nests Var nodes in a left spine (the first assignment's `value` holds
+    the next assignment, and the deepest one's `value` holds the RETURN
+    expression).
+    """
+
+    name: str
+    value: Node
+    body: Node
+
+
+Node = Literal | ColumnRef | TableRef | Ident | Call | Binary | Unary | Var
 
 # Precedence ladder: index binds looser -> tighter.
 _LEVELS: tuple[tuple[str, ...], ...] = (
@@ -143,6 +158,8 @@ class _Parser:
         if tok.kind == "table":
             return TableRef(name=tok.value)
         if tok.kind == "word":
+            if tok.value == "VAR":
+                return self._var_block()
             nxt = self._peek()
             if nxt is not None and nxt.value == "(":
                 return self._call(name=tok.value)
@@ -157,6 +174,26 @@ class _Parser:
         # Number, string, column, table, word or paren-expr all reduce above;
         # anything else cannot start an expression.
         raise self._error("expected number, string, column, word or '('")
+
+    def _var_block(self) -> Var:
+        """`VAR name = value [VAR …] RETURN body` — assignments chain left."""
+        name_tok = self._next()
+        if name_tok.kind != "word" or name_tok.value == "RETURN":
+            raise self._error("expected a variable name after VAR")
+        start = self._peek()
+        if start is None or start.value != "=":
+            raise self._error(f"expected '=' after VAR {name_tok.value}")
+        self._next()  # consume '='
+        value = self._expr()
+        nxt = self._peek()
+        if nxt is None:
+            raise self._error("expected RETURN after the VAR assignment")
+        if nxt.kind == "word" and nxt.value == "VAR":
+            return Var(name=name_tok.value, value=value, body=self._primary())
+        if not (nxt.kind == "word" and nxt.value == "RETURN"):
+            raise self._error("expected RETURN (or another VAR) after the assignment")
+        self._next()  # consume RETURN
+        return Var(name=name_tok.value, value=value, body=self._expr())
 
     def _call(self, name: str) -> Node:
         self._next()  # consume the '(' we peeked

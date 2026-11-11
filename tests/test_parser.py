@@ -13,6 +13,7 @@ from aibi_dax.parser import (
     ParseError,
     TableRef,
     Unary,
+    Var,
     parse,
 )
 
@@ -79,3 +80,40 @@ def test_amp_binds_tighter_than_plus() -> None:
     assert isinstance(tree, Binary) and tree.op == "+"
     amp = tree.right
     assert isinstance(amp, Binary) and amp.op == "&"
+
+
+def test_var_block_parses() -> None:
+    tree = parse("VAR k = [x] + 1 RETURN k")
+    assert tree == Var(
+        name="k",
+        value=Binary(op="+", left=ColumnRef("x"), right=Literal("1")),
+        body=Ident("k"),
+    )
+
+
+def test_chained_var_blocks_nest() -> None:
+    tree = parse("VAR a = 1 VAR b = 2 RETURN a + b")
+    assert tree == Var(
+        name="a",
+        value=Literal("1"),
+        body=Var(
+            name="b",
+            value=Literal("2"),
+            body=Binary(op="+", left=Ident("a"), right=Ident("b")),
+        ),
+    )
+
+
+def test_var_without_return_is_an_error() -> None:
+    with pytest.raises(ParseError):
+        parse("VAR k = 1")
+    with pytest.raises(ParseError):
+        parse("VAR k [x]")
+
+
+def test_iterator_inside_var_is_seen_by_rules() -> None:
+    """The lint walkers must descend Var blocks (regression for rule 12)."""
+    from aibi_dax.antipattern import nested_iterators
+
+    assert nested_iterators("VAR s = SUMX('S', AVERAGEX('S', [x])) RETURN s") is not None
+    assert nested_iterators("VAR s = SUMX('S', [x]) RETURN s") is None

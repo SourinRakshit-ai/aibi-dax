@@ -10,7 +10,18 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Iterator
 
-from .parser import Binary, Call, ColumnRef, Ident, Node, ParseError, TableRef, Unary, parse
+from .parser import (
+    Binary,
+    Call,
+    ColumnRef,
+    Ident,
+    Node,
+    ParseError,
+    TableRef,
+    Unary,
+    Var,
+    parse,
+)
 
 # Iterator functions whose row context makes CALCULATE placement dangerous.
 ITERATORS = {"SUMX", "AVERAGEX", "MAXX", "MINX", "COUNTX", "COUNTAX", "CONCATENATEX"}
@@ -78,6 +89,8 @@ def _count_calls(node: Node, name: str) -> int:
             return _count_calls(left, name) + _count_calls(right, name)
         case Unary(operand=operand):
             return _count_calls(operand, name)
+        case Var(value=value, body=body):
+            return _count_calls(value, name) + _count_calls(body, name)
         case _:
             return 0
 
@@ -130,6 +143,8 @@ def _eq_blank(node: Node) -> bool:
             return _eq_blank(left) or _eq_blank(right)
         case Unary(operand=operand):
             return _eq_blank(operand)
+        case Var(value=value, body=body):
+            return _eq_blank(value) or _eq_blank(body)
         case _:
             return False
 
@@ -180,6 +195,9 @@ def _walk_calls(node: Node) -> Iterator[Call]:
             yield from _walk_calls(right)
         case Unary(operand=operand):
             yield from _walk_calls(operand)
+        case Var(value=value, body=body):
+            yield from _walk_calls(value)
+            yield from _walk_calls(body)
         case _:
             return
 
@@ -278,6 +296,8 @@ def _iterator_depth(node: Node) -> int:
             return max(_iterator_depth(left), _iterator_depth(right))
         case Unary(operand=operand):
             return _iterator_depth(operand)
+        case Var(value=value, body=body):
+            return max(_iterator_depth(value), _iterator_depth(body))
         case _:
             return 0
 
