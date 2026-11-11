@@ -41,7 +41,7 @@ Exit code 0 when clean, 1 with `-` lines per finding. `--json` prints the
 findings as a JSON list (`[]` when clean):
 
 ```
-$ dxa lint "IF(a, 1, IF(b, 2, IF(c, 3, [D]/0)))"
+$ dxa lint "IF(a, 1, IF(b, 2, IF(c, 3, [D]/[E])))"
 - 3 nested IF calls — SWITCH(TRUE(), ...) reads better and evaluates faster.
 - Raw '/' division — use DIVIDE(num, den) to absorb zero-denominator errors.
 (exit 1)

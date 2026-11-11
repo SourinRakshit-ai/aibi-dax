@@ -31,6 +31,17 @@ def test_raw_division_and_divide_escape():
     assert antipattern.raw_division("path/no-slash") is not None
 
 
+def test_raw_division_ast_rules():
+    """Constant denominators and literal slashes are not runtime traps."""
+    assert antipattern.raw_division("[Amount] / 2") is None
+    assert antipattern.raw_division("[Amount] / 0.5") is None
+    assert antipattern.raw_division('"a/b"') is None
+    assert antipattern.raw_division("1 / [Den]") is not None
+    assert antipattern.raw_division("VAR t = [A] / [B] RETURN t") is not None
+    # unparseable text keeps the conservative text scan
+    assert antipattern.raw_division("a / /") is not None
+
+
 def test_blank_comparison_prefers_isblank():
     assert antipattern.blank_comparison("[x] = BLANK()") is not None
     assert antipattern.blank_comparison("ISBLANK([x])") is None
@@ -48,12 +59,18 @@ def test_concat_ampersand_redundancy():
     assert antipattern.concat_ampersand(good) is None
 
 
+def test_concat_ampersand_ast_rules():
+    """A '&' inside a string literal is data, not an operator."""
+    assert antipattern.concat_ampersand('CONCATENATEX(Sales, "a&b", [x])') is None
+    assert antipattern.concat_ampersand('CONCATENATEX(Sales, VAR k = "x" & [y] RETURN k)') is not None
+    # unparseable text keeps the conservative text scan
+    assert antipattern.concat_ampersand("CONCATENATEX(&") is not None
+
+
 def test_all_first_argument_flags_the_all_aggregate():
     assert antipattern.all_first_argument("SUMX(ALL('Sales'), [Amount])") is not None
     assert antipattern.all_first_argument("AVERAGEX(FILTER(ALL('T'), [q] > 0), [x])") is not None
     assert antipattern.all_first_argument("CALCULATE([Amount], 'Sales'[Qty] > 0)") is None
-
-
 def test_all_rules_cover_clean_expression():
     clean = "SUM('Sales'[Amount])"
     for rule in antipattern.ALL_RULES:
@@ -99,3 +116,32 @@ def test_switch_without_default_flags_silent_blank():
     assert antipattern.switch_missing_default('SWITCH(TRUE(), [k]="a", 1, [k]="b", 2, 0)') is None
     assert antipattern.switch_missing_default("SWITCH([k], 1, \"one\", \"other\")") is None
     assert antipattern.switch_missing_default("no switch here") is None
+
+
+def test_walker_breadth_call_unary_var():
+    """Every tree walker descends Call args, Unary operands and Var blocks."""
+    # _raw_div_hit: Call arg, Unary operand, Var body
+    assert antipattern.raw_division("IF(x, -[a] / [b])") is not None
+    assert antipattern.raw_division("VAR t = [a] / [b] RETURN t") is not None
+    assert antipattern.raw_division("VAR t = DIVIDE([a], [b]) RETURN t") is None
+    assert antipattern.raw_division('MAX("a/b", [x])') is None
+    # _eq_blank: Call arg, Unary operand, Var body
+    assert antipattern.blank_comparison("IF(x, [y] = BLANK())") is not None
+    assert antipattern.blank_comparison("-[y] = BLANK()") is not None
+    assert antipattern.blank_comparison("VAR t = [y] = BLANK() RETURN t") is not None
+    # _has_binary: Call arg, Unary operand, Var body
+    assert antipattern.concat_ampersand('CONCATENATEX(S, IF(x, -("a" & [y])))') is not None
+    assert antipattern.concat_ampersand('CONCATENATEX(S, VAR k = "x" & [y] RETURN k)') is not None
+    # _iterator_depth: Unary and Var paths
+    assert antipattern.nested_iterators("VAR s = SUMX('S', AVERAGEX('S', [x])) RETURN s") is not None
+    assert antipattern.nested_iterators("VAR s = SUMX('S', [x]) RETURN s") is None
+
+
+def test_unparseable_fallbacks_stay_conservative():
+    """Regex fallbacks fire on the unparseable text the old rules scanned."""
+    assert antipattern.raw_division("1 /") is not None
+    assert antipattern.raw_division('DIVIDE("x / y")') is None
+    assert antipattern.blank_comparison("= BLANK(") is not None
+    assert antipattern.blank_comparison("no equality here =") is None
+    assert antipattern.concat_ampersand("CONCATENATEX(S, 'a' & [b]") is not None
+    assert antipattern.concat_ampersand("no iterator & here") is None

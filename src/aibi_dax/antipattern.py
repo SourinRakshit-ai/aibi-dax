@@ -15,6 +15,7 @@ from .parser import (
     Call,
     ColumnRef,
     Ident,
+    Literal,
     Node,
     ParseError,
     TableRef,
@@ -99,18 +100,46 @@ def _has_call(node: Node, name: str) -> bool:
     return _count_calls(node, name) > 0
 
 
+def _is_numeric_literal(node: Node) -> bool:
+    """A numeric `Literal` (numbers tokenize without quote marks)."""
+    return isinstance(node, Literal) and not node.text.startswith(("'", '"'))
+
+
+def _raw_div_hit(node: Node) -> bool:
+    """Any `/` binary whose right operand is not a numeric literal."""
+    match node:
+        case Binary(op="/", left=left, right=right):
+            return not _is_numeric_literal(right) or _raw_div_hit(left)
+        case Binary(left=left, right=right):
+            return _raw_div_hit(left) or _raw_div_hit(right)
+        case Call(_, args):
+            return any(_raw_div_hit(a) for a in args)
+        case Unary(operand=operand):
+            return _raw_div_hit(operand)
+        case Var(value=value, body=body):
+            return _raw_div_hit(value) or _raw_div_hit(body)
+        case _:
+            return False
+
+
 def raw_division(expr: str) -> str | None:
     """/ without DIVIDE( raises #NUM! on zero denominators.
 
-    Quoted strings and quoted table names are stripped first so paths like
-    "a/b" in literals do not trigger the rule.
+    AST-driven: a `Binary('/')` whose denominator is not a numeric literal
+    is the runtime trap — constant denominators cannot change under filter
+    context. Any `DIVIDE(...)` anywhere suppresses the rule. Regex fallback
+    (string-stripped text scan) when the expression does not parse.
     """
-    stripped = re.sub(r'"[^"]*"|\'[^\']*\'', "", expr)
-    if "DIVIDE(" in stripped.upper():
+    try:
+        tree = parse(expr)
+    except ParseError:
+        stripped = re.sub(r'"[^"]*"|\'[^\']*\'', "", expr)
+        if "DIVIDE(" in stripped.upper():
+            return None
+        return _DIV_MSG if "/" in stripped else None
+    if _has_call(tree, "DIVIDE"):
         return None
-    if "/" in stripped:
-        return "Raw '/' division — use DIVIDE(num, den) to absorb zero-denominator errors."
-    return None
+    return _DIV_MSG if _raw_div_hit(tree) else None
 
 
 def blank_comparison(expr: str) -> str | None:
@@ -148,6 +177,9 @@ def _eq_blank(node: Node) -> bool:
         case _:
             return False
 
+
+_DIV_MSG = "Raw '/' division — use DIVIDE(num, den) to absorb zero-denominator errors."
+_CONCAT_MSG = "CONCATENATEX plus '&' — pass all parts as CONCATENATEX arguments instead."
 
 _BLANK_MSG = (
     "Compare with ISBLANK(x), not `x = BLANK()` — equality against BLANK is unreliable."
@@ -203,12 +235,40 @@ def _walk_calls(node: Node) -> Iterator[Call]:
 
 
 def concat_ampersand(expr: str) -> str | None:
-    """String concatenation '&' inside CONCATENATEX is redundant."""
-    if re.search(r"CONCATENATEX\s*\(", expr, re.IGNORECASE) and "&" in re.sub(
-        r'"[^"]*"', "", expr
-    ):
-        return "CONCATENATEX plus '&' — pass all parts as CONCATENATEX arguments instead."
+    """String concatenation '&' inside CONCATENATEX is redundant.
+
+    AST-driven: any CONCATENATEX call in the tree plus any `Binary('&')`
+    anywhere — a `&` inside a string literal is data, not an operator, and
+    no longer triggers. Regex fallback when the expression does not parse.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        if re.search(r"CONCATENATEX\s*\(", expr, re.IGNORECASE) and "&" in re.sub(
+            r'"[^"]*"|\'[^\']*\'', "", expr
+        ):
+            return _CONCAT_MSG
+        return None
+    names = {c.name.upper() for c in _walk_calls(tree)}
+    if "CONCATENATEX" not in names:
+        return None
+    if _has_binary(tree, "&"):
+        return _CONCAT_MSG
     return None
+
+
+def _has_binary(node: Node, op: str) -> bool:
+    match node:
+        case Binary(op=node_op, left=left, right=right):
+            return node_op == op or _has_binary(left, op) or _has_binary(right, op)
+        case Call(_, args):
+            return any(_has_binary(a, op) for a in args)
+        case Unary(operand=operand):
+            return _has_binary(operand, op)
+        case Var(value=value, body=body):
+            return _has_binary(value, op) or _has_binary(body, op)
+        case _:
+            return False
 
 
 def earlier_var(expr: str) -> str | None:

@@ -43,6 +43,9 @@ number after the first means no default is present.
 
 ### Raw division
 `/` raises #NUM! on zero denominators; `DIVIDE(num, den[, alt])` absorbs.
+AST-driven: only non-constant denominators flag — `[x] / 2` is
+safe, `[x] / [Scale]` is the trap, and slashes inside string
+literals never count.
 
 ### `= BLANK()` equality
 Equality against BLANK is unreliable for non-numeric types; `ISBLANK(x)`
@@ -56,7 +59,8 @@ where you need its modifying semantics.
 
 ### `&` inside CONCATENATEX
 Concatenate via the iterator's arguments; mixing `&` inside is ordering
-hazard with hidden separators.
+hazard with hidden separators. AST-driven: `&` inside a string
+literal is data and never flags.
 
 ## Style
 
