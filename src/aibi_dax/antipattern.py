@@ -323,6 +323,33 @@ def nested_iterators(expr: str) -> str | None:
     return None
 
 
+_SWITCH_MSG = (
+    "SWITCH without a default case returns BLANK silently when no branch matches — "
+    "add the final else argument."
+)
+
+
+def switch_missing_default(expr: str) -> str | None:
+    """A SWITCH whose argument list holds only value/result pairs falls
+    through to BLANK when nothing matches; the optional final argument
+    makes the miss explicit.
+
+    With `SWITCH(expr, v1, r1, …, [else])`, an even number of arguments
+    after the first means there is no default. Falls back to None when the
+    expression does not parse.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        match call:
+            case Call(name="SWITCH" | "switch", args=args):
+                if len(args) >= 3 and (len(args) - 1) % 2 == 0:
+                    return _SWITCH_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -336,4 +363,5 @@ ALL_RULES: list[Rule] = [
     values_with_hasonevalue,
     lowercase_function,
     nested_iterators,
+    switch_missing_default,
 ]

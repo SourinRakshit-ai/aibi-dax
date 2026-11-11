@@ -92,3 +92,10 @@ def test_nested_iterators_flags_depth_two():
 def test_nested_iterators_silent_on_parse_failure():
     # Unreducible text must never crash the rule engine.
     assert antipattern.nested_iterators("1 +") is None
+
+
+def test_switch_without_default_flags_silent_blank():
+    assert antipattern.switch_missing_default('SWITCH(TRUE(), [k]="a", 1, [k]="b", 2)') is not None
+    assert antipattern.switch_missing_default('SWITCH(TRUE(), [k]="a", 1, [k]="b", 2, 0)') is None
+    assert antipattern.switch_missing_default("SWITCH([k], 1, \"one\", \"other\")") is None
+    assert antipattern.switch_missing_default("no switch here") is None
