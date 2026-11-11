@@ -32,31 +32,40 @@ IDENT_IT_RE = re.compile(r"\b([A-Z]+X)\s*\(")
 Rule = Callable[[str], str | None]
 
 
+_CALC_IN_IT_MSG = (
+    "CALCULATE inside a row iterator — the iterator's row context "
+    "shadows filters; hoist CALCULATE outside the iterator."
+)
+
+
 def calculate_inside_iterator(expr: str) -> str | None:
     """CALCULATE inside a row-iterator: filter context is overridden per-row
     by the iterator, so the result is usually wrong or misleading.
 
-    Iterator delimiters that would end scanning depth prematurely are not
-    tracked across string literals; bracketed columns cannot contain ( or ),
-    and quoted strings rarely wrap calls — acceptable for a heuristic lint.
+    AST-driven: any iterator call whose argument tree contains a CALCULATE
+    call. Unparseable text keeps the conservative token scan.
     """
-    for match in IDENT_IT_RE.finditer(expr):
-        if match.group(1).upper() not in ITERATORS:
-            continue
-        depth = 1  # We stand just inside the iterator's opening paren.
-        cursor = match.end()
-        while cursor < len(expr) and depth:
-            ch = expr[cursor]
-            if ch == "(":
-                depth += 1
-            elif ch == ")":
-                depth -= 1
-            elif re.match(r"CALCULATE\s*\(", expr[cursor:], re.IGNORECASE):
-                return (
-                    "CALCULATE inside a row iterator — the iterator's row context "
-                    "shadows filters; hoist CALCULATE outside the iterator."
-                )
-            cursor += 1
+    try:
+        tree = parse(expr)
+    except ParseError:
+        for match in IDENT_IT_RE.finditer(expr):
+            if match.group(1).upper() not in ITERATORS:
+                continue
+            depth = 1  # We stand just inside the iterator's opening paren.
+            cursor = match.end()
+            while cursor < len(expr) and depth:
+                ch = expr[cursor]
+                if ch == "(":
+                    depth += 1
+                elif ch == ")":
+                    depth -= 1
+                elif re.match(r"CALCULATE\s*\(", expr[cursor:], re.IGNORECASE):
+                    return _CALC_IN_IT_MSG
+                cursor += 1
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() in ITERATORS and any(_has_call(a, "CALCULATE") for a in call.args):
+            return _CALC_IN_IT_MSG
     return None
 
 

@@ -18,6 +18,15 @@ def test_calculate_after_iterator_paren_closes_is_fine():
     assert antipattern.calculate_inside_iterator(nested) is None
 
 
+def test_calculate_inside_iterator_ast_rules():
+    """CALCULATE named in a string literal or below a non-iterator is data."""
+    assert antipattern.calculate_inside_iterator("CONCATENATEX(S, \"use CALCULATE(x)\")") is None
+    assert antipattern.calculate_inside_iterator("VAR c = CALCULATE([x]) RETURN c") is None
+    assert antipattern.calculate_inside_iterator("VAR s = SUMX('S', CALCULATE([x])) RETURN s") is not None
+    # unparseable text keeps the conservative token scan
+    assert antipattern.calculate_inside_iterator("SUMX('S', CALCULATE(") is not None
+
+
 def test_too_many_ifs_skips_switch():
     stair = "IF(a, 1, IF(b, 2, IF(c, 3, 4)))"
     flat = "IF(a, 1, 2)"
