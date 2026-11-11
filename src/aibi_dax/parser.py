@@ -14,6 +14,7 @@ raise ParseError.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 
 from .lexer import Token, tokenize
 
@@ -232,6 +233,12 @@ class _Parser:
             raise self._error(f"expected ',' or ')' inside {name}(…")
 
 
+@lru_cache(maxsize=512)
 def parse(expr: str) -> Node:
-    """Reduce a DAX expression string to one AST node tree."""
+    """Reduce a DAX expression string to one AST node tree.
+
+    Memoized: every AST rule parses the expression it inspects, so one
+    `lint_expression` call reparses up to once per rule without the cache.
+    Trees are frozen dataclasses — safe to share across callers.
+    """
     return _Parser(tokenize(expr)).parse()
