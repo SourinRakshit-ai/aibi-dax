@@ -1,5 +1,11 @@
+# Dependabot: keep the dev toolchain and workflow actions current.
+# https://docs.github.com/en/code-security/dependabot
 version: 2
 updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
