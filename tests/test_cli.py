@@ -60,6 +60,24 @@ def test_lint_model_json_and_clean_exit(model_path, capsys, tmp_path):
     assert isinstance(found["Sales.Bad"], list)
 
 
+def test_lint_model_table_filter(model_path, tmp_path, capsys):
+    other = dict(MODEL)
+    other["tables"] = MODEL["tables"] + [
+        {"name": "Other", "measures": [
+            {"name": "Worse", "expression": "SUMX('Sales', CALCULATE([Amount]))"},
+        ]},
+    ]
+    p2 = tmp_path / "two.json"
+    p2.write_text(json.dumps(other), encoding="utf-8")
+
+    assert main(["lint-model", p2, "--table", "Other"]) == 1
+    out = capsys.readouterr().out
+    assert "Other.Worse:" in out and "Sales.Bad" not in out
+
+    assert main(["lint-model", p2, "--table", "Nope"]) == 0
+    assert "model is clean" in capsys.readouterr().out
+
+
 def test_lint_clean_and_dirty(capsys):
     assert main(["lint", "SUM('Sales'[Amount])"]) == 0
     assert "no findings" in capsys.readouterr().out

@@ -38,6 +38,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_lint_model = sub.add_parser("lint-model", help="anti-pattern findings across a model dump")
     p_lint_model.add_argument("model", help="path to model JSON")
     p_lint_model.add_argument("--json", action="store_true", help="emit JSON")
+    p_lint_model.add_argument("--table", help="restrict findings to one table")
 
     p_parse = sub.add_parser("parse", help="AST for one expression")
     p_parse.add_argument("expr", help="DAX expression, quoted")
@@ -82,6 +83,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "lint-model":
         found = lint_model(load_model(args.model))
+        table = getattr(args, "table", None)
+        if table is not None:
+            found = {k: v for k, v in found.items() if k.split(".", 1)[0] == table}
         if not found:
             print("model is clean")
             return 0
