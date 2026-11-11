@@ -33,6 +33,12 @@ Prefer `DIVIDE`'s third argument, or fix what raises.
 ### HASONEVALUE + VALUES pairs
 `IF(HASONEVALUE(k), VALUES(k), other)` is exactly `SELECTEDVALUE(k, other)`.
 
+### SWITCH without a default
+`SWITCH(expr, v1, r1, v2, r2)` returns BLANK when nothing matches — silently.
+The optional final argument states the miss case explicitly, even if it is
+`0` or an error message. The rule counts arguments on the AST: an even
+number after the first means no default is present.
+
 ## Data-shape rules
 
 ### Raw division
