@@ -37,7 +37,8 @@ $ dxa rank model.json --top 3
 
 ## `dxa lint "EXPR"`
 
-Exit code 0 when clean, 1 with `-` lines per finding:
+Exit code 0 when clean, 1 with `-` lines per finding. `--json` prints the
+findings as a JSON list (`[]` when clean):
 
 ```
 $ dxa lint "IF(a, 1, IF(b, 2, IF(c, 3, [D]/0)))"
@@ -60,7 +61,13 @@ genuinely unparseable sequence):
 $ dxa parse "1 + [A]" --json
 {
   "op": "+",
-  "left": {"text": "1"},
-  "right": {"name": "A"}
+  "left": {
+    "text": "1"
+  },
+  "right": {
+    "name": "A"
+  }
 }
 ```
+
+Unparseable sequences exit 2 with a `parse error:` message on stderr.

@@ -72,3 +72,18 @@ def test_lint_example_pinned(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["lint", _expr_of(fence)]) == 1
     got = capsys.readouterr().out.strip().splitlines()
     assert got == expected
+
+
+def test_lint_json_clean_example(capsys: pytest.CaptureFixture[str]) -> None:
+    """The --json contract: empty list on a clean expression, exit 0."""
+    assert main(["lint", "SUM('Sales'[Amount])", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out) == []
+
+
+def test_parse_json_fence_is_real(capsys: pytest.CaptureFixture[str]) -> None:
+    """The parse example fence must equal the CLI's indented JSON byte for byte."""
+    fence = _fence("`dxa parse \"EXPR\"`")
+    expected = [line for line in fence if not line.lstrip().startswith("$")]
+    assert main(["parse", _expr_of(fence), "--json"]) == 0
+    got = capsys.readouterr().out.strip().splitlines()
+    assert got == expected
