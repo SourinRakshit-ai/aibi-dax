@@ -3,7 +3,7 @@
 ## Global
 
 ```
-dxa --version        # dxa 0.1.1
+dxa --version        # dxa 0.2.0
 dxa --help
 ```
 
