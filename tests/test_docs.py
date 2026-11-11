@@ -87,3 +87,17 @@ def test_parse_json_fence_is_real(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["parse", _expr_of(fence), "--json"]) == 0
     got = capsys.readouterr().out.strip().splitlines()
     assert got == expected
+
+
+def test_changelog_leads_with_the_current_version() -> None:
+    """The newest CHANGELOG heading equals the pyproject version."""
+    from pathlib import Path
+
+    changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
+    heading = re.search(r"^## (\S+)", changelog, re.MULTILINE)
+    assert heading, "no version heading in CHANGELOG.md"
+
+    pyproject = Path("pyproject.toml").read_text(encoding="utf-8")
+    version = re.search(r'^version = "(\S+)"', pyproject, re.MULTILINE)
+    assert version, "no version key in pyproject.toml"
+    assert heading.group(1) == version.group(1)
