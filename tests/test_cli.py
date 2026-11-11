@@ -137,6 +137,19 @@ def test_parse_tree_output(capsys):
     )
 
 
+def test_lint_rule_filter(capsys):
+    assert main(["lint", "SUMX('Sales', CALCULATE([Amount]))", "--rule", "too_many_ifs"]) == 0
+    assert "no findings" in capsys.readouterr().out
+
+    assert main(["lint", "SUMX('Sales', CALCULATE([Amount]))", "--rule", "nested_iterators"]) == 0
+
+    assert main(["lint", "SUMX('Sales', CALCULATE([Amount]))", "--rule", "calculate_inside_iterator"]) == 1
+    assert "CALCULATE inside" in capsys.readouterr().out
+
+    assert main(["lint", "[x]", "--rule", "nope"]) == 2
+    assert "unknown rule" in capsys.readouterr().err
+
+
 def test_lint_model_exit_codes(model_path, capsys):
     assert main(["lint-model", model_path]) == 1
     assert "Sales.Bad:" in capsys.readouterr().out

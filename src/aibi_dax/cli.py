@@ -81,6 +81,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_lint = sub.add_parser("lint", help="anti-pattern findings for one expression")
     p_lint.add_argument("expr", help="DAX expression, quoted")
     p_lint.add_argument("--json", action="store_true", help="emit JSON")
+    p_lint.add_argument("--rule", help="run only this rule (function name)")
 
     p_lint_model = sub.add_parser("lint-model", help="anti-pattern findings across a model dump")
     p_lint_model.add_argument("model", help="path to model JSON")
@@ -123,7 +124,15 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "lint":
-        findings = lint_expression(args.expr)
+        rules = None
+        rule_name = getattr(args, "rule", None)
+        if rule_name is not None:
+            rules = [r for r in ALL_RULES if r.__name__ == rule_name]
+            if not rules:
+                names = ", ".join(r.__name__ for r in ALL_RULES)
+                print(f"dxa: unknown rule {rule_name} — one of: {names}", file=sys.stderr)
+                return 2
+        findings = lint_expression(args.expr, rules)
         if getattr(args, "json", False):
             print(json.dumps(findings))
             return 1 if findings else 0
