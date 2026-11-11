@@ -5,13 +5,58 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from dataclasses import asdict
+from dataclasses import asdict, fields, is_dataclass
+from typing import TypeGuard
 
 from . import __version__
 from .complexity import rank_measures, report, weight
 from .lint import lint_expression, lint_model
 from .model_io import load_model
-from .parser import ParseError, parse
+from .parser import Node, ParseError, parse
+
+
+def format_tree(node: Node) -> str:
+    """Indented one-node-per-line rendering of an AST.
+
+    Scalar fields sit on the node line; node-valued fields and argument
+    lists indent one level deeper, with `field:` labels where the position
+    alone would not say what the child is.
+    """
+    lines: list[str] = []
+
+    def _is_node(value: object) -> TypeGuard[Node]:
+        return is_dataclass(value) and not isinstance(value, type)
+
+    def render(item: object, prefix: str) -> None:
+        if _is_node(item):
+            scalars: list[str] = []
+            children: list[tuple[str, object]] = []
+            for field in fields(item):
+                value = getattr(item, field.name)
+                if _is_node(value) or (
+                    isinstance(value, tuple)
+                    and bool(value)
+                    and all(_is_node(v) for v in value)
+                ):
+                    children.append((f"{field.name}:", value))
+                else:
+                    scalars.append(f"{field.name}={value!r}")
+            head = type(item).__name__
+            if scalars:
+                head += f" {' '.join(scalars)}"
+            lines.append(prefix + head)
+            for label, child in children:
+                if isinstance(child, tuple):
+                    for sub in child:
+                        render(sub, prefix + "  ")
+                else:
+                    lines.append(prefix + f"  {label}")
+                    render(child, prefix + "    ")
+        else:
+            lines.append(prefix + repr(item))
+
+    render(node, "")
+    return "\n".join(lines) + "\n"
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -44,6 +89,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_parse = sub.add_parser("parse", help="AST for one expression")
     p_parse.add_argument("expr", help="DAX expression, quoted")
     p_parse.add_argument("--json", action="store_true", help="emit JSON")
+    p_parse.add_argument("--tree", action="store_true", help="indented one-node-per-line tree")
     return parser
 
 
@@ -111,6 +157,8 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         if getattr(args, "json", False):
             print(json.dumps(asdict(tree), indent=2))
+        elif getattr(args, "tree", False):
+            print(format_tree(tree), end="")
         else:
             print(tree)
         return 0

@@ -111,6 +111,17 @@ def test_lint_json_dirty_and_clean(capsys):
     assert json.loads(capsys.readouterr().out) == []
 
 
+def test_parse_tree_output(capsys):
+    assert main(["parse", "1 + [A]", "--tree"]) == 0
+    assert capsys.readouterr().out == (
+        "Binary op='+'\n"
+        "  left:\n"
+        "    Literal text='1'\n"
+        "  right:\n"
+        "    ColumnRef name='A'\n"
+    )
+
+
 def test_lint_model_exit_codes(model_path, capsys):
     assert main(["lint-model", model_path]) == 1
     assert "Sales.Bad:" in capsys.readouterr().out
