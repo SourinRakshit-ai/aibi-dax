@@ -127,6 +127,18 @@ def test_switch_without_default_flags_silent_blank():
     assert antipattern.switch_missing_default("no switch here") is None
 
 
+def test_single_column_iterator_collapses_to_plain_aggregate():
+    msg = antipattern.single_column_iterator("SUMX('Sales', 'Sales'[Amount])")
+    assert msg is not None and "SUM('Sales'[Amount])" in msg
+    # mismatched table/column pairs are real iterations
+    assert antipattern.single_column_iterator("SUMX('Sales', 'Items'[Amount])") is None
+    # expressions, not bare column refs, are genuine per-row work
+    assert antipattern.single_column_iterator("SUMX('Sales', [Amount] * 2)") is None
+    assert antipattern.single_column_iterator("AVERAGEX('Sales', 'Sales'[Qty])") is not None
+    assert antipattern.single_column_iterator("SUM('Sales'[Amount])") is None
+    assert antipattern.single_column_iterator("SUMX(") is None
+
+
 def test_walker_breadth_call_unary_var():
     """Every tree walker descends Call args, Unary operands and Var blocks."""
     # _raw_div_hit: Call arg, Unary operand, Var body

@@ -18,6 +18,7 @@ from .parser import (
     Literal,
     Node,
     ParseError,
+    QualifiedColumn,
     TableRef,
     Unary,
     Var,
@@ -280,6 +281,46 @@ def _has_binary(node: Node, op: str) -> bool:
             return False
 
 
+_ITER_SUM_MSG = (
+    "Row iterator over a single column reference — plain SUM/AVERAGE/COUNT/MIN/MAX "
+    "on the column is faster and reads the same."
+)
+
+# iterator name -> the plain aggregate that replaces it
+_ITER_TO_AGG = {
+    "SUMX": "SUM",
+    "AVERAGEX": "AVERAGE",
+    "COUNTX": "COUNT",
+    "MINX": "MIN",
+    "MAXX": "MAX",
+}
+
+
+def single_column_iterator(expr: str) -> str | None:
+    """`SUMX('Sales', 'Sales'[Amount])` is a plain aggregate in disguise.
+
+    AST-driven: an aggregate iterator whose second argument is exactly the
+    fully-qualified form of its (table, column) first argument can collapse
+    to the non-iterator aggregate. Unparseable text stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        match call:
+            case Call(name=it_name, args=(TableRef() as table, QualifiedColumn() as col)) if (
+                it_name.upper() in _ITER_TO_AGG
+                and table.name.replace("'", "") == col.table.replace("'", "")
+            ):
+                agg = _ITER_TO_AGG[it_name.upper()]
+                return (
+                    f"{_ITER_SUM_MSG} ({it_name.upper()}({table.name}, {col.table}[{col.name}]) "
+                    f"is {agg}({col.table}[{col.name}]).)"
+                )
+    return None
+
+
 def earlier_var(expr: str) -> str | None:
     """EARLIER is superseded by VAR capture — flat and type-checkable."""
     if re.search(r"\bEARLIER\s*\(", expr, re.IGNORECASE):
@@ -433,4 +474,5 @@ ALL_RULES: list[Rule] = [
     lowercase_function,
     nested_iterators,
     switch_missing_default,
+    single_column_iterator,
 ]
