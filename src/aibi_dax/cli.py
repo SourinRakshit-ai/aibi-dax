@@ -29,6 +29,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_rank = sub.add_parser("rank", help="most complex measures of a model dump")
     p_rank.add_argument("model", help="path to model JSON")
     p_rank.add_argument("--top", type=int, default=10, help="how many to show")
+    p_rank.add_argument("--table", help="restrict ranking to one table")
     p_rank.add_argument("--json", action="store_true", help="emit JSON")
 
     p_lint = sub.add_parser("lint", help="anti-pattern findings for one expression")
@@ -61,7 +62,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "rank":
-        rows = rank_measures(load_model(args.model), top=args.top)
+        model = load_model(args.model)
+        only = getattr(args, "table", None)
+        if only is not None:
+            model = {"tables": [t for t in model.get("tables", []) if t.get("name") == only]}
+        rows = rank_measures(model, top=args.top)
         if getattr(args, "json", False):
             print(json.dumps([{"table": t, "name": n, "weight": w} for t, n, w in rows]))
         else:

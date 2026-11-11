@@ -53,6 +53,24 @@ def test_rank_json_payload(model_path, capsys):
     assert payload[0]["weight"] > payload[1]["weight"]
 
 
+def test_rank_table_filter(tmp_path, capsys):
+    other = dict(MODEL)
+    other["tables"] = MODEL["tables"] + [
+        {"name": "Other", "measures": [
+            {"name": "Heavy", "expression": "SUMX('S', AVERAGEX('S', CALCULATE([x])))"},
+        ]},
+    ]
+    p2 = tmp_path / "two.json"
+    p2.write_text(json.dumps(other), encoding="utf-8")
+
+    assert main(["rank", str(p2), "--table", "Other"]) == 0
+    out = capsys.readouterr().out
+    assert "Other.Heavy" in out and "Sales" not in out
+
+    assert main(["rank", str(p2), "--table", "Nope"]) == 0
+    assert capsys.readouterr().out.strip() == ""
+
+
 def test_lint_model_json_and_clean_exit(model_path, capsys, tmp_path):
     assert main(["lint-model", model_path, "--json"]) == 1
     found = json.loads(capsys.readouterr().out)
