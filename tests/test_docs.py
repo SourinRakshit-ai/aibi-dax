@@ -20,13 +20,13 @@ from aibi_dax.cli import main
 DOC = Path("docs/CLI.md")
 
 
-def _fence(after_heading: str) -> list[str]:
-    """Lines of the first ``` fence below the given CLI.md heading."""
+def _fence(after_heading: str, index: int = 0) -> list[str]:
+    """Lines of the index-th ``` fence below the given CLI.md heading."""
     text = DOC.read_text(encoding="utf-8")
     body = text.split(f"## {after_heading}", 1)[1]
-    block = re.search(r"```\n(.*?)```", body, re.DOTALL)
-    assert block, f"no fenced example under '## {after_heading}'"
-    return block.group(1).strip().splitlines()
+    blocks = re.findall(r"```\n(.*?)```", body, re.DOTALL)
+    assert len(blocks) > index, f"fence #{index} missing under '## {after_heading}'"
+    return blocks[index].strip().splitlines()
 
 
 def _expr_of(fence: list[str]) -> str:
@@ -80,9 +80,18 @@ def test_lint_json_clean_example(capsys: pytest.CaptureFixture[str]) -> None:
     assert json.loads(capsys.readouterr().out) == []
 
 
+def test_parse_tree_fence_is_real(capsys: pytest.CaptureFixture[str]) -> None:
+    """The --tree example fence must equal the CLI's indented tree byte for byte."""
+    fence = _fence("`dxa parse \"EXPR\"`", index=0)
+    expected = [line for line in fence if not line.lstrip().startswith("$")]
+    assert main(["parse", _expr_of(fence), "--tree"]) == 0
+    got = capsys.readouterr().out.strip().splitlines()
+    assert got == expected
+
+
 def test_parse_json_fence_is_real(capsys: pytest.CaptureFixture[str]) -> None:
     """The parse example fence must equal the CLI's indented JSON byte for byte."""
-    fence = _fence("`dxa parse \"EXPR\"`")
+    fence = _fence("`dxa parse \"EXPR\"`", index=1)
     expected = [line for line in fence if not line.lstrip().startswith("$")]
     assert main(["parse", _expr_of(fence), "--json"]) == 0
     got = capsys.readouterr().out.strip().splitlines()

@@ -56,7 +56,18 @@ lines per finding; `--json` prints the findings map.
 ## `dxa parse "EXPR"`
 
 Reduces the expression to an AST (recursive descent; exit 2 on a
-genuinely unparseable sequence):
+genuinely unparseable sequence). `--json` prints the tree as JSON;
+`--tree` prints it one node per line, children indented, with `field:`
+labels where position alone would not say what the child is:
+
+```
+$ dxa parse "1 + [A]" --tree
+Binary op='+'
+  left:
+    Literal text='1'
+  right:
+    ColumnRef name='A'
+```
 
 ```
 $ dxa parse "1 + [A]" --json
