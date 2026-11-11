@@ -83,9 +83,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "lint-model":
         found = lint_model(load_model(args.model))
-        table = getattr(args, "table", None)
-        if table is not None:
-            found = {k: v for k, v in found.items() if k.split(".", 1)[0] == table}
+        only = getattr(args, "table", None)
+        if only is not None:
+            found = {k: v for k, v in found.items() if k.split(".", 1)[0] == only}
         if not found:
             print("model is clean")
             return 0

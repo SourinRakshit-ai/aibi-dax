@@ -70,11 +70,11 @@ def test_lint_model_table_filter(model_path, tmp_path, capsys):
     p2 = tmp_path / "two.json"
     p2.write_text(json.dumps(other), encoding="utf-8")
 
-    assert main(["lint-model", p2, "--table", "Other"]) == 1
+    assert main(["lint-model", str(p2), "--table", "Other"]) == 1
     out = capsys.readouterr().out
     assert "Other.Worse:" in out and "Sales.Bad" not in out
 
-    assert main(["lint-model", p2, "--table", "Nope"]) == 0
+    assert main(["lint-model", str(p2), "--table", "Nope"]) == 0
     assert "model is clean" in capsys.readouterr().out
 
 
