@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.0 - 2026-11-11
+
+- Parser: `VAR … RETURN` assignment blocks, chained `VAR`s, and
+  fully-qualified `'Table'[Column]` references (`QualifiedColumn` node);
+  `dxa parse` emits them all.
+- Rule 13: `SWITCH` without a default case flags the silent-BLANK
+  fall-through; argument parity checked on the AST.
+- Rule walkers descend `Var` blocks, so iterator nesting and IF counts
+  inside `VAR` bodies are visible.
+- CLI: `--json` for `dxa lint`; `--table` filter for `dxa lint-model`.
+- CI: coverage job installs editable so measured paths match imports
+  (the regular install made coverage read 0.00%); publish workflow
+  fixed to job-scoped `environment` for trusted publishing.
+- Docs: rule 13 reference, parse examples pinned by smoke tests,
+  `examples/parse_tour.py`. 66 tests, coverage ≥ 95%.
+
 ## 0.1.1 - 2026-11-08
 
 - CLI: `--json` flag for `dxa rank` and `dxa lint-model` (machine-readable
