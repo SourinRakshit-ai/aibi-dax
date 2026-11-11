@@ -55,6 +55,16 @@ def test_fully_qualified_column_reference() -> None:
     )
 
 
+def test_column_bracket_escape() -> None:
+    """A literal ] inside a column name is written ]] (DAX escaping)."""
+    assert parse("[Profit %]]]") == ColumnRef(name="Profit %]")
+    assert parse("SUM('S'[Profit %]]])") == Call(
+        name="SUM", args=(QualifiedColumn(table="'S'", name="Profit %]"),)
+    )
+    # a doubled escape is two literal brackets
+    assert parse("[A]]]]]") == ColumnRef(name="A]]")
+
+
 def test_nullary_call() -> None:
     assert parse("TODAY()") == Call(name="TODAY", args=())
 

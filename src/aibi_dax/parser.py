@@ -111,6 +111,11 @@ _LEVELS: tuple[tuple[str, ...], ...] = (
 )
 
 
+def _column_name(raw: str) -> str:
+    """Strip the outer brackets and unescape the `]]` -> `]` escapes."""
+    return raw[1:-1].strip().replace("]]", "]")
+
+
 class _Parser:
     def __init__(self, tokens: list[Token]) -> None:
         self._toks = tokens
@@ -162,12 +167,12 @@ class _Parser:
         if tok.kind == "string":
             return Literal(text=tok.value)
         if tok.kind == "column":
-            return ColumnRef(name=tok.value.strip("[] \t"))
+            return ColumnRef(name=_column_name(tok.value))
         if tok.kind == "table":
             nxt = self._peek()
             if nxt is not None and nxt.kind == "column":
                 self._next()
-                return QualifiedColumn(table=tok.value, name=nxt.value.strip("[] \t"))
+                return QualifiedColumn(table=tok.value, name=_column_name(nxt.value))
             return TableRef(name=tok.value)
         if tok.kind == "word":
             if tok.value == "VAR":

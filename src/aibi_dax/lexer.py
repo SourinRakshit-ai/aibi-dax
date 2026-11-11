@@ -9,7 +9,7 @@ _TOKEN_RE = re.compile(
     r'"[^"]*"'  # double-quoted string literal
     r"|'[^']*'"  # quoted table name
     r"|\b[A-Za-z_][A-Za-z0-9_.]*\b"  # word (identifier / function / keyword)
-    r"|\[\s*[^]]*?\s*\]"  # column reference [Column Name]
+    r"|\[[^\]]*(?:\]\][^\]]*)*\]"  # column ref; a literal ] inside is escaped ]]
     r"|\d+(?:\.\d+)?"  # numeric literal
     r"|\S",  # any single non-space symbol
     re.VERBOSE,
