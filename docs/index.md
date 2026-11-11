@@ -21,6 +21,7 @@ dxa --version
 | `dxa lint "EXPR"` | anti-pattern findings for one expression |
 | `dxa lint-model model.json` | findings across every measure, grouped |
 | `dxa parse "EXPR"` | the recursive-descent AST, human or `--json` |
+| `dxa parse "EXPR"` | the recursive-descent AST, human or `--json` |
 
 ## The weight
 

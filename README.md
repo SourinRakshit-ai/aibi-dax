@@ -22,9 +22,10 @@ dxa --version
 | -------------------------- | ---------------------------------------------- |
 | `dxa metrics "EXPR"`       | token/function/depth/iterator counts + weight  |
 | `dxa metrics "EXPR" --json`| the same as a JSON payload                     |
-| `dxa rank model.json`      | heaviest measures first (`--top N` to limit)   |
-| `dxa lint "EXPR"`          | anti-pattern findings for one expression       |
-| `dxa lint-model model.json`| findings across every measure in a model dump  |
+| `dxa rank model.json`      | heaviest measures first (`--top N`, `--table T`) |
+| `dxa lint "EXPR"`          | anti-pattern findings for one expression (`--json`) |
+| `dxa lint-model model.json`| findings across every measure (`--table T`, `--json`) |
+| `dxa parse "EXPR"`         | the recursive-descent AST, human or `--json`    |
 
 Model dumps use the same JSON shape TMDL export produces — the shared schema
 of aibi-toolkit — so one file feeds both tools.
