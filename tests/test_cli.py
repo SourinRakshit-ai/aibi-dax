@@ -67,6 +67,14 @@ def test_lint_clean_and_dirty(capsys):
     assert "CALCULATE" in capsys.readouterr().out
 
 
+def test_lint_json_dirty_and_clean(capsys):
+    assert main(["lint", "SUMX('Sales', CALCULATE([Amount]))", "--json"]) == 1
+    findings = json.loads(capsys.readouterr().out)
+    assert isinstance(findings, list) and any("CALCULATE" in m for m in findings)
+    assert main(["lint", "SUM('Sales'[Amount])", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out) == []
+
+
 def test_lint_model_exit_codes(model_path, capsys):
     assert main(["lint-model", model_path]) == 1
     assert "Sales.Bad:" in capsys.readouterr().out

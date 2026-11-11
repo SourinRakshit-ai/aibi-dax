@@ -33,6 +33,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     p_lint = sub.add_parser("lint", help="anti-pattern findings for one expression")
     p_lint.add_argument("expr", help="DAX expression, quoted")
+    p_lint.add_argument("--json", action="store_true", help="emit JSON")
 
     p_lint_model = sub.add_parser("lint-model", help="anti-pattern findings across a model dump")
     p_lint_model.add_argument("model", help="path to model JSON")
@@ -69,6 +70,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "lint":
         findings = lint_expression(args.expr)
+        if getattr(args, "json", False):
+            print(json.dumps(findings))
+            return 1 if findings else 0
         if findings:
             for msg in findings:
                 print(f"- {msg}")
