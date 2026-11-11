@@ -11,6 +11,7 @@ from aibi_dax.parser import (
     Ident,
     Literal,
     ParseError,
+    QualifiedColumn,
     TableRef,
     Unary,
     Var,
@@ -43,6 +44,15 @@ def test_iterator_over_table_measures_calc() -> None:
 
 def test_table_arg_alone_is_a_table_ref() -> None:
     assert parse("'Sales'") == TableRef(name="'Sales'")
+
+
+def test_fully_qualified_column_reference() -> None:
+    """'Table'[Column] reduces to one QualifiedColumn node."""
+    tree = parse("SUM('Sales'[Amount])")
+    assert tree == Call(name="SUM", args=(QualifiedColumn(table="'Sales'", name="Amount"),))
+    assert parse("'Sales'[Amount] * 2") == Binary(
+        op="*", left=QualifiedColumn(table="'Sales'", name="Amount"), right=Literal("2")
+    )
 
 
 def test_nullary_call() -> None:

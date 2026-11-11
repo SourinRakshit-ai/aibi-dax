@@ -37,6 +37,14 @@ class ColumnRef:
 
 
 @dataclass(frozen=True)
+class QualifiedColumn:
+    """A fully-qualified `'Table'[Column]` reference."""
+
+    table: str  # quote marks preserved
+    name: str   # brackets stripped
+
+
+@dataclass(frozen=True)
 class TableRef:
     """A quoted table argument, quote marks preserved (`'Sales'`)."""
 
@@ -90,7 +98,7 @@ class Var:
     body: Node
 
 
-Node = Literal | ColumnRef | TableRef | Ident | Call | Binary | Unary | Var
+Node = Literal | ColumnRef | QualifiedColumn | TableRef | Ident | Call | Binary | Unary | Var
 
 # Precedence ladder: index binds looser -> tighter.
 _LEVELS: tuple[tuple[str, ...], ...] = (
@@ -156,6 +164,10 @@ class _Parser:
         if tok.kind == "column":
             return ColumnRef(name=tok.value.strip("[] \t"))
         if tok.kind == "table":
+            nxt = self._peek()
+            if nxt is not None and nxt.kind == "column":
+                self._next()
+                return QualifiedColumn(table=tok.value, name=nxt.value.strip("[] \t"))
             return TableRef(name=tok.value)
         if tok.kind == "word":
             if tok.value == "VAR":
