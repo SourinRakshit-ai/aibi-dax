@@ -39,6 +39,13 @@ The optional final argument states the miss case explicitly, even if it is
 `0` or an error message. The rule counts arguments on the AST: an even
 number after the first means no default is present.
 
+### Single-column row iterator
+`SUMX('Sales', 'Sales'[Amount])` walks the table to read one column; the
+plain aggregate `SUM('Sales'[Amount])` is faster and identical. The rule
+matches the iterator's first argument against the column's table
+qualification on the AST, so mismatched tables stay flagged as real
+iteration.
+
 ## Data-shape rules
 
 ### Raw division

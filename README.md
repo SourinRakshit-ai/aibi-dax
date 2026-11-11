@@ -45,6 +45,7 @@ of aibi-toolkit — so one file feeds both tools.
 11. Lowercase function calls (→ UPPERCASE form)
 12. Nested row iterators (→ `VAR` capture of the outer step)
 13. `SWITCH` without a default (→ explicit else argument)
+14. Single-column row iterator (→ plain `SUM`/`AVERAGE`/`COUNT`/`MIN`/`MAX`)
 
 ## What the weight measures
 
