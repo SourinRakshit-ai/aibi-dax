@@ -9,6 +9,7 @@ from dataclasses import asdict, fields, is_dataclass
 from typing import TypeGuard
 
 from . import __version__
+from .antipattern import ALL_RULES
 from .complexity import rank_measures, report, weight
 from .lint import lint_expression, lint_model
 from .model_io import load_model
@@ -85,6 +86,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_lint_model.add_argument("model", help="path to model JSON")
     p_lint_model.add_argument("--json", action="store_true", help="emit JSON")
     p_lint_model.add_argument("--table", help="restrict findings to one table")
+    p_lint_model.add_argument("--rule", help="run only this rule (function name)")
 
     p_parse = sub.add_parser("parse", help="AST for one expression")
     p_parse.add_argument("expr", help="DAX expression, quoted")
@@ -133,7 +135,15 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "lint-model":
-        found = lint_model(load_model(args.model))
+        rules = None
+        rule_name = getattr(args, "rule", None)
+        if rule_name is not None:
+            rules = [r for r in ALL_RULES if r.__name__ == rule_name]
+            if not rules:
+                names = ", ".join(r.__name__ for r in ALL_RULES)
+                print(f"dxa: unknown rule {rule_name} — one of: {names}", file=sys.stderr)
+                return 2
+        found = lint_model(load_model(args.model), rules)
         only = getattr(args, "table", None)
         if only is not None:
             found = {k: v for k, v in found.items() if k.split(".", 1)[0] == only}

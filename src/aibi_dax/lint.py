@@ -11,14 +11,14 @@ def lint_expression(expr: str, rules: list[Rule] | None = None) -> list[str]:
     return [msg for rule in (rules or ALL_RULES) for msg in [rule(expr)] if msg]
 
 
-def lint_model(model: Model) -> dict[str, list[str]]:
+def lint_model(model: Model, rules: list[Rule] | None = None) -> dict[str, list[str]]:
     """Map measure keys ("table.name") to their findings; empty when clean."""
     out: dict[str, list[str]] = {}
     for table in model.get("tables", []):
         table_name = str(table.get("name", "?"))
         for measure in table.get("measures", []):
             key = f"{table_name}.{measure.get('name', '?')}"
-            findings = lint_expression(str(measure.get("expression", "")))
+            findings = lint_expression(str(measure.get("expression", "")), rules)
             if findings:
                 out[key] = findings
     return out

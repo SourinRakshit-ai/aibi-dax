@@ -96,6 +96,21 @@ def test_lint_model_table_filter(model_path, tmp_path, capsys):
     assert "model is clean" in capsys.readouterr().out
 
 
+def test_lint_model_rule_filter(model_path, capsys):
+    assert main(["lint-model", model_path, "--rule", "calculate_inside_iterator"]) == 1
+    out = capsys.readouterr().out
+    assert "Sales.Bad:" in out and "CALCULATE inside" in out
+
+    assert main(["lint-model", model_path, "--rule", "raw_division"]) == 0
+    assert "model is clean" in capsys.readouterr().out
+
+    assert main(["lint-model", model_path, "--rule", "single_column_iterator"]) == 0
+    assert "model is clean" in capsys.readouterr().out
+
+    assert main(["lint-model", model_path, "--rule", "no_such_rule"]) == 2
+    assert "unknown rule" in capsys.readouterr().err
+
+
 def test_lint_clean_and_dirty(capsys):
     assert main(["lint", "SUM('Sales'[Amount])"]) == 0
     assert "no findings" in capsys.readouterr().out
