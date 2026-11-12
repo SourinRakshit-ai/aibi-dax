@@ -166,6 +166,17 @@ def test_lint_without_expression_errors():
     assert main(["lint"]) == 2
 
 
+def test_explain_prints_full_docstring(capsys):
+    assert main(["explain", "single_column_iterator"]) == 0
+    out = capsys.readouterr().out
+    assert out.startswith("single_column_iterator\n----------------------\n")
+    assert "plain aggregate in disguise" in out
+
+    assert main(["explain", "nope"]) == 2
+    err = capsys.readouterr().err
+    assert "unknown rule nope" in err and "abs_negative_comparison" in err
+
+
 def test_lint_model_exit_codes(model_path, capsys):
     assert main(["lint-model", model_path]) == 1
     assert "Sales.Bad:" in capsys.readouterr().out

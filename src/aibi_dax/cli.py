@@ -9,7 +9,7 @@ from dataclasses import asdict, fields, is_dataclass
 from typing import TypeGuard
 
 from . import __version__
-from .antipattern import ALL_RULES
+from .antipattern import ALL_RULES, Rule
 from .complexity import rank_measures, report, weight
 from .lint import lint_expression, lint_model
 from .model_io import load_model
@@ -78,6 +78,9 @@ def _build_parser() -> argparse.ArgumentParser:
     p_rank.add_argument("--table", help="restrict ranking to one table")
     p_rank.add_argument("--json", action="store_true", help="emit JSON")
 
+    p_explain = sub.add_parser("explain", help="full documentation for one rule")
+    p_explain.add_argument("rule", help="rule name as shown by dxa lint --list-rules")
+
     p_lint = sub.add_parser("lint", help="anti-pattern findings for one expression")
     p_lint.add_argument("expr", nargs="?", help="DAX expression, quoted")
     p_lint.add_argument("--json", action="store_true", help="emit JSON")
@@ -97,9 +100,26 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _rule_summary(rule: Rule) -> str:
+    """First sentence of a rule's docstring, for --list-rules lines."""
+    text = " ".join((rule.__doc__ or "").strip().splitlines())
+    return text.partition(". ")[0]
+
+
 def main(argv: list[str] | None = None) -> int:
     """Entry point; returns a conventional exit code."""
     args = _build_parser().parse_args(argv)
+
+    if args.command == "explain":
+        match = [r for r in ALL_RULES if r.__name__ == args.rule]
+        if not match:
+            names = "\n".join(f"  {r.__name__}" for r in ALL_RULES)
+            print(f"dxa: unknown rule {args.rule} — one of:\n{names}", file=sys.stderr)
+            return 2
+        rule = match[0]
+        doc = (rule.__doc__ or "").strip()
+        print(f"{rule.__name__}\n{'-' * len(rule.__name__)}\n{doc}")
+        return 0
 
     if args.command == "metrics":
         m = report(args.expr)
@@ -127,9 +147,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "lint":
         if getattr(args, "list_rules", False):
             for rule in ALL_RULES:
-                text = " ".join((rule.__doc__ or "").strip().splitlines())
-                sentence = text.partition(". ")[0]
-                summary = sentence[:97] + "…" if len(sentence) > 98 else sentence
+                summary = _rule_summary(rule)
                 print(f"{rule.__name__:26}{summary}")
             return 0
         if args.expr is None:
