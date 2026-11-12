@@ -139,6 +139,30 @@ def test_single_column_iterator_collapses_to_plain_aggregate():
     assert antipattern.single_column_iterator("SUMX(") is None
 
 
+def test_abs_negative_comparison_flags_impossible_bounds():
+    flag = antipattern.abs_negative_comparison
+    # always-false shapes
+    assert flag("ABS([x]) < 0") is not None
+    assert flag("ABS([x]) < -1") is not None
+    assert flag("ABS([x]) <= -1") is not None
+    assert flag("0 > ABS([x])") is not None
+    assert flag("-1 > ABS([x])") is not None
+    assert flag("-1 >= ABS([x])") is not None
+    # legitimate comparisons stay silent
+    assert flag("ABS([x]) >= 0") is None
+    assert flag("ABS([x]) < 5") is None
+    assert flag("ABS([x]) <= 0") is None  # only-possible-at-zero: not flagged
+    assert flag("0 <= ABS([x])") is None
+    # ABS wrapping a call is a real expression, still comparable
+    assert flag("ABS(SUM([x])) < 0") is not None
+    assert flag("ABS(SUM([x]) + [y]) < -2") is not None
+    # non-numeric / non-comparison shapes stay silent
+    assert flag("ABS([x])") is None
+    assert flag("[x] < 0") is None
+    assert flag("ABS(") is None
+    assert flag("IF(ABS([x]) < 0, 1, 2)") is not None  # found anywhere in tree
+
+
 def test_walker_breadth_call_unary_var():
     """Every tree walker descends Call args, Unary operands and Var blocks."""
     # _raw_div_hit: Call arg, Unary operand, Var body

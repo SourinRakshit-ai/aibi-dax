@@ -244,6 +244,102 @@ def _walk_calls(node: Node) -> Iterator[Call]:
             return
 
 
+def _walk_binaries(node: Node) -> Iterator[Binary]:
+    """Yield every Binary node in the tree."""
+    match node:
+        case Call(_, args):
+            for a in args:
+                yield from _walk_binaries(a)
+        case Binary():
+            yield node
+            yield from _walk_binaries(node.left)
+            yield from _walk_binaries(node.right)
+        case Unary(operand=operand):
+            yield from _walk_binaries(operand)
+        case Var(value=value, body=body):
+            yield from _walk_binaries(value)
+            yield from _walk_binaries(body)
+        case _:
+            return
+
+
+_ABS_MSG = (
+    "ABS(...) is never negative — this comparison can never hold. "
+    "Check the sign or drop the condition."
+)
+
+
+def abs_negative_comparison(expr: str) -> str | None:
+    """`ABS(x) < 0` and friends can never hold: ABS returns a non-negative.
+
+    Flagged always-false shapes — ABS on one side, a numeric literal on
+    the other:
+
+    - `ABS(x) < n` with n <= 0
+    - `ABS(x) <= n` with n < 0
+    - `n > ABS(x)`  with n <= 0
+    - `n >= ABS(x)` with n < 0
+
+    The always-true mirrors (`ABS(x) >= 0`) are legitimate defensive
+    style and stay unflagged. Unparseable text stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for node in _walk_binaries(tree):
+        if node.op not in ("<", "<=", ">", ">="):
+            continue
+        left_value = _numeric_literal(node.left)
+        right_value = _numeric_literal(node.right)
+        if (
+            right_value is not None
+            and _is_abs(node.left)
+            and _impossible(node.op, right_value, abs_on_left=True)
+        ):
+            return _ABS_MSG
+        if (
+            left_value is not None
+            and _is_abs(node.right)
+            and _impossible(node.op, left_value, abs_on_left=False)
+        ):
+            return _ABS_MSG
+    return None
+
+
+def _is_abs(node: Node) -> bool:
+    """True for a one-argument ABS call — ABS(x) is non-negative for any x."""
+    match node:
+        case Call(name=name, args=(_arg,)):
+            return name.upper() == "ABS"
+    return False
+
+
+def _numeric_literal(node: Node) -> float | None:
+    """Value of a (possibly negated) numeric literal; None otherwise."""
+    match node:
+        case Literal(text=text):
+            return _number(text)
+        case Unary(op="-" | "−" as sign, operand=Literal(text=text)):
+            value = _number(text)
+            return -value if value is not None and sign == "-" else None
+    return None
+
+
+def _number(text: str) -> float | None:
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
+def _impossible(op: str, bound: float, abs_on_left: bool) -> bool:
+    """True when ABS(x) <op> bound is vacuously false for ABS on the side."""
+    if abs_on_left:
+        return (op == "<" and bound <= 0) or (op == "<=" and bound < 0)
+    return (op == ">" and bound <= 0) or (op == ">=" and bound < 0)
+
+
 def concat_ampersand(expr: str) -> str | None:
     """String concatenation '&' inside CONCATENATEX is redundant.
 
@@ -475,4 +571,5 @@ ALL_RULES: list[Rule] = [
     nested_iterators,
     switch_missing_default,
     single_column_iterator,
+    abs_negative_comparison,
 ]
