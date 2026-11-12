@@ -150,6 +150,21 @@ def test_lint_rule_filter(capsys):
     assert "unknown rule" in capsys.readouterr().err
 
 
+def test_lint_list_rules(capsys):
+    assert main(["lint", "--list-rules"]) == 0
+    out = capsys.readouterr().out
+    lines = out.strip().splitlines()
+    assert len(lines) == 14
+    assert lines[0].startswith("calculate_inside_iterator")
+    assert any("single_column_iterator" in l for l in lines)
+    # every documented rule keeps its name column aligned
+    assert all(len(l.split(maxsplit=1)[0]) <= 26 for l in lines)
+
+
+def test_lint_without_expression_errors():
+    assert main(["lint"]) == 2
+
+
 def test_lint_model_exit_codes(model_path, capsys):
     assert main(["lint-model", model_path]) == 1
     assert "Sales.Bad:" in capsys.readouterr().out
