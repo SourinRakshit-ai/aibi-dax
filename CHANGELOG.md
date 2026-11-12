@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.1 - 2026-11-12
+
+- Rules 1 and 14: `calculate_inside_iterator` rewritten over the AST
+  (string-literal mentions no longer fire), and new rule 14 — a
+  single-column row iterator (`SUMX('S', 'S'[Amount])`) collapses to a
+  plain aggregate.
+- CLI: `dxa parse --tree` (indented AST), `dxa lint --rule` and
+  `dxa lint-model --rule` to run one rule (exit 2 + rule list on stderr
+  when unknown).
+- Lexer/parser: `]]` bracket escapes inside column names; parse errors
+  carry the source character offset.
+- Perf: `parse` memoized — `lint_expression` 202 → 25 µs,
+  `lint_model` 17.8 → 2.2 ms on the benchmark corpus.
+- Chore: Dependabot for pip + GitHub Actions. 80 tests, coverage ≥ 95%.
+
 ## 0.2.0 - 2026-11-11
 
 - Parser: `VAR … RETURN` assignment blocks, chained `VAR`s, and
