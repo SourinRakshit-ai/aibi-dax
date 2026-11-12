@@ -50,6 +50,18 @@ $ dxa lint "IF(a, 1, IF(b, 2, IF(c, 3, [D]/[E])))"
 (exit 1)
 ```
 
+## `dxa explain RULE`
+
+Full documentation for one rule — its docstring, underlined. Exit 2 with
+the complete rule list on stderr if the name is unknown:
+
+```
+$ dxa explain earlier_var
+earlier_var
+-----------
+EARLIER is superseded by VAR capture — flat and type-checkable.
+```
+
 ## `dxa lint-model model.json`
 
 Groups findings by `table.measure`; `--table T` restricts to one table.

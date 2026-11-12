@@ -24,6 +24,7 @@ dxa --version
 | `dxa metrics "EXPR" --json`| the same as a JSON payload                     |
 | `dxa rank model.json`      | heaviest measures first (`--top N`, `--table T`) |
 | `dxa lint "EXPR"`          | anti-pattern findings for one expression (`--rule R`, `--list-rules`) |
+| `dxa explain RULE`         | full documentation for one anti-pattern rule |
 | `dxa lint-model model.json`| findings across every measure (`--table T`, `--rule R`) |
 | `dxa parse "EXPR"`         | the recursive-descent AST, human or `--json`    |
 
