@@ -22,6 +22,7 @@ class Token:
 
     kind: str  # "string" | "table" | "column" | "word" | "symbol"
     value: str
+    pos: int  # character offset in the source expression
 
 
 def tokenize(expr: str) -> list[Token]:
@@ -43,5 +44,5 @@ def tokenize(expr: str) -> list[Token]:
             kind = "number"
         else:
             kind = "symbol"
-        toks.append(Token(kind=kind, value=text))
+        toks.append(Token(kind=kind, value=text, pos=match.start()))
     return toks

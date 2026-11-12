@@ -131,6 +131,16 @@ def test_var_without_return_is_an_error() -> None:
         parse("VAR k [x]")
 
 
+def test_parse_error_carries_source_offset() -> None:
+    """The error points at the character offset, not just a token index."""
+    with pytest.raises(ParseError) as exc:
+        parse("[a] [b]")
+    assert "near '[b]' at char 4" in str(exc.value)
+    with pytest.raises(ParseError) as exc2:
+        parse("SUM('S' [x]")
+    assert "end of expression, token 4" in str(exc2.value)
+
+
 def test_iterator_inside_var_is_seen_by_rules() -> None:
     """The lint walkers must descend Var blocks (regression for rule 12)."""
     from aibi_dax.antipattern import nested_iterators

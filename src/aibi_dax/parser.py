@@ -130,13 +130,16 @@ class _Parser:
     def _next(self) -> Token:
         tok = self._peek()
         if tok is None:
-            raise ParseError("unexpected end of expression")
+            raise ParseError("unexpected end of expression (at end of input)")
         self._i += 1
         return tok
 
     def _error(self, why: str) -> ParseError:
         tok = self._peek()
-        where = "end of expression" if tok is None else f"near {tok.value!r}"
+        if tok is None:
+            where = "end of expression"
+        else:
+            where = f"near {tok.value!r} at char {tok.pos}"
         return ParseError(f"{why} ({where}, token {self._i})")
 
     def parse(self) -> Node:
