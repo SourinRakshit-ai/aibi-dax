@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 
-from .lexer import tokenize
+from .lexer import strip_comments, tokenize
 from .model_io import Measure, Model
 
 ITERATORS = (
@@ -43,15 +43,21 @@ def paren_depth(expr: str) -> int:
 
 
 def report(expr: str) -> dict[str, int]:
-    """All elementary metrics for one expression."""
+    """All elementary metrics for one expression.
+
+    Comment text does not count toward tokens, depth, or iterators —
+    the code inside a comment is not code. `chars`/`lines` measure the
+    text as written, comments included.
+    """
+    code = strip_comments(expr)
     return {
         "tokens": len(tokenize(expr)),
         "lines": 1 + expr.count("\n"),
         "chars": len(expr),
         "functions": count_functions(expr),
-        "depth": paren_depth(expr),
+        "depth": paren_depth(code),
         "iterators": sum(
-            1 for m in re.finditer(r"\b[A-Z]+X\s*\(", expr)
+            1 for m in re.finditer(r"\b[A-Z]+X\s*\(", code)
             if m.group(0).split()[0].rstrip("(").strip() in ITERATORS
         ),
     }

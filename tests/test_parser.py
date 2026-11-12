@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from aibi_dax.complexity import weight
 from aibi_dax.parser import (
     Binary,
     Call,
@@ -63,6 +64,39 @@ def test_column_bracket_escape() -> None:
     )
     # a doubled escape is two literal brackets
     assert parse("[A]]]]]") == ColumnRef(name="A]]")
+
+
+def test_line_comments_are_stripped() -> None:
+    """// and -- comments never reach the token stream."""
+    assert parse("[a] + [b] -- trailing note") == parse("[a] + [b]")
+    assert parse("SUM(1) // total") == parse("SUM(1)")
+    with pytest.raises(ParseError):
+        parse("// only a comment")
+    with pytest.raises(ParseError):
+        parse("")
+
+
+def test_block_comments_are_stripped() -> None:
+    assert parse("/* header */ [a]") == ColumnRef(name="a")
+    assert parse("/* multi\nline\n*/ [a] + 1") == parse("[a] + 1")
+    assert parse("[a] /* mid */ + /* mid */ 1") == parse("[a] + 1")
+
+
+def test_comment_lookalikes_inside_strings_survive() -> None:
+    """//, -- and /* inside string literals and column names are text."""
+    assert parse('"// not a comment"') == Literal('"// not a comment"')
+    assert parse("'T // x'[c -- d]") == QualifiedColumn(table="'T // x'", name="c -- d")
+    assert weight('"a // b"') > 0
+
+
+def test_commented_measure_lints_like_uncommented() -> None:
+    """A comment mentioning CALCULATE must not trip the AST fallback."""
+    from aibi_dax.lint import lint_expression
+
+    assert lint_expression("[a] + 1 -- consider CALCULATE(x)") == []
+    assert lint_expression("SUM(1) /* /5 */") == []
+    # the commented form of a dirty expression still trips the rule
+    assert lint_expression("SUMX('S', CALCULATE([x])) // row context") != []
 
 
 def test_nullary_call() -> None:

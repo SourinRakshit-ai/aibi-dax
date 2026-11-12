@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 from .antipattern import ALL_RULES, Rule
+from .lexer import strip_comments
 from .model_io import Model
 
 
 def lint_expression(expr: str, rules: list[Rule] | None = None) -> list[str]:
-    """All findings a single expression trips, human-readable."""
-    return [msg for rule in (rules or ALL_RULES) for msg in [rule(expr)] if msg]
+    """All findings a single expression trips, human-readable.
+
+    Comments are blanked before the rules see the text — `-- note about
+    CALCULATE` must not trip the calculate_inside_iterator fallback.
+    """
+    return [msg for rule in (rules or ALL_RULES) for msg in [rule(strip_comments(expr))] if msg]
 
 
 def lint_model(model: Model, rules: list[Rule] | None = None) -> dict[str, list[str]]:

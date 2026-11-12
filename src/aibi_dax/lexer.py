@@ -26,10 +26,38 @@ class Token:
     pos: int  # character offset in the source expression
 
 
+_COMMENT_RE = re.compile(
+    r'"[^"]*"'  # keep string literals intact — "//" inside them is text
+    r"|'[^']*'"  # keep quoted table names intact
+    r"|\[[^\]]*(?:\]\][^\]]*)*\]"  # keep bracketed columns (may contain //, --)
+    r"|//[^\n]*"  # DAX line comment
+    r"|--[^\n]*"  # DAX line comment (double-dash; single - is subtraction)
+    r"|/\*.*?\*/",  # DAX block comment
+    re.DOTALL,
+)
+
+
+def strip_comments(expr: str) -> str:
+    """Blank out DAX comments, preserving length and newlines.
+
+    Line (`//`, `--`) and block (`/* … */`) comments are replaced by
+    spaces of exactly their length, so character offsets stay valid for
+    the parser's `at char N` messages and quoted strings, table names,
+    and bracketed columns that merely look like comments are untouched.
+    """
+    def _keep_or_blank(match: re.Match[str]) -> str:
+        head = match.group(0)[:1]
+        if head in ('"', "'", "["):
+            return match.group(0)
+        return " " * len(match.group(0))
+
+    return _COMMENT_RE.sub(_keep_or_blank, expr)
+
+
 def tokenize(expr: str) -> list[Token]:
-    """Split a DAX expression into tokens, dropping whitespace."""
+    """Split a DAX expression into tokens, dropping whitespace and comments."""
     toks: list[Token] = []
-    for match in _TOKEN_RE.finditer(expr):
+    for match in _TOKEN_RE.finditer(strip_comments(expr)):
         text = match.group(0)
         if text.isspace() or (len(text) == 1 and not text.isprintable()):
             continue
