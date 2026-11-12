@@ -12,5 +12,6 @@ nav:
   - Home: index.md
   - CLI reference: CLI.md
   - Anti-pattern rules: rules.md
+  - Performance: performance.md
 
 strict: true
