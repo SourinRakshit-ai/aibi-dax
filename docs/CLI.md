@@ -37,8 +37,11 @@ $ dxa rank model.json --top 3
 
 ## `dxa lint "EXPR"`
 
-Exit code 0 when clean, 1 with `-` lines per finding. `--json` prints the
-findings as a JSON list (`[]` when clean):
+Anti-pattern findings for one expression. Exit code 0 when clean, 1 with
+`-` lines per finding. `--json` prints the findings as a JSON list (`[]`
+when clean). `--rule NAME` runs a single rule (function name, exit 2 with
+the rule list on stderr if unknown). `--list-rules` prints the rule
+inventory with each rule's summary and exits 0:
 
 ```
 $ dxa lint "IF(a, 1, IF(b, 2, IF(c, 3, [D]/[E])))"

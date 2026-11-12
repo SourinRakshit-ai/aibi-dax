@@ -79,9 +79,10 @@ def _build_parser() -> argparse.ArgumentParser:
     p_rank.add_argument("--json", action="store_true", help="emit JSON")
 
     p_lint = sub.add_parser("lint", help="anti-pattern findings for one expression")
-    p_lint.add_argument("expr", help="DAX expression, quoted")
+    p_lint.add_argument("expr", nargs="?", help="DAX expression, quoted")
     p_lint.add_argument("--json", action="store_true", help="emit JSON")
     p_lint.add_argument("--rule", help="run only this rule (function name)")
+    p_lint.add_argument("--list-rules", action="store_true", help="print the rule inventory and exit")
 
     p_lint_model = sub.add_parser("lint-model", help="anti-pattern findings across a model dump")
     p_lint_model.add_argument("model", help="path to model JSON")
@@ -124,6 +125,16 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "lint":
+        if getattr(args, "list_rules", False):
+            for rule in ALL_RULES:
+                text = " ".join((rule.__doc__ or "").strip().splitlines())
+                sentence = text.partition(". ")[0]
+                summary = sentence[:97] + "…" if len(sentence) > 98 else sentence
+                print(f"{rule.__name__:26}{summary}")
+            return 0
+        if args.expr is None:
+            print("dxa: lint needs an expression (or --list-rules)", file=sys.stderr)
+            return 2
         rules = None
         rule_name = getattr(args, "rule", None)
         if rule_name is not None:
