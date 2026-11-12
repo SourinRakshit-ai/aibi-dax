@@ -141,6 +141,18 @@ def test_parse_error_carries_source_offset() -> None:
     assert "end of expression, token 4" in str(exc2.value)
 
 
+def test_two_char_operators_lex_as_single_symbols() -> None:
+    """>= <= <> && || were previously split into single-char tokens, so the
+    precedence ladder could never match them (`1 >= -1` failed to parse)."""
+    assert parse("1 >= -1") == Binary(
+        op=">=", left=Literal("1"), right=Unary(op="-", operand=Literal("1"))
+    )
+    assert parse("[a] <= [b]").op == "<="  # type: ignore[union-attr]
+    assert parse("[a] <> [b]").op == "<>"  # type: ignore[union-attr]
+    assert parse("[a] && [b]").op == "&&"  # type: ignore[union-attr]
+    assert parse("TRUE() || FALSE()").op == "||"  # type: ignore[union-attr]
+
+
 def test_iterator_inside_var_is_seen_by_rules() -> None:
     """The lint walkers must descend Var blocks (regression for rule 12)."""
     from aibi_dax.antipattern import nested_iterators

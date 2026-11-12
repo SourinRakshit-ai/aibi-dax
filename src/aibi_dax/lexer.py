@@ -11,6 +11,7 @@ _TOKEN_RE = re.compile(
     r"|\b[A-Za-z_][A-Za-z0-9_.]*\b"  # word (identifier / function / keyword)
     r"|\[[^\]]*(?:\]\][^\]]*)*\]"  # column ref; a literal ] inside is escaped ]]
     r"|\d+(?:\.\d+)?"  # numeric literal
+    r"|>=|<=|<>|&&|\|\|"  # two-char operators (matched before single symbols)
     r"|\S",  # any single non-space symbol
     re.VERBOSE,
 )
