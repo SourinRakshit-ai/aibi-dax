@@ -15,6 +15,8 @@ SAMPLES = [
     'SWITCH(TRUE(), [k]="a", 1, [k]="b", 2, 0)',
     "SUMX('Sales', 'Sales'[Amount])",
     "SUMX('Sales', 'Sales'[Amount] * [Qty])",
+    "ABS([x]) < 0",
+    "ABS([x]) >= 0",
     'CONCATENATEX(Sales, "a&b", [x])',
 ]
 

@@ -46,6 +46,13 @@ matches the iterator's first argument against the column's table
 qualification on the AST, so mismatched tables stay flagged as real
 iteration.
 
+### ABS against an impossible bound
+`ABS(x)` is never negative, so `ABS(x) < 0` (and `<= n` for negative n,
+mirrored as `0 > ABS(x)` / `-1 >= ABS(x)`) can never hold — almost always
+a sign slip. AST-driven: one side is a one-argument ABS call, the other a
+numeric literal; the always-true mirrors (`ABS(x) >= 0`) are legitimate
+defensive style and stay silent.
+
 ## Data-shape rules
 
 ### Raw division

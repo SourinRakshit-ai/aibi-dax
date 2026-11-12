@@ -46,6 +46,7 @@ of aibi-toolkit — so one file feeds both tools.
 12. Nested row iterators (→ `VAR` capture of the outer step)
 13. `SWITCH` without a default (→ explicit else argument)
 14. Single-column row iterator (→ plain `SUM`/`AVERAGE`/`COUNT`/`MIN`/`MAX`)
+15. `ABS(...)` against an impossible bound (→ sign check / drop the condition)
 
 ## What the weight measures
 
