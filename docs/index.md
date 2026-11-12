@@ -18,7 +18,7 @@ dxa --version
 |---|---|
 | `dxa metrics "EXPR"` | six complexity metrics plus a single weighted score |
 | `dxa rank model.json --top N` | the most complex measures of a model dump |
-| `dxa lint "EXPR"` | anti-pattern findings for one expression |
+| `dxa lint "EXPR"` | anti-pattern findings for one expression (`--rule`, `--list-rules`) |
 | `dxa lint-model model.json` | findings across every measure, grouped (`--table`, `--rule`) |
 | `dxa parse "EXPR"` | the recursive-descent AST, human or `--json` |
 | `dxa parse "EXPR"` | the recursive-descent AST, human or `--json` |

@@ -23,7 +23,7 @@ dxa --version
 | `dxa metrics "EXPR"`       | token/function/depth/iterator counts + weight  |
 | `dxa metrics "EXPR" --json`| the same as a JSON payload                     |
 | `dxa rank model.json`      | heaviest measures first (`--top N`, `--table T`) |
-| `dxa lint "EXPR"`          | anti-pattern findings for one expression (`--json`) |
+| `dxa lint "EXPR"`          | anti-pattern findings for one expression (`--rule R`, `--list-rules`) |
 | `dxa lint-model model.json`| findings across every measure (`--table T`, `--rule R`) |
 | `dxa parse "EXPR"`         | the recursive-descent AST, human or `--json`    |
 
