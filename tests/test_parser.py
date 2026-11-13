@@ -10,6 +10,7 @@ from aibi_dax.parser import (
     Call,
     ColumnRef,
     Ident,
+    List,
     Literal,
     ParseError,
     QualifiedColumn,
@@ -193,3 +194,49 @@ def test_iterator_inside_var_is_seen_by_rules() -> None:
 
     assert nested_iterators("VAR s = SUMX('S', AVERAGEX('S', [x])) RETURN s") is not None
     assert nested_iterators("VAR s = SUMX('S', [x]) RETURN s") is None
+
+
+def test_in_list_literal_parses() -> None:
+    """[k] IN {…} is a comparison-level binary with a List right side."""
+    assert parse("[k] IN {1, 2}") == Binary(
+        op="IN",
+        left=ColumnRef(name="k"),
+        right=List(items=(Literal("1"), Literal("2"))),
+    )
+    assert parse("'STATUS'[Name] IN {\"Won\", \"Lost\"}") == Binary(
+        op="IN",
+        left=QualifiedColumn(table="'STATUS'", name="Name"),
+        right=List(items=(Literal('"Won"'), Literal('"Lost"'))),
+    )
+    # keyword case does not matter, the node normalizes to upper-case IN
+    assert parse("[k] in {1}") == parse("[k] IN {1}")
+
+
+def test_list_items_hold_full_expressions() -> None:
+    tree = parse("[a] IN {[b] + 1, SUM({1, 2})}")
+    assert isinstance(tree, Binary) and isinstance(tree.right, List)
+    inner, nested = tree.right.items
+    assert inner == Binary(op="+", left=ColumnRef(name="b"), right=Literal("1"))
+    assert nested == Call(name="SUM", args=(List(items=(Literal("1"), Literal("2"))),))
+    assert parse("FILTER(T, [k] IN {1,2})") == Call(
+        name="FILTER",
+        args=(Ident(name="T"), Binary(
+            op="IN", left=ColumnRef(name="k"),
+            right=List(items=(Literal("1"), Literal("2"))),
+        )),
+    )
+
+
+def test_empty_list_is_allowed_but_empty_items_are_not() -> None:
+    assert parse("{}") == List(items=())
+    for bad in ("[a] IN {1,}", "[a] IN {,}", "[a] IN {1, ,2}", "[a] IN {1"):
+        with pytest.raises(ParseError):
+            parse(bad)
+
+
+def test_rules_see_calls_inside_lists() -> None:
+    """AST walkers descend List items (rule 12 nested_iterators regression)."""
+    from aibi_dax.lint import lint_expression
+
+    assert lint_expression("[x] IN {SUMX('S', AVERAGEX('S', [y]))}") != []
+    assert lint_expression("[x] IN {1, 2}") == []

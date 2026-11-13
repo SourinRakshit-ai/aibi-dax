@@ -15,6 +15,7 @@ from .parser import (
     Call,
     ColumnRef,
     Ident,
+    List,
     Literal,
     Node,
     ParseError,
@@ -235,6 +236,9 @@ def _walk_calls(node: Node) -> Iterator[Call]:
         case Binary(left=left, right=right):
             yield from _walk_calls(left)
             yield from _walk_calls(right)
+        case List(items=items):
+            for item in items:
+                yield from _walk_calls(item)
         case Unary(operand=operand):
             yield from _walk_calls(operand)
         case Var(value=value, body=body):
@@ -254,6 +258,9 @@ def _walk_binaries(node: Node) -> Iterator[Binary]:
             yield node
             yield from _walk_binaries(node.left)
             yield from _walk_binaries(node.right)
+        case List(items=items):
+            for item in items:
+                yield from _walk_binaries(item)
         case Unary(operand=operand):
             yield from _walk_binaries(operand)
         case Var(value=value, body=body):
@@ -371,6 +378,8 @@ def _has_binary(node: Node, op: str) -> bool:
             return any(_has_binary(a, op) for a in args)
         case Unary(operand=operand):
             return _has_binary(operand, op)
+        case List(items=items):
+            return any(_has_binary(item, op) for item in items)
         case Var(value=value, body=body):
             return _has_binary(value, op) or _has_binary(body, op)
         case _:
@@ -500,6 +509,8 @@ def _iterator_depth(node: Node) -> int:
             return child + 1 if name.upper() in ITERATORS else child
         case Binary(left=left, right=right):
             return max(_iterator_depth(left), _iterator_depth(right))
+        case List(items=items):
+            return max((_iterator_depth(item) for item in items), default=0)
         case Unary(operand=operand):
             return _iterator_depth(operand)
         case Var(value=value, body=body):

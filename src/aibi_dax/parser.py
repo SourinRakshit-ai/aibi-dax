@@ -4,8 +4,9 @@ Issue #1 groundwork — the tokenizer sees calls as flat token streams; this
 module reduces the same tokens to a tree so rules and tools can reason about
 argument positions and nesting instead of regex fragments.
 
-Precedence, loosest binding first: `||`, `&&`, comparison (left-assoc), `+ -`,
-`&`, `* /`, unary `- +`, primary (calls, refs, parenthesization). The parser is
+Precedence, loosest binding first: `||`, `&&`, comparison and `IN` (left-assoc),
+`+ -`, `&`, `* /`, unary `- +`, primary (calls, refs, list literals,
+parenthesization). The parser is
 permissive: it accepts a syntactic superset of real DAX (e.g. `%` symbols) so
 lint never crashes on odd-but-parseable text; genuinely unreducible sequences
 raise ParseError.
@@ -77,6 +78,13 @@ class Binary:
 
 
 @dataclass(frozen=True)
+class List:
+    """`{ item1, item2, ... }` — a DAX list literal, items are expressions."""
+
+    items: tuple[Node, ...]
+
+
+@dataclass(frozen=True)
 class Unary:
     """A prefix operator application (`-x`, `+x`, `!`)."""
 
@@ -99,13 +107,16 @@ class Var:
     body: Node
 
 
-Node = Literal | ColumnRef | QualifiedColumn | TableRef | Ident | Call | Binary | Unary | Var
+Node = (
+    Literal | ColumnRef | QualifiedColumn | TableRef | Ident | Call | Binary | List | Unary | Var
+)
 
-# Precedence ladder: index binds looser -> tighter.
+# Precedence ladder: index binds looser -> tighter. IN is a word token, but
+# DAX places it with the comparison operators, so it shares their level.
 _LEVELS: tuple[tuple[str, ...], ...] = (
     ("||",),
     ("&&",),
-    ("=", "<>", "<", ">", "<=", ">="),
+    ("=", "<>", "<", ">", "<=", ">=", "IN"),
     ("+", "-"),
     ("&",),
     ("*", "/", "%"),
@@ -152,8 +163,11 @@ class _Parser:
         if level == len(_LEVELS):
             return self._unary()
         left = self._expr(level + 1)
-        while (tok := self._peek()) is not None and tok.value in _LEVELS[level]:
-            op = self._next().value
+        while (tok := self._peek()) is not None and (
+            tok.value in _LEVELS[level]
+            or (tok.kind == "word" and tok.value.upper() in _LEVELS[level])
+        ):
+            op = self._next().value.upper()
             right = self._expr(level + 1)
             left = Binary(op=op, left=left, right=right)
         return left
@@ -192,9 +206,31 @@ class _Parser:
                 self._next()
                 return inner
             raise self._error("expected ')'")
+        if tok.kind == "symbol" and tok.value == "{":
+            return self._list()
         # Number, string, column, table, word or paren-expr all reduce above;
         # anything else cannot start an expression.
         raise self._error("expected number, string, column, word or '('")
+
+    def _list(self) -> Node:
+        """`{ expr, expr, … }` — comma-separated items, any expression each."""
+        # The '{' was already consumed by _primary.
+        if self._peek() is not None and self._peek().value == "}":  # type: ignore[union-attr]
+            self._next()
+            return List(items=())
+        items: list[Node] = []
+        while True:
+            items.append(self._expr())
+            sep = self._peek()
+            if sep is None:
+                raise self._error("unterminated { … } list")
+            if sep.value == ",":
+                self._next()
+                continue
+            if sep.value == "}":
+                self._next()
+                return List(items=tuple(items))
+            raise self._error("expected ',' or '}' inside { … }")
 
     def _var_block(self) -> Var:
         """`VAR name = value [VAR …] RETURN body` — assignments chain left."""
