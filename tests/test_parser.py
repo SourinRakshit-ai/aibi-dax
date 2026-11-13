@@ -271,3 +271,35 @@ def test_word_forms_stay_distinct() -> None:
     assert parse("SUM([x])") == Call(name="SUM", args=(ColumnRef(name="x"),))
     assert parse("'Sales'[Amount]") == QualifiedColumn(table="'Sales'", name="Amount")
     assert parse("'Sales'") == TableRef(name="'Sales'")
+
+
+def test_unterminated_delimiters_are_named() -> None:
+    """A missing closer names the delimiter and where it opened."""
+    for expr, needle in [
+        ('"abc', "unterminated string starting at char 0"),
+        ("'Tbl", "unterminated quoted table name starting at char 0"),
+        ("[col", "unterminated bracketed column starting at char 0"),
+        ('SUM("abc)', "unterminated string starting at char 4"),
+    ]:
+        with pytest.raises(ParseError) as exc:
+            parse(expr)
+        assert needle in str(exc.value)
+
+
+def test_doubled_delimiters_are_escapes_not_closers() -> None:
+    """DAX escapes a delimiter by doubling it; the literal stays whole."""
+    assert parse('"a""b"') == Literal('"a""b"')
+    assert parse("'T''x'") == TableRef(name="'T''x'")
+    assert parse("[A]]]]]") == ColumnRef(name="A]]")
+    with pytest.raises(ParseError):
+        parse("[A]]]]")  # two escaped brackets and no closer
+
+
+def test_quotes_inside_comments_do_not_count() -> None:
+    assert parse('[a] /* " */ + 1') == Binary(
+        op="+", left=ColumnRef(name="a"), right=Literal("1")
+    )
+    assert parse("[a] /* it's fine */ + 1") == Binary(
+        op="+", left=ColumnRef(name="a"), right=Literal("1")
+    )
+    assert parse("\"// not a comment\" // tail") == Literal('"// not a comment"')

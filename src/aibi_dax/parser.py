@@ -17,7 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import lru_cache
 
-from .lexer import Token, tokenize
+from .lexer import Token, tokenize, unterminated
 
 
 class ParseError(ValueError):
@@ -283,4 +283,7 @@ def parse(expr: str) -> Node:
     `lint_expression` call reparses up to once per rule without the cache.
     Trees are frozen dataclasses — safe to share across callers.
     """
+    problem = unterminated(expr)
+    if problem is not None:
+        raise ParseError(problem)
     return _Parser(tokenize(expr)).parse()

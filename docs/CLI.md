@@ -111,6 +111,9 @@ $ dxa parse "1 + [A]" --json
 ```
 
 Unparseable sequences exit 2 with a `parse error:` message on stderr.
+A missing quote or bracket names the delimiter and where it opened
+(`unterminated string starting at char 4`), and doubled delimiters are
+escapes, not closers (`"a""b"`, `'T''x'`, `[A]]]]]`).
 
 The grammar covers `VAR … RETURN` blocks, calls, qualified columns,
 list literals, and the operator ladder `||`, `&&`, comparison/`IN`,
