@@ -8,7 +8,8 @@
   plain aggregate.
 - CLI: `dxa parse --tree` (indented AST), `dxa lint --rule` and
   `dxa lint-model --rule` to run one rule (exit 2 + rule list on stderr
-  when unknown).
+  when unknown), and `dxa lint-model --summary` for a model-wide rule
+  histogram.
 - Lexer/parser: `]]` bracket escapes inside column names; parse errors
   carry the source character offset; `IN { … }` list literals parse as a
   comparison-level binary with a `List` right side; unquoted table

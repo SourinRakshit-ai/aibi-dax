@@ -20,7 +20,7 @@ dxa --version
 | `dxa rank model.json --top N` | the most complex measures of a model dump |
 | `dxa lint "EXPR"` | anti-pattern findings for one expression (`--rule`, `--list-rules`) |
 | `dxa explain RULE` | full documentation for one anti-pattern rule |
-| `dxa lint-model model.json` | findings across every measure, grouped (`--table`, `--rule`) |
+| `dxa lint-model model.json` | findings across every measure, grouped (`--table`, `--rule`, `--summary`) |
 | `dxa parse "EXPR"` | the recursive-descent AST, human or `--json` |
 
 ## The weight

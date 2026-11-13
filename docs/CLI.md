@@ -70,6 +70,17 @@ on stderr if unknown). Prints nothing and exits 0 for a clean model.
 Findings exit 1 with `- ` lines per finding; `--json` prints the findings
 map.
 
+`--summary` swaps the per-measure listing for a model-wide rule
+histogram — the count of measures each rule fires on, heaviest first.
+It respects `--table` and `--rule`, and `--json` emits the counts as an
+object. Exit 1 when anything fires, 0 with `model is clean` otherwise:
+
+```
+$ dxa lint-model model.json --summary
+    2  calculate_inside_iterator
+    1  raw_division
+```
+
 ## `dxa parse "EXPR"`
 
 Reduces the expression to an AST (recursive descent; exit 2 on a
