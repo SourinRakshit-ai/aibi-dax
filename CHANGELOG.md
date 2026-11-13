@@ -11,7 +11,8 @@
   when unknown).
 - Lexer/parser: `]]` bracket escapes inside column names; parse errors
   carry the source character offset; `IN { … }` list literals parse as a
-  comparison-level binary with a `List` right side.
+  comparison-level binary with a `List` right side; unquoted table
+  qualifiers (`Sales[Amount]`) parse the same as quoted ones.
 - Perf: `parse` memoized — `lint_expression` 202 → 25 µs,
   `lint_model` 17.8 → 2.2 ms on the benchmark corpus.
 - Chore: Dependabot for pip + GitHub Actions. 173 tests, coverage ≥ 95%.
