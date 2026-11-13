@@ -17,6 +17,10 @@ SAMPLES = [
     "SUMX('Sales', 'Sales'[Amount] * [Qty])",
     "ABS([x]) < 0",
     "ABS([x]) >= 0",
+    "IF([q] > 0, TRUE(), FALSE())",
+    "IF([q] > 0, FALSE(), TRUE())",
+    "[k] IN {1, 2}",
+    "Sales[Amount] + 1",
     'CONCATENATEX(Sales, "a&b", [x])',
 ]
 
