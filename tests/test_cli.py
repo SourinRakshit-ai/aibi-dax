@@ -193,3 +193,23 @@ def test_parse_tree_as_json(capsys):
 def test_parse_error_is_exit_two(capsys):
     assert main(["parse", "1 +"]) == 2
     assert "error" in capsys.readouterr().err.lower()
+
+
+def test_lint_model_summary_counts_by_rule(model_path, capsys):
+    assert main(["lint-model", model_path, "--summary"]) == 1
+    out = capsys.readouterr().out.splitlines()
+    assert out == ["    1  calculate_inside_iterator"]
+
+    assert main(["lint-model", model_path, "--summary", "--json"]) == 1
+    assert json.loads(capsys.readouterr().out) == {"calculate_inside_iterator": 1}
+
+
+def test_lint_model_summary_respects_filters(model_path, capsys):
+    assert main(["lint-model", model_path, "--summary", "--rule", "calculate_inside_iterator"]) == 1
+    assert "calculate_inside_iterator" in capsys.readouterr().out
+
+    assert main(["lint-model", model_path, "--summary", "--rule", "raw_division"]) == 0
+    assert "model is clean" in capsys.readouterr().out
+
+    assert main(["lint-model", model_path, "--summary", "--table", "Nope"]) == 0
+    assert "model is clean" in capsys.readouterr().out

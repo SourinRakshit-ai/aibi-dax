@@ -11,7 +11,7 @@ from typing import TypeGuard
 from . import __version__
 from .antipattern import ALL_RULES, Rule
 from .complexity import rank_measures, report, weight
-from .lint import lint_expression, lint_model
+from .lint import lint_expression, lint_model, lint_model_summary
 from .model_io import load_model
 from .parser import Node, ParseError, parse
 
@@ -92,6 +92,9 @@ def _build_parser() -> argparse.ArgumentParser:
     p_lint_model.add_argument("--json", action="store_true", help="emit JSON")
     p_lint_model.add_argument("--table", help="restrict findings to one table")
     p_lint_model.add_argument("--rule", help="run only this rule (function name)")
+    p_lint_model.add_argument(
+        "--summary", action="store_true", help="hit count per rule instead of per measure"
+    )
 
     p_parse = sub.add_parser("parse", help="AST for one expression")
     p_parse.add_argument("expr", help="DAX expression, quoted")
@@ -181,10 +184,22 @@ def main(argv: list[str] | None = None) -> int:
                 names = ", ".join(r.__name__ for r in ALL_RULES)
                 print(f"dxa: unknown rule {rule_name} — one of: {names}", file=sys.stderr)
                 return 2
-        found = lint_model(load_model(args.model), rules)
+        model = load_model(args.model)
         only = getattr(args, "table", None)
         if only is not None:
-            found = {k: v for k, v in found.items() if k.split(".", 1)[0] == only}
+            model = {"tables": [t for t in model.get("tables", []) if t.get("name") == only]}
+        if getattr(args, "summary", False):
+            counts = lint_model_summary(model, rules)
+            if getattr(args, "json", False):
+                print(json.dumps(counts))
+                return 1 if counts else 0
+            if not counts:
+                print("model is clean")
+                return 0
+            for rule_name_, hits in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])):
+                print(f"{hits:5}  {rule_name_}")
+            return 1
+        found = lint_model(model, rules)
         if not found:
             print("model is clean")
             return 0

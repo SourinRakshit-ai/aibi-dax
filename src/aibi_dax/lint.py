@@ -27,3 +27,20 @@ def lint_model(model: Model, rules: list[Rule] | None = None) -> dict[str, list[
             if findings:
                 out[key] = findings
     return out
+
+
+def lint_model_summary(model: Model, rules: list[Rule] | None = None) -> dict[str, int]:
+    """How many measures each rule fires on, for a model-wide cleanup plan.
+
+    Rules that fire on nothing are omitted, so the result reads as a
+    priority list rather than a rule inventory. Comment text is blanked
+    before the rules run, exactly as in `lint_expression`.
+    """
+    counts: dict[str, int] = {}
+    for table in model.get("tables", []):
+        for measure in table.get("measures", []):
+            expr = strip_comments(str(measure.get("expression", "")))
+            for rule in rules or ALL_RULES:
+                if rule(expr):
+                    counts[rule.__name__] = counts.get(rule.__name__, 0) + 1
+    return counts
