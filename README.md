@@ -48,6 +48,7 @@ of aibi-toolkit — so one file feeds both tools.
 13. `SWITCH` without a default (→ explicit else argument)
 14. Single-column row iterator (→ plain `SUM`/`AVERAGE`/`COUNT`/`MIN`/`MAX`)
 15. `ABS(...)` against an impossible bound (→ sign check / drop the condition)
+16. `IF(cond, TRUE(), FALSE())` (→ `cond`; inverted order → `NOT cond`)
 
 ## What the weight measures
 

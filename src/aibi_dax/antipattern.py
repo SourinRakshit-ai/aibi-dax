@@ -567,6 +567,44 @@ def switch_missing_default(expr: str) -> str | None:
     return None
 
 
+_IF_TRUE_FALSE_MSG = (
+    "IF(cond, TRUE(), FALSE()) is just cond — the branch and boolean "
+    "coercion add work for the same value."
+)
+
+_IF_INVERTED_MSG = (
+    "IF(cond, FALSE(), TRUE()) is just NOT cond — the branch buys nothing."
+)
+
+
+def _zero_arg_call(node: Node, name: str) -> bool:
+    """True for a `NAME()` call with no arguments."""
+    return isinstance(node, Call) and node.name.upper() == name and not node.args
+
+
+def if_true_false_branches(expr: str) -> str | None:
+    """`IF(cond, TRUE(), FALSE())` is `cond`; the branch is pure waste.
+
+    AST-driven: a three-argument IF whose second and third arguments are
+    zero-argument TRUE() / FALSE() calls. The inverted order suggests
+    `NOT cond`. Bare TRUE/FALSE identifiers, other arities, and nested
+    IFs over non-boolean values stay silent. Unparseable text stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "IF" or len(call.args) != 3:
+            continue
+        _, yes, no = call.args
+        if _zero_arg_call(yes, "TRUE") and _zero_arg_call(no, "FALSE"):
+            return _IF_TRUE_FALSE_MSG
+        if _zero_arg_call(yes, "FALSE") and _zero_arg_call(no, "TRUE"):
+            return _IF_INVERTED_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -583,4 +621,5 @@ ALL_RULES: list[Rule] = [
     switch_missing_default,
     single_column_iterator,
     abs_negative_comparison,
+    if_true_false_branches,
 ]

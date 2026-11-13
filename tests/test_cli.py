@@ -154,10 +154,11 @@ def test_lint_list_rules(capsys):
     assert main(["lint", "--list-rules"]) == 0
     out = capsys.readouterr().out
     lines = out.strip().splitlines()
-    assert len(lines) == 15
+    assert len(lines) == 16
     assert lines[0].startswith("calculate_inside_iterator")
     assert any("single_column_iterator" in l for l in lines)
     assert any("abs_negative_comparison" in l for l in lines)
+    assert any("if_true_false_branches" in l for l in lines)
     # every documented rule keeps its name column aligned
     assert all(len(l.split(maxsplit=1)[0]) <= 26 for l in lines)
 

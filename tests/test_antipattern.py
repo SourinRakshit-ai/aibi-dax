@@ -190,3 +190,23 @@ def test_unparseable_fallbacks_stay_conservative():
     assert antipattern.blank_comparison("no equality here =") is None
     assert antipattern.concat_ampersand("CONCATENATEX(S, 'a' & [b]") is not None
     assert antipattern.concat_ampersand("no iterator & here") is None
+
+
+def test_if_true_false_branches_flag_identity_and_inversion():
+    flag = antipattern.if_true_false_branches
+    assert flag("IF([q] > 0, TRUE(), FALSE())") is not None
+    assert "just cond" in (flag("IF([q] > 0, TRUE(), FALSE())") or "")
+    assert flag("IF([q] > 0, FALSE(), TRUE())") is not None
+    assert "NOT cond" in (flag("IF([q] > 0, FALSE(), TRUE())") or "")
+    # nested inside another call: still the same expression
+    assert flag("SUM(IF([q], TRUE(), FALSE()))") is not None
+
+
+def test_if_true_false_branches_stay_silent_otherwise():
+    flag = antipattern.if_true_false_branches
+    assert flag("IF([q], TRUE(), FALSE)") is None  # bare identifier, not a call
+    assert flag("IF([q], TRUE())") is None  # two-arg IF
+    assert flag("IF([q], 1, 0)") is None
+    assert flag("IF([q], TRUE(), TRUE())") is None
+    assert flag("TRUE()") is None
+    assert flag("IF(") is None

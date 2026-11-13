@@ -53,6 +53,14 @@ a sign slip. AST-driven: one side is a one-argument ABS call, the other a
 numeric literal; the always-true mirrors (`ABS(x) >= 0`) are legitimate
 defensive style and stay silent.
 
+### IF with TRUE()/FALSE() branches
+`IF(cond, TRUE(), FALSE())` computes the value the condition already is —
+one branch and a boolean coercion for nothing. Write `cond`; for the
+inverted `IF(cond, FALSE(), TRUE())` write `NOT cond`. AST-driven: only a
+three-argument IF whose last two arguments are zero-argument `TRUE()` /
+`FALSE()` calls flags, so bare `TRUE` identifiers and two-argument IFs
+stay silent.
+
 ## Data-shape rules
 
 ### Raw division
