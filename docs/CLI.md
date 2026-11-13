@@ -100,3 +100,19 @@ $ dxa parse "1 + [A]" --json
 ```
 
 Unparseable sequences exit 2 with a `parse error:` message on stderr.
+
+The grammar covers `VAR … RETURN` blocks, calls, qualified columns,
+list literals, and the operator ladder `||`, `&&`, comparison/`IN`,
+`+ -`, `&`, `* /`, unary. `IN` binds with the comparisons, and its
+right side is usually a list:
+
+```
+$ dxa parse "[k] IN {1, 2}" --tree
+Binary op='IN'
+  left:
+    ColumnRef name='k'
+  right:
+    List
+      Literal text='1'
+      Literal text='2'
+```

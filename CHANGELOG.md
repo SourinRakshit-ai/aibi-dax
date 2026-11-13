@@ -10,10 +10,11 @@
   `dxa lint-model --rule` to run one rule (exit 2 + rule list on stderr
   when unknown).
 - Lexer/parser: `]]` bracket escapes inside column names; parse errors
-  carry the source character offset.
+  carry the source character offset; `IN { … }` list literals parse as a
+  comparison-level binary with a `List` right side.
 - Perf: `parse` memoized — `lint_expression` 202 → 25 µs,
   `lint_model` 17.8 → 2.2 ms on the benchmark corpus.
-- Chore: Dependabot for pip + GitHub Actions. 80 tests, coverage ≥ 95%.
+- Chore: Dependabot for pip + GitHub Actions. 173 tests, coverage ≥ 95%.
 
 ## 0.2.0 - 2026-11-11
 

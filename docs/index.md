@@ -22,11 +22,10 @@ dxa --version
 | `dxa explain RULE` | full documentation for one anti-pattern rule |
 | `dxa lint-model model.json` | findings across every measure, grouped (`--table`, `--rule`) |
 | `dxa parse "EXPR"` | the recursive-descent AST, human or `--json` |
-| `dxa parse "EXPR"` | the recursive-descent AST, human or `--json` |
 
 ## The weight
 
 `weight = tokens + 3·functions + 5·depth + 20·iterators` — iterators cost the
 most because row context is where DAX quietly goes wrong.
 
-See the [twelve anti-pattern rules](rules.md) for what the linter flags and why.
+See the [fifteen anti-pattern rules](rules.md) for what the linter flags and why.
