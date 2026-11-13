@@ -198,6 +198,9 @@ class _Parser:
             nxt = self._peek()
             if nxt is not None and nxt.value == "(":
                 return self._call(name=tok.value)
+            if nxt is not None and nxt.kind == "column":
+                self._next()
+                return QualifiedColumn(table=tok.value, name=_column_name(nxt.value))
             return Ident(name=tok.value)
         if tok.kind == "symbol" and tok.value == "(":
             inner = self._expr()

@@ -240,3 +240,34 @@ def test_rules_see_calls_inside_lists() -> None:
 
     assert lint_expression("[x] IN {SUMX('S', AVERAGEX('S', [y]))}") != []
     assert lint_expression("[x] IN {1, 2}") == []
+
+
+def test_unquoted_table_column_reference() -> None:
+    """Sales[Amount] is a QualifiedColumn with the bare table name kept."""
+    assert parse("Sales[Amount]") == QualifiedColumn(table="Sales", name="Amount")
+    assert parse("Sales [Amount]") == QualifiedColumn(table="Sales", name="Amount")
+    assert parse("SUM(Sales[Amount])") == Call(
+        name="SUM", args=(QualifiedColumn(table="Sales", name="Amount"),)
+    )
+    assert parse("Sales[Amount] + 1") == Binary(
+        op="+",
+        left=QualifiedColumn(table="Sales", name="Amount"),
+        right=Literal("1"),
+    )
+    assert parse("Sales[Amount] IN {1,2}") == Binary(
+        op="IN",
+        left=QualifiedColumn(table="Sales", name="Amount"),
+        right=List(items=(Literal("1"), Literal("2"))),
+    )
+
+
+def test_unquoted_qualified_keeps_bracket_escapes() -> None:
+    assert parse("Sales[Profit %]]]") == QualifiedColumn(table="Sales", name="Profit %]")
+
+
+def test_word_forms_stay_distinct() -> None:
+    """A word alone is Ident, before '(' is a Call, before '[' a qualifier."""
+    assert parse("Name") == Ident(name="Name")
+    assert parse("SUM([x])") == Call(name="SUM", args=(ColumnRef(name="x"),))
+    assert parse("'Sales'[Amount]") == QualifiedColumn(table="'Sales'", name="Amount")
+    assert parse("'Sales'") == TableRef(name="'Sales'")
