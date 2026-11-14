@@ -286,3 +286,19 @@ def test_expression_resolver_errors_are_identical_across_commands(tmp_path, caps
 
         assert main([command]) == 2
         assert f"{command} needs an expression" in capsys.readouterr().err
+
+
+def test_lint_list_rules_json_is_tooling_friendly(capsys):
+    assert main(["lint", "--list-rules", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert isinstance(payload, list) and len(payload) == 17
+    assert payload[0]["name"] == "calculate_inside_iterator"
+    assert all(set(entry) == {"name", "summary"} for entry in payload)
+    assert all(entry["summary"] for entry in payload)
+    names = [entry["name"] for entry in payload]
+    assert len(names) == len(set(names))
+
+
+def test_lint_json_without_list_rules_still_reports_findings(capsys):
+    assert main(["lint", "SUMX('Sales', CALCULATE([Amount]))", "--json"]) == 1
+    assert isinstance(json.loads(capsys.readouterr().out), list)

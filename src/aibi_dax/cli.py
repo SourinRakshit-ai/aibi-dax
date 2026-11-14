@@ -182,6 +182,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "lint":
         if getattr(args, "list_rules", False):
+            if getattr(args, "json", False):
+                print(json.dumps(
+                    [{"name": rule.__name__, "summary": _rule_summary(rule)}
+                     for rule in ALL_RULES]
+                ))
+                return 0
             for rule in ALL_RULES:
                 summary = _rule_summary(rule)
                 print(f"{rule.__name__:26}{summary}")
