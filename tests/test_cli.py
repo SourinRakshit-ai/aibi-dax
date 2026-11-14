@@ -352,3 +352,27 @@ def test_rank_min_weight_filters_before_top(model_path, capsys):
 
     assert main(["rank", model_path, "--min-weight", "999"]) == 0
     assert capsys.readouterr().out.strip() == ""
+
+
+def test_blank_expression_is_rejected_by_every_expression_command(monkeypatch, capsys):
+    for command in ("lint", "metrics", "parse"):
+        assert main([command, ""]) == 2
+        err = capsys.readouterr().err
+        assert f"{command} got an empty expression" in err
+
+        assert main([command, "   \n\t "]) == 2
+        assert "empty expression" in capsys.readouterr().err
+
+
+def test_blank_file_or_stdin_is_rejected_with_its_source(monkeypatch, tmp_path, capsys):
+    blank = tmp_path / "blank.dax"
+    blank.write_text(" \n\n", encoding="utf-8")
+
+    assert main(["lint", "--file", str(blank)]) == 2
+    err = capsys.readouterr().err
+    assert "empty expression" in err and str(blank) in err
+
+    monkeypatch.setattr("sys.stdin", io.StringIO(""))
+    assert main(["metrics", "--file", "-"]) == 2
+    err = capsys.readouterr().err
+    assert "empty expression from stdin" in err

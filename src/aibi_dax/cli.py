@@ -145,6 +145,12 @@ def _expression(args: argparse.Namespace) -> tuple[str | None, int]:
         print(f"dxa: {args.command} needs an expression, --file PATH{hint}",
               file=sys.stderr)
         return None, 2
+    if not expr.strip():
+        path = getattr(args, "file", None)
+        source = "stdin" if path == "-" else (path or "the command line")
+        print(f"dxa: {args.command} got an empty expression from {source}",
+              file=sys.stderr)
+        return None, 2
     return expr, 0
 
 

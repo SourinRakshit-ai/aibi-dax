@@ -18,7 +18,9 @@
   `dxa parse --file` share the same resolver (`--file -` reads stdin),
   and `dxa explain` matches rule names case-insensitively.
 - CLI: `dxa rank --min-weight W` keeps only measures at or above the
-  threshold, with `--top N` applying to the filtered set.
+  threshold, with `--top N` applying to the filtered set. A blank
+  expression (including a blank `--file`/stdin) now exits 2 on
+  `lint`/`metrics`/`parse` instead of passing lint silently.
 - Lexer/parser: `]]` bracket escapes inside column names; parse errors
   carry the source character offset; `IN { … }` list literals parse as a
   comparison-level binary with a `List` right side; unquoted table

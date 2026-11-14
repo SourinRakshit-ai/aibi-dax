@@ -53,7 +53,9 @@ plugins and CI allow-lists. `--file PATH` reads the
 expression from a file instead, so a measure copied from a model keeps
 its newlines and quotes; `--file -` reads stdin, so
 `cat measure.dax | dxa lint --file -` works in a pipeline. Pass one
-source or the other, never both:
+source or the other, never both. A blank expression — nothing, or only
+whitespace, from any source — exits 2 with `got an empty expression
+from …` rather than passing silently:
 
 ```
 $ dxa lint "IF(a, 1, IF(b, 2, IF(c, 3, [D]/[E])))"
