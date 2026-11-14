@@ -6,7 +6,9 @@
   (string-literal mentions no longer fire), and new rule 14 — a
   single-column row iterator (`SUMX('S', 'S'[Amount])`) collapses to a
   plain aggregate. Rule 15 flags `ABS(x)` against an impossible bound;
-  rule 16 flags `IF(cond, TRUE(), FALSE())` (→ `cond`, inverted → `NOT cond`).
+  rule 16 flags `IF(cond, TRUE(), FALSE())` (→ `cond`, inverted → `NOT cond`);
+  rule 17 flags `FILTER(...)` as an aggregate's first argument
+  (→ pass the condition to `CALCULATE`).
 - CLI: `dxa parse --tree` (indented AST), `dxa lint --rule` and
   `dxa lint-model --rule` to run one rule (exit 2 + rule list on stderr
   when unknown), and `dxa lint-model --summary` for a model-wide rule

@@ -20,6 +20,14 @@ Capture once, reference by name — it type-checks and stays readable.
 A boolean filter (`'Sales'[Col] = value`) inside `CALCULATE` prunes the
 table during scan instead of after.
 
+### FILTER inside an aggregate
+`COUNTROWS(FILTER('Sales', cond))` and `SUMX(FILTER('Sales', cond), …)`
+build a filtered table in memory before aggregating. The same condition
+as a `CALCULATE` filter is pushed into the scan:
+`CALCULATE(COUNTROWS('Sales'), cond)`. Only the aggregate's **first**
+argument is checked, so `FILTER` used elsewhere — a `CALCULATE` filter
+argument, a nested step — stays silent.
+
 ## Refactoring rules
 
 ### Three or more IF calls

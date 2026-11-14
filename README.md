@@ -49,6 +49,7 @@ of aibi-toolkit — so one file feeds both tools.
 14. Single-column row iterator (→ plain `SUM`/`AVERAGE`/`COUNT`/`MIN`/`MAX`)
 15. `ABS(...)` against an impossible bound (→ sign check / drop the condition)
 16. `IF(cond, TRUE(), FALSE())` (→ `cond`; inverted order → `NOT cond`)
+17. `FILTER(...)` as an aggregate's first argument (→ the filter condition in `CALCULATE`)
 
 ## What the weight measures
 
