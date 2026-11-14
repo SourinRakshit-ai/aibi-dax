@@ -256,3 +256,33 @@ def test_lint_file_clean_measure_exits_zero(tmp_path, capsys):
 
     assert main(["lint", "--file", str(p)]) == 0
     assert "no findings" in capsys.readouterr().out
+
+
+def test_metrics_and_parse_read_from_a_file(tmp_path, capsys):
+    p = tmp_path / "measure.dax"
+    p.write_text("VAR t = SUM('Sales'[Amount])\nRETURN t / [Count]\n", encoding="utf-8")
+
+    assert main(["metrics", "--file", str(p)]) == 0
+    out = capsys.readouterr().out
+    assert "weight" in out and "functions" in out
+
+    assert main(["metrics", "--file", str(p), "--json"]) == 0
+    assert "weight" in json.loads(capsys.readouterr().out)
+
+    assert main(["parse", "--file", str(p), "--tree"]) == 0
+    tree = capsys.readouterr().out
+    assert "Var name=" in tree or "Binary op='/' " in tree
+
+
+def test_expression_resolver_errors_are_identical_across_commands(tmp_path, capsys):
+    p = tmp_path / "m.dax"
+    p.write_text("SUM([x])", encoding="utf-8")
+    for command in ("metrics", "parse", "lint"):
+        assert main([command, "SUM([x])", "--file", str(p)]) == 2
+        assert "not both" in capsys.readouterr().err
+
+        assert main([command, "--file", str(tmp_path / "gone.dax")]) == 2
+        assert "cannot read" in capsys.readouterr().err
+
+        assert main([command]) == 2
+        assert f"{command} needs an expression" in capsys.readouterr().err

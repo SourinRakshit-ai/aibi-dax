@@ -23,6 +23,7 @@ weight      45
 ```
 
 `--json` wraps the same payload: `{"metrics": {...}, "weight": 45}`.
+`--file PATH` reads the expression from a file, matching `dxa lint`.
 
 ## `dxa rank model.json [--top N]`
 
@@ -87,7 +88,9 @@ $ dxa lint-model model.json --summary
 
 Reduces the expression to an AST (recursive descent; exit 2 on a
 genuinely unparseable sequence). `--json` prints the tree as JSON;
-`--tree` prints it one node per line, children indented, with `field:`
+`--file PATH` reads the expression from a file instead of the command
+line, so multiline measures keep their shape. `--tree` prints it one
+node per line, children indented, with `field:`
 labels where position alone would not say what the child is:
 
 ```

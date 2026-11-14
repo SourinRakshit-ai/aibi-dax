@@ -70,7 +70,8 @@ def _build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_metrics = sub.add_parser("metrics", help="complexity metrics for one expression")
-    p_metrics.add_argument("expr", help="DAX expression, quoted")
+    p_metrics.add_argument("expr", nargs="?", help="DAX expression, quoted")
+    p_metrics.add_argument("--file", help="read the expression from this file instead")
     p_metrics.add_argument("--json", action="store_true", help="emit JSON")
 
     p_rank = sub.add_parser("rank", help="most complex measures of a model dump")
@@ -99,7 +100,8 @@ def _build_parser() -> argparse.ArgumentParser:
     )
 
     p_parse = sub.add_parser("parse", help="AST for one expression")
-    p_parse.add_argument("expr", help="DAX expression, quoted")
+    p_parse.add_argument("expr", nargs="?", help="DAX expression, quoted")
+    p_parse.add_argument("--file", help="read the expression from this file instead")
     p_parse.add_argument("--json", action="store_true", help="emit JSON")
     p_parse.add_argument("--tree", action="store_true", help="indented one-node-per-line tree")
     return parser
@@ -109,6 +111,32 @@ def _rule_summary(rule: Rule) -> str:
     """First sentence of a rule's docstring, for --list-rules lines."""
     text = " ".join((rule.__doc__ or "").strip().splitlines())
     return text.partition(". ")[0]
+
+
+def _expression(args: argparse.Namespace) -> tuple[str | None, int]:
+    """Resolve the expression from the positional or `--file`.
+
+    Returns `(text, 0)` on success or `(None, exit_code)` after printing
+    the reason to stderr, so every expression command fails the same way.
+    """
+    expr: str | None = getattr(args, "expr", None)
+    path: str | None = getattr(args, "file", None)
+    if path is not None:
+        if expr is not None:
+            print("dxa: give either an expression or --file, not both", file=sys.stderr)
+            return None, 2
+        try:
+            expr = Path(path).read_text(encoding="utf-8")
+        except OSError as exc:
+            reason = exc.strerror or str(exc)
+            print(f"dxa: cannot read {path}: {reason}", file=sys.stderr)
+            return None, 2
+    if expr is None:
+        hint = " (or --list-rules)" if args.command == "lint" else ""
+        print(f"dxa: {args.command} needs an expression, --file PATH{hint}",
+              file=sys.stderr)
+        return None, 2
+    return expr, 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -127,13 +155,16 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "metrics":
-        m = report(args.expr)
+        expr, code = _expression(args)
+        if expr is None:
+            return code
+        m = report(expr)
         if getattr(args, "json", False):
-            print(json.dumps({"metrics": m, "weight": weight(args.expr)}))
+            print(json.dumps({"metrics": m, "weight": weight(expr)}))
         else:
             for key, value in m.items():
                 print(f"{key:12}{value}")
-            print(f"{'weight':12}{weight(args.expr)}")
+            print(f"{'weight':12}{weight(expr)}")
         return 0
 
     if args.command == "rank":
@@ -155,22 +186,9 @@ def main(argv: list[str] | None = None) -> int:
                 summary = _rule_summary(rule)
                 print(f"{rule.__name__:26}{summary}")
             return 0
-        expr = args.expr
-        path = getattr(args, "file", None)
-        if path is not None:
-            if expr is not None:
-                print("dxa: give either an expression or --file, not both", file=sys.stderr)
-                return 2
-            try:
-                expr = Path(path).read_text(encoding="utf-8")
-            except OSError as exc:
-                reason = exc.strerror or str(exc)
-                print(f"dxa: cannot read {path}: {reason}", file=sys.stderr)
-                return 2
+        expr, code = _expression(args)
         if expr is None:
-            print("dxa: lint needs an expression, --file PATH (or --list-rules)",
-                  file=sys.stderr)
-            return 2
+            return code
         rules = None
         rule_name = getattr(args, "rule", None)
         if rule_name is not None:
@@ -228,8 +246,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     if args.command == "parse":
+        expr, code = _expression(args)
+        if expr is None:
+            return code
         try:
-            tree = parse(args.expr)
+            tree = parse(expr)
         except ParseError as err:
             print(f"dxa: parse error: {err}", file=sys.stderr)
             return 2

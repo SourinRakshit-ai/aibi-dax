@@ -13,6 +13,7 @@
   `dxa lint-model --rule` to run one rule (exit 2 + rule list on stderr
   when unknown), `dxa lint --file PATH` to read a multiline measure from
   disk, and `dxa lint-model --summary` for a model-wide rule histogram.
+  `dxa metrics --file` and `dxa parse --file` share the same resolver.
 - Lexer/parser: `]]` bracket escapes inside column names; parse errors
   carry the source character offset; `IN { … }` list literals parse as a
   comparison-level binary with a `List` right side; unquoted table
