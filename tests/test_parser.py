@@ -303,3 +303,44 @@ def test_quotes_inside_comments_do_not_count() -> None:
         op="+", left=ColumnRef(name="a"), right=Literal("1")
     )
     assert parse("\"// not a comment\" // tail") == Literal('"// not a comment"')
+
+
+def test_not_prefix_keyword_is_a_unary_operator() -> None:
+    """DAX spells negation both `!x` and `NOT x`; both reduce to Unary."""
+    assert parse("NOT [a]") == Unary(op="NOT", operand=ColumnRef(name="a"))
+    assert parse("NOT ISBLANK([x])") == Unary(
+        op="NOT", operand=Call(name="ISBLANK", args=(ColumnRef(name="x"),))
+    )
+    assert parse("NOT ([a] = 1)") == Unary(
+        op="NOT", operand=Binary(op="=", left=ColumnRef(name="a"), right=Literal("1"))
+    )
+    assert parse("NOT([a] = 1)") == parse("NOT ([a] = 1)")
+    assert parse("not [a]") == parse("NOT [a]")  # keywords are case-insensitive
+
+
+def test_not_binds_at_the_unary_level() -> None:
+    assert parse("[a] && NOT [b]") == Binary(
+        op="&&",
+        left=ColumnRef(name="a"),
+        right=Unary(op="NOT", operand=ColumnRef(name="b")),
+    )
+    assert parse("NOT [a] && [b]") == Binary(
+        op="&&",
+        left=Unary(op="NOT", operand=ColumnRef(name="a")),
+        right=ColumnRef(name="b"),
+    )
+    assert parse("NOT NOT [a]") == Unary(
+        op="NOT", operand=Unary(op="NOT", operand=ColumnRef(name="a"))
+    )
+    assert parse("NOT Sales[Amount]") == Unary(
+        op="NOT", operand=QualifiedColumn(table="Sales", name="Amount")
+    )
+
+
+def test_not_edge_cases_stay_sane() -> None:
+    assert parse("[NOT]") == ColumnRef(name="NOT")  # bracketed column, not the keyword
+    assert parse("!ISBLANK([x])") == Unary(
+        op="!", operand=Call(name="ISBLANK", args=(ColumnRef(name="x"),))
+    )
+    with pytest.raises(ParseError):
+        parse("NOT")
