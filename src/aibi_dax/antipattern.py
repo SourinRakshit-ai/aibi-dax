@@ -605,6 +605,35 @@ def if_true_false_branches(expr: str) -> str | None:
     return None
 
 
+_FILTER_IN_AGG_MSG = (
+    "FILTER inside an aggregate builds a filtered table before aggregating — "
+    "pass the condition to CALCULATE so the engine can push it into the scan."
+)
+
+
+def filter_inside_aggregate(expr: str) -> str | None:
+    """`COUNTROWS(FILTER(…))` / `SUMX(FILTER(…), …)` materialize a table.
+
+    AST-driven: COUNTROWS and the row iterators flag only when their first
+    argument is a FILTER call, the shape CALCULATE replaces one-for-one.
+    FILTER anywhere else — a CALCULATE filter argument, a nested step, a
+    second argument — is a legitimate table expression and stays silent.
+    Unparseable text stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    aggregates = ITERATORS | {"COUNTROWS"}
+    for call in _walk_calls(tree):
+        if call.name.upper() not in aggregates or not call.args:
+            continue
+        first = call.args[0]
+        if isinstance(first, Call) and first.name.upper() == "FILTER":
+            return _FILTER_IN_AGG_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -622,4 +651,5 @@ ALL_RULES: list[Rule] = [
     single_column_iterator,
     abs_negative_comparison,
     if_true_false_branches,
+    filter_inside_aggregate,
 ]

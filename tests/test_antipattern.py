@@ -210,3 +210,21 @@ def test_if_true_false_branches_stay_silent_otherwise():
     assert flag("IF([q], TRUE(), TRUE())") is None
     assert flag("TRUE()") is None
     assert flag("IF(") is None
+
+
+def test_filter_inside_aggregate_flags_materializing_shapes():
+    flag = antipattern.filter_inside_aggregate
+    assert flag("COUNTROWS(FILTER('Sales', 'Sales'[A] > 0))") is not None
+    assert flag("SUMX(FILTER('Sales', [A] > 0), [A])") is not None
+    assert flag("AVERAGEX(FILTER('Sales', [A] > 0), [B])") is not None
+    assert flag("sumx(filter(S, [A] > 0), [A])") is not None  # case-insensitive
+
+
+def test_filter_inside_aggregate_leaves_legitimate_uses():
+    flag = antipattern.filter_inside_aggregate
+    assert flag("CALCULATE(COUNTROWS('Sales'), [A] > 0)") is None
+    assert flag("COUNTROWS('Sales')") is None
+    assert flag("SUMX('Sales', FILTER(T, [x]))") is None  # FILTER not first arg
+    assert flag("SUM(FILTER(S, [A] > 0))") is None
+    assert flag("FILTER(S, [A] > 0)") is None
+    assert flag("COUNTROWS(FILTER(") is None

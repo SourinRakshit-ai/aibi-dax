@@ -154,7 +154,7 @@ def test_lint_list_rules(capsys):
     assert main(["lint", "--list-rules"]) == 0
     out = capsys.readouterr().out
     lines = out.strip().splitlines()
-    assert len(lines) == 16
+    assert len(lines) == 17
     assert lines[0].startswith("calculate_inside_iterator")
     assert any("single_column_iterator" in l for l in lines)
     assert any("abs_negative_comparison" in l for l in lines)
