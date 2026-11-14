@@ -6,6 +6,7 @@ import argparse
 import json
 import sys
 from dataclasses import asdict, fields, is_dataclass
+from pathlib import Path
 from typing import TypeGuard
 
 from . import __version__
@@ -83,6 +84,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     p_lint = sub.add_parser("lint", help="anti-pattern findings for one expression")
     p_lint.add_argument("expr", nargs="?", help="DAX expression, quoted")
+    p_lint.add_argument("--file", help="read the expression from this file instead")
     p_lint.add_argument("--json", action="store_true", help="emit JSON")
     p_lint.add_argument("--rule", help="run only this rule (function name)")
     p_lint.add_argument("--list-rules", action="store_true", help="print the rule inventory and exit")
@@ -153,8 +155,21 @@ def main(argv: list[str] | None = None) -> int:
                 summary = _rule_summary(rule)
                 print(f"{rule.__name__:26}{summary}")
             return 0
-        if args.expr is None:
-            print("dxa: lint needs an expression (or --list-rules)", file=sys.stderr)
+        expr = args.expr
+        path = getattr(args, "file", None)
+        if path is not None:
+            if expr is not None:
+                print("dxa: give either an expression or --file, not both", file=sys.stderr)
+                return 2
+            try:
+                expr = Path(path).read_text(encoding="utf-8")
+            except OSError as exc:
+                reason = exc.strerror or str(exc)
+                print(f"dxa: cannot read {path}: {reason}", file=sys.stderr)
+                return 2
+        if expr is None:
+            print("dxa: lint needs an expression, --file PATH (or --list-rules)",
+                  file=sys.stderr)
             return 2
         rules = None
         rule_name = getattr(args, "rule", None)
@@ -164,7 +179,7 @@ def main(argv: list[str] | None = None) -> int:
                 names = ", ".join(r.__name__ for r in ALL_RULES)
                 print(f"dxa: unknown rule {rule_name} — one of: {names}", file=sys.stderr)
                 return 2
-        findings = lint_expression(args.expr, rules)
+        findings = lint_expression(expr, rules)
         if getattr(args, "json", False):
             print(json.dumps(findings))
             return 1 if findings else 0

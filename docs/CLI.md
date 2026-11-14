@@ -41,7 +41,9 @@ Anti-pattern findings for one expression. Exit code 0 when clean, 1 with
 `-` lines per finding. `--json` prints the findings as a JSON list (`[]`
 when clean). `--rule NAME` runs a single rule (function name, exit 2 with
 the rule list on stderr if unknown). `--list-rules` prints the rule
-inventory with each rule's summary and exits 0:
+inventory with each rule's summary and exits 0. `--file PATH` reads the
+expression from a file instead, so a measure copied from a model keeps
+its newlines and quotes; pass one or the other, never both:
 
 ```
 $ dxa lint "IF(a, 1, IF(b, 2, IF(c, 3, [D]/[E])))"

@@ -214,3 +214,45 @@ def test_lint_model_summary_respects_filters(model_path, capsys):
 
     assert main(["lint-model", model_path, "--summary", "--table", "Nope"]) == 0
     assert "model is clean" in capsys.readouterr().out
+
+
+def test_lint_reads_a_multiline_measure_from_a_file(tmp_path, capsys):
+    measure = (
+        "VAR total = SUM('Sales'[Amount])\n"
+        "RETURN\n"
+        "    IF(total > 0, total / [Count], BLANK())\n"
+    )
+    p = tmp_path / "measure.dax"
+    p.write_text(measure, encoding="utf-8")
+
+    assert main(["lint", "--file", str(p)]) == 1
+    out = capsys.readouterr().out
+    assert "raw division" in out.lower() or "/" in out
+
+    assert main(["lint", "--file", str(p), "--rule", "raw_division"]) == 1
+    assert capsys.readouterr().out.startswith("- ")
+
+    assert main(["lint", "--file", str(p), "--json"]) == 1
+    assert isinstance(json.loads(capsys.readouterr().out), list)
+
+
+def test_lint_file_usage_errors(tmp_path, capsys):
+    p = tmp_path / "m.dax"
+    p.write_text("SUM('Sales'[Amount])", encoding="utf-8")
+
+    assert main(["lint", "SUM([x])", "--file", str(p)]) == 2
+    assert "not both" in capsys.readouterr().err
+
+    assert main(["lint", "--file", str(tmp_path / "missing.dax")]) == 2
+    assert "cannot read" in capsys.readouterr().err
+
+    assert main(["lint"]) == 2
+    assert "--file PATH" in capsys.readouterr().err
+
+
+def test_lint_file_clean_measure_exits_zero(tmp_path, capsys):
+    p = tmp_path / "clean.dax"
+    p.write_text("SUM('Sales'[Amount])\n", encoding="utf-8")
+
+    assert main(["lint", "--file", str(p)]) == 0
+    assert "no findings" in capsys.readouterr().out
