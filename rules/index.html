@@ -1,0 +1,1109 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="DAX expression analysis — complexity metrics, anti-pattern detection, per-model ranking">
+      
+      
+      
+      
+        <link rel="prev" href="../CLI/">
+      
+      
+        <link rel="next" href="../performance/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Anti-pattern rules - aibi-dax</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dax-anti-patterns-the-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="aibi-dax" class="md-header__button md-logo" aria-label="aibi-dax" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            aibi-dax
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Anti-pattern rules
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/SourinRakshit-ai/aibi-dax" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    SourinRakshit-ai/aibi-dax
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="aibi-dax" class="md-nav__button md-logo" aria-label="aibi-dax" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    aibi-dax
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/SourinRakshit-ai/aibi-dax" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    SourinRakshit-ai/aibi-dax
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CLI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Anti-pattern rules
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Anti-pattern rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#context-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Context rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calculate-inside-an-iterator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CALCULATE inside an iterator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#earlier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EARLIER(...)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#all-filterall-as-an-aggregates-first-argument" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ALL / FILTER(ALL(...)) as an aggregate's first argument
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter-inside-an-aggregate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FILTER inside an aggregate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#refactoring-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refactoring rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Refactoring rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#three-or-more-if-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Three or more IF calls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iferror-overreach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IFERROR overreach
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hasonevalue-values-pairs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HASONEVALUE + VALUES pairs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switch-without-a-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SWITCH without a default
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#single-column-row-iterator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single-column row iterator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#abs-against-an-impossible-bound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ABS against an impossible bound
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-with-truefalse-branches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF with TRUE()/FALSE() branches
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-shape-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data-shape rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data-shape rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#raw-division" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw division
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blank-equality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        = BLANK() equality
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filter-safety-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter-safety rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Filter-safety rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bare-alltable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bare ALL(table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inside-concatenatex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &amp; inside CONCATENATEX
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Style">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lowercase-function-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lowercase function calls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nested-row-iterators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested row iterators
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#context-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Context rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calculate-inside-an-iterator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CALCULATE inside an iterator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#earlier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EARLIER(...)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#all-filterall-as-an-aggregates-first-argument" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ALL / FILTER(ALL(...)) as an aggregate's first argument
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter-inside-an-aggregate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FILTER inside an aggregate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#refactoring-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refactoring rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Refactoring rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#three-or-more-if-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Three or more IF calls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iferror-overreach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IFERROR overreach
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hasonevalue-values-pairs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HASONEVALUE + VALUES pairs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switch-without-a-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SWITCH without a default
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#single-column-row-iterator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single-column row iterator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#abs-against-an-impossible-bound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ABS against an impossible bound
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-with-truefalse-branches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF with TRUE()/FALSE() branches
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-shape-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data-shape rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data-shape rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#raw-division" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw division
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blank-equality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        = BLANK() equality
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filter-safety-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter-safety rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Filter-safety rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bare-alltable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bare ALL(table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inside-concatenatex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &amp; inside CONCATENATEX
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Style">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lowercase-function-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lowercase function calls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nested-row-iterators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested row iterators
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="dax-anti-patterns-the-reference">DAX anti-patterns — the reference</h1>
+<p>Each rule shipped by <code>dxa lint</code> with its reasoning and a fix. Community
+DAX guidance (SQLBI, DAX Guide) is the common source of truth; the engine
+here flags the pattern and the message names the preferred form.</p>
+<h2 id="context-rules">Context rules</h2>
+<h3 id="calculate-inside-an-iterator">CALCULATE inside an iterator</h3>
+<p><code>SUMX('Sales', CALCULATE([Amount]))</code> — the iterator's row context shadows
+the filter context CALCULATE would use, so the result rarely matches
+intent. Hoist CALCULATE outside or pass explicit filters.</p>
+<h3 id="earlier">EARLIER(...)</h3>
+<p>Deprecated since <code>VAR</code> became the idiomatic way to capture an outer row.
+Capture once, reference by name — it type-checks and stays readable.</p>
+<h3 id="all-filterall-as-an-aggregates-first-argument">ALL / FILTER(ALL(...)) as an aggregate's first argument</h3>
+<p><code>SUMX(ALL('Sales'), ...)</code> walks every row through the filter machinery.
+A boolean filter (<code>'Sales'[Col] = value</code>) inside <code>CALCULATE</code> prunes the
+table during scan instead of after.</p>
+<h3 id="filter-inside-an-aggregate">FILTER inside an aggregate</h3>
+<p><code>COUNTROWS(FILTER('Sales', cond))</code> and <code>SUMX(FILTER('Sales', cond), …)</code>
+build a filtered table in memory before aggregating. The same condition
+as a <code>CALCULATE</code> filter is pushed into the scan:
+<code>CALCULATE(COUNTROWS('Sales'), cond)</code>. Only the aggregate's <strong>first</strong>
+argument is checked, so <code>FILTER</code> used elsewhere — a <code>CALCULATE</code> filter
+argument, a nested step — stays silent.</p>
+<h2 id="refactoring-rules">Refactoring rules</h2>
+<h3 id="three-or-more-if-calls">Three or more IF calls</h3>
+<p><code>SWITCH(TRUE(), cond, value, ...)</code> states a decision table rather than a
+staircase, and evaluates each branch once.</p>
+<h3 id="iferror-overreach">IFERROR overreach</h3>
+<p><code>IFERROR(expr, blank)</code> turns <em>any</em> failure into silence — including bugs.
+Prefer <code>DIVIDE</code>'s third argument, or fix what raises.</p>
+<h3 id="hasonevalue-values-pairs">HASONEVALUE + VALUES pairs</h3>
+<p><code>IF(HASONEVALUE(k), VALUES(k), other)</code> is exactly <code>SELECTEDVALUE(k, other)</code>.</p>
+<h3 id="switch-without-a-default">SWITCH without a default</h3>
+<p><code>SWITCH(expr, v1, r1, v2, r2)</code> returns BLANK when nothing matches — silently.
+The optional final argument states the miss case explicitly, even if it is
+<code>0</code> or an error message. The rule counts arguments on the AST: an even
+number after the first means no default is present.</p>
+<h3 id="single-column-row-iterator">Single-column row iterator</h3>
+<p><code>SUMX('Sales', 'Sales'[Amount])</code> walks the table to read one column; the
+plain aggregate <code>SUM('Sales'[Amount])</code> is faster and identical. The rule
+matches the iterator's first argument against the column's table
+qualification on the AST, so mismatched tables stay flagged as real
+iteration.</p>
+<h3 id="abs-against-an-impossible-bound">ABS against an impossible bound</h3>
+<p><code>ABS(x)</code> is never negative, so <code>ABS(x) &lt; 0</code> (and <code>&lt;= n</code> for negative n,
+mirrored as <code>0 &gt; ABS(x)</code> / <code>-1 &gt;= ABS(x)</code>) can never hold — almost always
+a sign slip. AST-driven: one side is a one-argument ABS call, the other a
+numeric literal; the always-true mirrors (<code>ABS(x) &gt;= 0</code>) are legitimate
+defensive style and stay silent.</p>
+<h3 id="if-with-truefalse-branches">IF with TRUE()/FALSE() branches</h3>
+<p><code>IF(cond, TRUE(), FALSE())</code> computes the value the condition already is —
+one branch and a boolean coercion for nothing. Write <code>cond</code>; for the
+inverted <code>IF(cond, FALSE(), TRUE())</code> write <code>NOT cond</code>. AST-driven: only a
+three-argument IF whose last two arguments are zero-argument <code>TRUE()</code> /
+<code>FALSE()</code> calls flags, so bare <code>TRUE</code> identifiers and two-argument IFs
+stay silent.</p>
+<h2 id="data-shape-rules">Data-shape rules</h2>
+<h3 id="raw-division">Raw division</h3>
+<p><code>/</code> raises #NUM! on zero denominators; <code>DIVIDE(num, den[, alt])</code> absorbs.
+AST-driven: only non-constant denominators flag — <code>[x] / 2</code> is
+safe, <code>[x] / [Scale]</code> is the trap, and slashes inside string
+literals never count.</p>
+<h3 id="blank-equality"><code>= BLANK()</code> equality</h3>
+<p>Equality against BLANK is unreliable for non-numeric types; <code>ISBLANK(x)</code>
+is the intended test.</p>
+<h2 id="filter-safety-rules">Filter-safety rules</h2>
+<h3 id="bare-alltable">Bare ALL(table)</h3>
+<p>As a filter eraser <code>REMOVEFILTERS(table)</code> says exactly that; keep ALL
+where you need its modifying semantics.</p>
+<h3 id="inside-concatenatex"><code>&amp;</code> inside CONCATENATEX</h3>
+<p>Concatenate via the iterator's arguments; mixing <code>&amp;</code> inside is ordering
+hazard with hidden separators. AST-driven: <code>&amp;</code> inside a string
+literal is data and never flags.</p>
+<h2 id="style">Style</h2>
+<h3 id="lowercase-function-calls">Lowercase function calls</h3>
+<p>DAX function names are uppercase by convention — <code>sum(</code> is a typo until
+proven otherwise. Literal strings and bracketed columns are exempt.</p>
+<h3 id="nested-row-iterators">Nested row iterators</h3>
+<p><code>SUMX('Sales', AVERAGEX('Sales', [x]))</code> pays a context transition per row
+for every iterator on the path. Capture the outer step in a <code>VAR</code> and
+aggregate over it. This rule runs over the parser AST — the tree is why it
+knows how deep the iterators stack.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>
