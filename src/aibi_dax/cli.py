@@ -84,6 +84,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     p_explain = sub.add_parser("explain", help="full documentation for one rule")
     p_explain.add_argument("rule", help="rule name as shown by dxa lint --list-rules")
+    p_explain.add_argument("--json", action="store_true", help="emit JSON")
 
     p_lint = sub.add_parser("lint", help="anti-pattern findings for one expression")
     p_lint.add_argument("expr", nargs="?", help="DAX expression, quoted")
@@ -167,6 +168,13 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         rule = match[0]
         doc = (rule.__doc__ or "").strip()
+        if getattr(args, "json", False):
+            print(json.dumps({
+                "name": rule.__name__,
+                "summary": _rule_summary(rule),
+                "doc": doc,
+            }))
+            return 0
         print(f"{rule.__name__}\n{'-' * len(rule.__name__)}\n{doc}")
         return 0
 

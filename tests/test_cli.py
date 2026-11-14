@@ -376,3 +376,19 @@ def test_blank_file_or_stdin_is_rejected_with_its_source(monkeypatch, tmp_path, 
     assert main(["metrics", "--file", "-"]) == 2
     err = capsys.readouterr().err
     assert "empty expression from stdin" in err
+
+
+def test_explain_json_matches_the_list_rules_inventory(capsys):
+    assert main(["explain", "Raw_Division", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert set(payload) == {"name", "summary", "doc"}
+    assert payload["name"] == "raw_division"
+    assert payload["doc"].startswith("/ without DIVIDE(")
+    assert "raw_division\n" not in payload["doc"]
+
+    assert main(["lint", "--list-rules", "--json"]) == 0
+    inventory = {row["name"]: row["summary"] for row in json.loads(capsys.readouterr().out)}
+    assert payload["summary"] == inventory["raw_division"]
+
+    assert main(["explain", "nope", "--json"]) == 2
+    assert "unknown rule nope" in capsys.readouterr().err

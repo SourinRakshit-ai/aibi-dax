@@ -69,7 +69,9 @@ $ dxa lint "IF(a, 1, IF(b, 2, IF(c, 3, [D]/[E])))"
 Full documentation for one rule — its docstring, underlined. Exit 2 with
 the complete rule list on stderr if the name is unknown. Names match
 case-insensitively and ignore surrounding whitespace; the heading always
-prints the canonical lower-case name:
+prints the canonical lower-case name. `--json` emits
+`{"name", "summary", "doc"}` — the same summary as `--list-rules --json`
+and the docstring without the heading, for editor hovers:
 
 ```
 $ dxa explain earlier_var

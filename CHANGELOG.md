@@ -21,6 +21,8 @@
   threshold, with `--top N` applying to the filtered set. A blank
   expression (including a blank `--file`/stdin) now exits 2 on
   `lint`/`metrics`/`parse` instead of passing lint silently.
+- CLI: `dxa explain --json` emits `{"name", "summary", "doc"}` for
+  editor hovers, sharing the summary with `--list-rules --json`.
 - Lexer/parser: `]]` bracket escapes inside column names; parse errors
   carry the source character offset; `IN { … }` list literals parse as a
   comparison-level binary with a `List` right side; unquoted table
