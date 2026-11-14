@@ -335,3 +335,20 @@ def test_file_dash_still_rejects_two_sources(monkeypatch, capsys):
     monkeypatch.setattr("sys.stdin", io.StringIO("SUM([x])"))
     assert main(["lint", "SUM([x])", "--file", "-"]) == 2
     assert "not both" in capsys.readouterr().err
+
+
+def test_rank_min_weight_filters_before_top(model_path, capsys):
+    assert main(["rank", model_path, "--min-weight", "40"]) == 0
+    out = capsys.readouterr().out.strip()
+    assert "Sales.Bad" in out and "Sales.Good" not in out
+
+    # --top applies to the filtered set, not before the filter
+    assert main(["rank", model_path, "--min-weight", "40", "--top", "1"]) == 0
+    assert capsys.readouterr().out.strip().count("\n") == 0
+
+    assert main(["rank", model_path, "--min-weight", "13", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert [row["name"] for row in payload] == ["Bad", "Good"]
+
+    assert main(["rank", model_path, "--min-weight", "999"]) == 0
+    assert capsys.readouterr().out.strip() == ""

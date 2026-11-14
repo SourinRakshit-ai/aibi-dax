@@ -78,6 +78,8 @@ def _build_parser() -> argparse.ArgumentParser:
     p_rank.add_argument("model", help="path to model JSON")
     p_rank.add_argument("--top", type=int, default=10, help="how many to show")
     p_rank.add_argument("--table", help="restrict ranking to one table")
+    p_rank.add_argument("--min-weight", type=int, default=None,
+                        help="only measures at or above this weight")
     p_rank.add_argument("--json", action="store_true", help="emit JSON")
 
     p_explain = sub.add_parser("explain", help="full documentation for one rule")
@@ -180,7 +182,7 @@ def main(argv: list[str] | None = None) -> int:
         only = getattr(args, "table", None)
         if only is not None:
             model = {"tables": [t for t in model.get("tables", []) if t.get("name") == only]}
-        rows = rank_measures(model, top=args.top)
+        rows = rank_measures(model, top=args.top, min_weight=getattr(args, "min_weight", None))
         if getattr(args, "json", False):
             print(json.dumps([{"table": t, "name": n, "weight": w} for t, n, w in rows]))
         else:

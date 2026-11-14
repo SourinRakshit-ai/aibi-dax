@@ -22,7 +22,7 @@ dxa --version
 | -------------------------- | ---------------------------------------------- |
 | `dxa metrics "EXPR"`       | token/function/depth/iterator counts + weight (`--file PATH`)  |
 | `dxa metrics "EXPR" --json`| the same as a JSON payload                     |
-| `dxa rank model.json`      | heaviest measures first (`--top N`, `--table T`) |
+| `dxa rank model.json`      | heaviest measures first (`--top N`, `--table T`, `--min-weight W`) |
 | `dxa lint "EXPR"`          | anti-pattern findings for one expression (`--rule R`, `--list-rules [--json]`, `--file PATH`) |
 | `dxa explain RULE`         | full documentation for one anti-pattern rule |
 | `dxa lint-model model.json`| findings across every measure (`--table T`, `--rule R`, `--summary`) |

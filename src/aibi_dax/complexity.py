@@ -74,13 +74,21 @@ def weight(expr: str) -> int:
     )
 
 
-def rank_measures(model: Model, top: int = 10) -> list[tuple[str, str, int]]:
-    """The `top` most complex measures as (table, name, weight), heaviest first."""
+def rank_measures(
+    model: Model, top: int = 10, min_weight: int | None = None
+) -> list[tuple[str, str, int]]:
+    """The `top` most complex measures as (table, name, weight), heaviest first.
+
+    `min_weight` drops anything below the threshold *before* the `top`
+    slice, so `--top` always means the heaviest N of the qualifying set.
+    """
     scored: list[tuple[str, str, int]] = []
     for table in model.get("tables", []):
         for measure in table.get("measures", []):
             expr = str(measure.get("expression", ""))
             scored.append((str(table.get("name", "?")), str(measure.get("name", "?")), weight(expr)))
+    if min_weight is not None:
+        scored = [item for item in scored if item[2] >= min_weight]
     scored.sort(key=lambda item: (item[2], item[1]), reverse=True)
     return scored[: max(0, top)]
 

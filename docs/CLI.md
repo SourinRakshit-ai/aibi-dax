@@ -26,7 +26,7 @@ weight      45
 `--file PATH` reads the expression from a file (`-` for stdin), matching
 `dxa lint`.
 
-## `dxa rank model.json [--top N]`
+## `dxa rank model.json [--top N] [--min-weight W]`
 
 Weighs every measure in a shared-schema model dump:
 
@@ -36,6 +36,10 @@ $ dxa rank model.json --top 3
     34  Sales.If Stair
     12  Sales.Clean Total
 ```
+
+`--min-weight 40` keeps only measures at or above that weight, which is
+the review question "what crosses the line"; `--top N` then applies to
+the filtered set. It composes with `--table` and `--json`.
 
 ## `dxa lint "EXPR"`
 

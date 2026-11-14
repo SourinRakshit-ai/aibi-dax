@@ -17,6 +17,8 @@
   `[{"name", "summary"}]` for tooling; `dxa metrics --file` and
   `dxa parse --file` share the same resolver (`--file -` reads stdin),
   and `dxa explain` matches rule names case-insensitively.
+- CLI: `dxa rank --min-weight W` keeps only measures at or above the
+  threshold, with `--top N` applying to the filtered set.
 - Lexer/parser: `]]` bracket escapes inside column names; parse errors
   carry the source character offset; `IN { … }` list literals parse as a
   comparison-level binary with a `List` right side; unquoted table
