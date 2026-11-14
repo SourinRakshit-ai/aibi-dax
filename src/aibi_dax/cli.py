@@ -144,7 +144,8 @@ def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
 
     if args.command == "explain":
-        match = [r for r in ALL_RULES if r.__name__ == args.rule]
+        wanted = args.rule.strip().lower()
+        match = [r for r in ALL_RULES if r.__name__.lower() == wanted]
         if not match:
             names = "\n".join(f"  {r.__name__}" for r in ALL_RULES)
             print(f"dxa: unknown rule {args.rule} — one of:\n{names}", file=sys.stderr)

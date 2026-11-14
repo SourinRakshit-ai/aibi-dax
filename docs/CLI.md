@@ -58,7 +58,9 @@ $ dxa lint "IF(a, 1, IF(b, 2, IF(c, 3, [D]/[E])))"
 ## `dxa explain RULE`
 
 Full documentation for one rule — its docstring, underlined. Exit 2 with
-the complete rule list on stderr if the name is unknown:
+the complete rule list on stderr if the name is unknown. Names match
+case-insensitively and ignore surrounding whitespace; the heading always
+prints the canonical lower-case name:
 
 ```
 $ dxa explain earlier_var

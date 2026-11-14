@@ -302,3 +302,18 @@ def test_lint_list_rules_json_is_tooling_friendly(capsys):
 def test_lint_json_without_list_rules_still_reports_findings(capsys):
     assert main(["lint", "SUMX('Sales', CALCULATE([Amount]))", "--json"]) == 1
     assert isinstance(json.loads(capsys.readouterr().out), list)
+
+
+def test_explain_is_case_and_whitespace_tolerant(capsys):
+    assert main(["explain", "single_column_iterator"]) == 0
+    canonical = capsys.readouterr().out
+
+    assert main(["explain", "Single_Column_Iterator"]) == 0
+    assert capsys.readouterr().out == canonical
+
+    assert main(["explain", "  RAW_DIVISION  "]) == 0
+    out = capsys.readouterr().out
+    assert out.startswith("raw_division\n------------\n")
+
+    assert main(["explain", "not_a_rule"]) == 2
+    assert "unknown rule not_a_rule" in capsys.readouterr().err
