@@ -15,8 +15,8 @@
   disk, and `dxa lint-model --summary` for a model-wide rule histogram.
   `dxa lint --list-rules --json` emits the rule inventory as
   `[{"name", "summary"}]` for tooling; `dxa metrics --file` and
-  `dxa parse --file` share the same resolver, and `dxa explain` matches
-  rule names case-insensitively.
+  `dxa parse --file` share the same resolver (`--file -` reads stdin),
+  and `dxa explain` matches rule names case-insensitively.
 - Lexer/parser: `]]` bracket escapes inside column names; parse errors
   carry the source character offset; `IN { … }` list literals parse as a
   comparison-level binary with a `List` right side; unquoted table

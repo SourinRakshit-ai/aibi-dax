@@ -1,5 +1,6 @@
 """Tests for the dxa CLI."""
 
+import io
 import json
 
 import pytest
@@ -317,3 +318,20 @@ def test_explain_is_case_and_whitespace_tolerant(capsys):
 
     assert main(["explain", "not_a_rule"]) == 2
     assert "unknown rule not_a_rule" in capsys.readouterr().err
+
+
+def test_file_dash_reads_stdin(monkeypatch, capsys):
+    for command, expected in [
+        ("lint", "no findings"),
+        ("metrics", "weight"),
+        ("parse", "Call(name='SUM'"),
+    ]:
+        monkeypatch.setattr("sys.stdin", io.StringIO("SUM('Sales'[Amount])\n"))
+        assert main([command, "--file", "-"]) == 0
+        assert expected in capsys.readouterr().out
+
+
+def test_file_dash_still_rejects_two_sources(monkeypatch, capsys):
+    monkeypatch.setattr("sys.stdin", io.StringIO("SUM([x])"))
+    assert main(["lint", "SUM([x])", "--file", "-"]) == 2
+    assert "not both" in capsys.readouterr().err

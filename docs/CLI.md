@@ -23,7 +23,8 @@ weight      45
 ```
 
 `--json` wraps the same payload: `{"metrics": {...}, "weight": 45}`.
-`--file PATH` reads the expression from a file, matching `dxa lint`.
+`--file PATH` reads the expression from a file (`-` for stdin), matching
+`dxa lint`.
 
 ## `dxa rank model.json [--top N]`
 
@@ -46,7 +47,9 @@ inventory with each rule's summary and exits 0. `--list-rules --json`
 prints that inventory as `[{"name": …, "summary": …}]` for editor
 plugins and CI allow-lists. `--file PATH` reads the
 expression from a file instead, so a measure copied from a model keeps
-its newlines and quotes; pass one or the other, never both:
+its newlines and quotes; `--file -` reads stdin, so
+`cat measure.dax | dxa lint --file -` works in a pipeline. Pass one
+source or the other, never both:
 
 ```
 $ dxa lint "IF(a, 1, IF(b, 2, IF(c, 3, [D]/[E])))"
@@ -93,7 +96,7 @@ $ dxa lint-model model.json --summary
 Reduces the expression to an AST (recursive descent; exit 2 on a
 genuinely unparseable sequence). `--json` prints the tree as JSON;
 `--file PATH` reads the expression from a file instead of the command
-line, so multiline measures keep their shape. `--tree` prints it one
+line (`-` for stdin), so multiline measures keep their shape. `--tree` prints it one
 node per line, children indented, with `field:`
 labels where position alone would not say what the child is:
 

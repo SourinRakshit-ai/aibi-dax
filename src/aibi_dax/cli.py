@@ -125,12 +125,19 @@ def _expression(args: argparse.Namespace) -> tuple[str | None, int]:
         if expr is not None:
             print("dxa: give either an expression or --file, not both", file=sys.stderr)
             return None, 2
-        try:
-            expr = Path(path).read_text(encoding="utf-8")
-        except OSError as exc:
-            reason = exc.strerror or str(exc)
-            print(f"dxa: cannot read {path}: {reason}", file=sys.stderr)
-            return None, 2
+        if path == "-":
+            try:
+                expr = sys.stdin.read()
+            except OSError as exc:
+                print(f"dxa: cannot read stdin: {exc.strerror or exc}", file=sys.stderr)
+                return None, 2
+        else:
+            try:
+                expr = Path(path).read_text(encoding="utf-8")
+            except OSError as exc:
+                reason = exc.strerror or str(exc)
+                print(f"dxa: cannot read {path}: {reason}", file=sys.stderr)
+                return None, 2
     if expr is None:
         hint = " (or --list-rules)" if args.command == "lint" else ""
         print(f"dxa: {args.command} needs an expression, --file PATH{hint}",
