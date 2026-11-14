@@ -174,6 +174,10 @@ class _Parser:
 
     def _unary(self) -> Node:
         tok = self._peek()
+        if tok is not None and tok.kind == "word" and tok.value.upper() == "NOT":
+            # `NOT` is a keyword operator, not a table qualifier or function.
+            self._next()
+            return Unary(op="NOT", operand=self._unary())
         if tok is not None and tok.kind == "symbol" and tok.value in ("-", "+", "!"):
             return Unary(op=self._next().value, operand=self._unary())
         return self._primary()
