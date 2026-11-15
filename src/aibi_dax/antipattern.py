@@ -634,6 +634,37 @@ def filter_inside_aggregate(expr: str) -> str | None:
     return None
 
 
+_NESTED_CALC_MSG = (
+    "CALCULATE nested inside CALCULATE — the inner context transition is "
+    "redundant; merge the filter lists into a single CALCULATE(...)."
+)
+
+_NESTED_CALC_RE = re.compile(r"CALCULATE\s*\(\s*CALCULATE\s*\(", re.IGNORECASE)
+
+
+def nested_calculate(expr: str) -> str | None:
+    """`CALCULATE(CALCULATE(...))`: the inner transition is redundant.
+
+    AST-driven: a CALCULATE call whose first argument is itself a
+    CALCULATE flags — the outer call has already transitioned the context,
+    so the two filter lists merge into one. Direct nesting only: deeper in
+    the expression (behind an iterator, inside an IF branch) the inner
+    CALCULATE is either real row-context work rule 1 owns or an ordinary
+    conditional. Unparseable text falls back to the literal-token scan.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return _NESTED_CALC_MSG if _NESTED_CALC_RE.search(expr) else None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "CALCULATE" or not call.args:
+            continue
+        first = call.args[0]
+        if isinstance(first, Call) and first.name.upper() == "CALCULATE":
+            return _NESTED_CALC_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -652,4 +683,5 @@ ALL_RULES: list[Rule] = [
     abs_negative_comparison,
     if_true_false_branches,
     filter_inside_aggregate,
+    nested_calculate,
 ]

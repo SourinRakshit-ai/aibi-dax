@@ -8,7 +8,9 @@
   plain aggregate. Rule 15 flags `ABS(x)` against an impossible bound;
   rule 16 flags `IF(cond, TRUE(), FALSE())` (→ `cond`, inverted → `NOT cond`);
   rule 17 flags `FILTER(...)` as an aggregate's first argument
-  (→ pass the condition to `CALCULATE`).
+  (→ pass the condition to `CALCULATE`); rule 18 flags a nested
+  `CALCULATE(CALCULATE(...))` whose inner context transition is
+  redundant (→ merge the filter lists into one call).
 - CLI: `dxa parse --tree` (indented AST), `dxa lint --rule` and
   `dxa lint-model --rule` to run one rule (exit 2 + rule list on stderr
   when unknown), `dxa lint --file PATH` to read a multiline measure from

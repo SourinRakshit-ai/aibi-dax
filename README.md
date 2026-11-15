@@ -51,6 +51,7 @@ of aibi-toolkit — so one file feeds both tools.
 15. `ABS(...)` against an impossible bound (→ sign check / drop the condition)
 16. `IF(cond, TRUE(), FALSE())` (→ `cond`; inverted order → `NOT cond`)
 17. `FILTER(...)` as an aggregate's first argument (→ the filter condition in `CALCULATE`)
+18. `CALCULATE(CALCULATE(...))` — nested context transition (→ merge both filter lists into one `CALCULATE`)
 
 ## What the weight measures
 
