@@ -22,10 +22,10 @@ dxa --version
 | -------------------------- | ---------------------------------------------- |
 | `dxa metrics "EXPR"`       | token/function/depth/iterator counts + weight (`--file PATH`)  |
 | `dxa metrics "EXPR" --json`| the same as a JSON payload                     |
-| `dxa rank model.json`      | heaviest measures first (`--top N`, `--table T`, `--min-weight W`) |
+| `dxa rank model.json`      | heaviest measures first (`--top N`, `--table T`, `--min-weight W`; `-` = stdin) |
 | `dxa lint "EXPR"`          | anti-pattern findings for one expression (`--rule R`, `--list-rules [--json]`, `--file PATH`) |
 | `dxa explain RULE`         | full documentation for one anti-pattern rule (`--json`) |
-| `dxa lint-model model.json`| findings across every measure (`--table T`, `--rule R`, `--summary`) |
+| `dxa lint-model model.json`| findings across every measure (`--table T`, `--rule R`, `--summary`; `-` = stdin) |
 | `dxa parse "EXPR"`         | the recursive-descent AST, human or `--json` (`--file PATH`)    |
 
 Model dumps use the same JSON shape TMDL export produces — the shared schema

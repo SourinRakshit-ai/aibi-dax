@@ -156,23 +156,30 @@ def _expression(args: argparse.Namespace) -> tuple[str | None, int]:
 
 
 def _model(path: str) -> tuple[Model | None, int]:
-    """Load a model dump or exit 2 with a one-line reason.
+    """Load a model dump from a path or `-` (stdin), or exit 2 one-line.
 
     Missing files, broken JSON and non-object payloads are input errors,
     not crashes — every other CLI error already prints one line and
-    returns 2, so the loaders must behave the same way.
+    returns 2, so the loaders must behave the same way. `-` reads the
+    dump from stdin and reports errors as `stdin` rather than a path.
     """
+    source = "stdin" if path == "-" else path
     try:
+        if path == "-":
+            data = json.loads(sys.stdin.read())
+            if not isinstance(data, dict):
+                raise TypeError("model dump must be a JSON object")
+            return data, 0
         return load_model(path), 0
     except OSError as exc:
         reason = exc.strerror or str(exc)
-        print(f"dxa: cannot read {path}: {reason}", file=sys.stderr)
+        print(f"dxa: cannot read {source}: {reason}", file=sys.stderr)
         return None, 2
     except json.JSONDecodeError as exc:
-        print(f"dxa: {path} is not valid JSON: {exc}", file=sys.stderr)
+        print(f"dxa: {source} is not valid JSON: {exc}", file=sys.stderr)
         return None, 2
     except TypeError as exc:
-        print(f"dxa: {path} is not a model dump: {exc}", file=sys.stderr)
+        print(f"dxa: {source} is not a model dump: {exc}", file=sys.stderr)
         return None, 2
 
 

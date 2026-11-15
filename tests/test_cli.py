@@ -419,3 +419,36 @@ def test_model_loader_errors_are_one_line_not_tracebacks(tmp_path, capsys):
     assert main(["rank", str(good)]) == 0
     assert main(["lint-model", str(good)]) == 1
     capsys.readouterr()
+
+
+def test_model_commands_read_the_dump_from_stdin(monkeypatch, capsys):
+    dump = json.dumps(MODEL)
+
+    monkeypatch.setattr("sys.stdin", io.StringIO(dump))
+    assert main(["lint-model", "-"]) == 1
+    assert "Sales.Bad" in capsys.readouterr().out
+
+    monkeypatch.setattr("sys.stdin", io.StringIO(dump))
+    assert main(["rank", "-", "--top", "1", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload[0]["name"] == "Bad"
+
+    monkeypatch.setattr("sys.stdin", io.StringIO(dump))
+    assert main(["lint-model", "-", "--summary", "--table", "Sales"]) == 1
+    assert "calculate_inside_iterator" in capsys.readouterr().out
+
+
+def test_stdin_model_errors_name_stdin_not_a_path(monkeypatch, capsys):
+    for text, needle in [
+        ("", "stdin is not valid JSON"),
+        ("not json", "stdin is not valid JSON"),
+        ("[1, 2]", "stdin is not a model dump"),
+    ]:
+        monkeypatch.setattr("sys.stdin", io.StringIO(text))
+        assert main(["lint-model", "-"]) == 2
+        err = capsys.readouterr().err
+        assert needle in err and "Traceback" not in err
+
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps(MODEL)))
+    assert main(["rank", "-", "--min-weight", "999"]) == 0
+    assert capsys.readouterr().out.strip() == ""

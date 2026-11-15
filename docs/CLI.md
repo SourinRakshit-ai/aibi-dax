@@ -39,7 +39,8 @@ $ dxa rank model.json --top 3
 
 `--min-weight 40` keeps only measures at or above that weight, which is
 the review question "what crosses the line"; `--top N` then applies to
-the filtered set. It composes with `--table` and `--json`.
+the filtered set. It composes with `--table` and `--json`. The model
+path may be `-` to read the dump from stdin.
 
 ## `dxa lint "EXPR"`
 
@@ -89,7 +90,9 @@ Findings exit 1 with `- ` lines per finding; `--json` prints the findings
 map. Both model commands (`lint-model` and `rank`) share one loader, so
 a missing file, broken JSON or a non-object payload exits 2 with a
 single-line reason — `cannot read …`, `is not valid JSON: …`,
-`is not a model dump: …` — never a traceback.
+`is not a model dump: …` — never a traceback. Passing `-` as the path
+reads the model JSON from stdin instead (`tmdlexport | dxa lint-model -`),
+and the same errors then name `stdin` rather than a path.
 
 `--summary` swaps the per-measure listing for a model-wide rule
 histogram — the count of measures each rule fires on, heaviest first.
