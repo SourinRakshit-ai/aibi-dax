@@ -228,3 +228,28 @@ def test_filter_inside_aggregate_leaves_legitimate_uses():
     assert flag("SUM(FILTER(S, [A] > 0))") is None
     assert flag("FILTER(S, [A] > 0)") is None
     assert flag("COUNTROWS(FILTER(") is None
+
+
+def test_nested_calculate_flags_direct_nesting():
+    flag = antipattern.nested_calculate
+    assert flag("CALCULATE(CALCULATE(SUM([Amount]), [Qty] > 0))") is not None
+    assert flag("CALCULATE ( CALCULATE ([x]))") is not None  # unparseable → token scan
+    assert flag("calculate(calculate(sum([x])))") is not None  # case-insensitive
+    triple = "CALCULATE(CALCULATE(CALCULATE(SUM([x]))))"
+    assert flag(triple) is not None
+
+
+def test_nested_calculate_reports_a_merge_not_a_crime():
+    msg = antipattern.nested_calculate("CALCULATE(CALCULATE(SUM([x])))")
+    assert msg is not None
+    assert "merge" in msg and "redundant" in msg
+
+
+def test_nested_calculate_leaves_legitimate_uses():
+    flag = antipattern.nested_calculate
+    assert flag("CALCULATE(SUM([Amount]), [Qty] > 0)") is None  # not nested
+    assert flag("SUMX('Sales', CALCULATE([Amount]))") is None  # rule 1's shape
+    assert flag("CALCULATE(IF([a], [b], [c]), [d] > 0)") is None  # ordinary conditional
+    assert flag("CALCULATE(SUM([x]))") is None
+    assert flag("[x]") is None
+    assert flag("CALCULATE(CALCULATE(") is not None  # literal fallback still catches it

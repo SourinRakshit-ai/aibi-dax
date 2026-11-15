@@ -28,6 +28,14 @@ as a `CALCULATE` filter is pushed into the scan:
 argument is checked, so `FILTER` used elsewhere — a `CALCULATE` filter
 argument, a nested step — stays silent.
 
+### Nested `CALCULATE`
+`CALCULATE(CALCULATE(x, f1), f2)` — the inner context transition is a
+no-op, because the outer call has already transitioned before it
+evaluates its first argument. Merge the filter lists instead:
+`CALCULATE(x, f1, f2)`. Only direct nesting flags: a `CALCULATE` deeper
+in the expression either sits behind a row iterator (rule 1's real
+context work) or is an ordinary conditional.
+
 ## Refactoring rules
 
 ### Three or more IF calls
