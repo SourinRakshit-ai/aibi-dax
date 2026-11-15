@@ -23,6 +23,9 @@
   `lint`/`metrics`/`parse` instead of passing lint silently.
 - CLI: `dxa explain --json` emits `{"name", "summary", "doc"}` for
   editor hovers, sharing the summary with `--list-rules --json`.
+- CLI: `--rule` repeats on `lint` and `lint-model` (and `--summary`) —
+  findings are the union of the named rules; an unknown name anywhere in
+  the list exits 2 before any output.
 - Model loading: `dxa rank` and `dxa lint-model` report a missing file,
   broken JSON or a non-object payload as a one-line exit-2 error
   instead of a Python traceback, and both accept `-` to read the model

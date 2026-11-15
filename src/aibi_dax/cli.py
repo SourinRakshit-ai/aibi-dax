@@ -90,14 +90,16 @@ def _build_parser() -> argparse.ArgumentParser:
     p_lint.add_argument("expr", nargs="?", help="DAX expression, quoted")
     p_lint.add_argument("--file", help="read the expression from this file instead")
     p_lint.add_argument("--json", action="store_true", help="emit JSON")
-    p_lint.add_argument("--rule", help="run only this rule (function name)")
+    p_lint.add_argument("--rule", action="append", metavar="NAME",
+                        help="run only this rule (function name; repeatable)")
     p_lint.add_argument("--list-rules", action="store_true", help="print the rule inventory and exit")
 
     p_lint_model = sub.add_parser("lint-model", help="anti-pattern findings across a model dump")
-    p_lint_model.add_argument("model", help="path to model JSON")
+    p_lint_model.add_argument("model", help="path to model JSON (`-` for stdin)")
     p_lint_model.add_argument("--json", action="store_true", help="emit JSON")
     p_lint_model.add_argument("--table", help="restrict findings to one table")
-    p_lint_model.add_argument("--rule", help="run only this rule (function name)")
+    p_lint_model.add_argument("--rule", action="append", metavar="NAME",
+                              help="run only this rule (function name; repeatable)")
     p_lint_model.add_argument(
         "--summary", action="store_true", help="hit count per rule instead of per measure"
     )
@@ -183,6 +185,31 @@ def _model(path: str) -> tuple[Model | None, int]:
         return None, 2
 
 
+def _rules_for(names: list[str] | None) -> tuple[list[Rule] | None, int]:
+    """Resolve repeated `--rule` names to rules.
+
+    Returns `(rules, 0)` — `rules` is `None` when no filter was asked
+    for, so "run everything" stays distinguishable from an error — or
+    `(None, 2)` after naming every unknown rule on stderr. Repeating a
+    name runs that rule once.
+    """
+    if not names:
+        return None, 0
+    known = {rule.__name__: rule for rule in ALL_RULES}
+    unknown = [name for name in names if name not in known]
+    if unknown:
+        inventory = ", ".join(rule.__name__ for rule in ALL_RULES)
+        print(f"dxa: unknown rule {', '.join(unknown)} — one of: {inventory}",
+              file=sys.stderr)
+        return None, 2
+    picked: list[Rule] = []
+    for name in names:
+        rule = known[name]
+        if rule not in picked:
+            picked.append(rule)
+    return picked, 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """Entry point; returns a conventional exit code."""
     args = _build_parser().parse_args(argv)
@@ -249,14 +276,9 @@ def main(argv: list[str] | None = None) -> int:
         expr, code = _expression(args)
         if expr is None:
             return code
-        rules = None
-        rule_name = getattr(args, "rule", None)
-        if rule_name is not None:
-            rules = [r for r in ALL_RULES if r.__name__ == rule_name]
-            if not rules:
-                names = ", ".join(r.__name__ for r in ALL_RULES)
-                print(f"dxa: unknown rule {rule_name} — one of: {names}", file=sys.stderr)
-                return 2
+        rules, code = _rules_for(getattr(args, "rule", None))
+        if code:
+            return code
         findings = lint_expression(expr, rules)
         if getattr(args, "json", False):
             print(json.dumps(findings))
@@ -269,14 +291,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "lint-model":
-        rules = None
-        rule_name = getattr(args, "rule", None)
-        if rule_name is not None:
-            rules = [r for r in ALL_RULES if r.__name__ == rule_name]
-            if not rules:
-                names = ", ".join(r.__name__ for r in ALL_RULES)
-                print(f"dxa: unknown rule {rule_name} — one of: {names}", file=sys.stderr)
-                return 2
+        rules, code = _rules_for(getattr(args, "rule", None))
+        if code:
+            return code
         model, code = _model(args.model)
         if model is None:
             return code

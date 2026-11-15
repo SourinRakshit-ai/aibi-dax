@@ -452,3 +452,44 @@ def test_stdin_model_errors_name_stdin_not_a_path(monkeypatch, capsys):
     monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps(MODEL)))
     assert main(["rank", "-", "--min-weight", "999"]) == 0
     assert capsys.readouterr().out.strip() == ""
+
+
+def test_rule_flag_is_repeatable(capsys):
+    expr = "IF([a], 1, IF([b], 2, IF([c], 3, [D]/[E])))"
+
+    # the union of two rules, each firing once
+    assert main(["lint", expr, "--rule", "too_many_ifs", "--rule", "raw_division"]) == 1
+    out = capsys.readouterr().out
+    assert "nested IF" in out and "DIVIDE" in out
+
+    # a repeated name runs that rule once
+    assert main(["lint", expr, "--rule", "raw_division", "--rule", "raw_division"]) == 1
+    assert capsys.readouterr().out.count("DIVIDE") == 1
+
+    # a single name behaves exactly as before
+    assert main(["lint", expr, "--rule", "raw_division"]) == 1
+    assert "DIVIDE" in capsys.readouterr().out and "nested IF" not in capsys.readouterr().out
+
+
+def test_unknown_rule_anywhere_in_the_list_exits_2_before_output(capsys):
+    expr = "IF([a], 1, IF([b], 2, IF([c], 3, [D]/[E])))"
+
+    assert main(["lint", expr, "--rule", "raw_division", "--rule", "nope"]) == 2
+    err = capsys.readouterr().err
+    assert "unknown rule nope" in err and "calculate_inside_iterator" in err
+    assert capsys.readouterr().out == ""
+
+    assert main(["lint-model", "unused.json", "--rule", "nope", "--rule", "also_bad"]) == 2
+    err = capsys.readouterr().err
+    assert "unknown rule nope, also_bad" in err
+    assert capsys.readouterr().out == ""
+
+
+def test_lint_model_rule_flag_is_repeatable(model_path, capsys):
+    assert main(["lint-model", model_path, "--rule", "calculate_inside_iterator",
+                 "--rule", "raw_division"]) == 1
+    assert "Sales.Bad:" in capsys.readouterr().out
+
+    assert main(["lint-model", model_path, "--summary", "--rule", "raw_division",
+                 "--rule", "single_column_iterator"]) == 0
+    assert "model is clean" in capsys.readouterr().out
