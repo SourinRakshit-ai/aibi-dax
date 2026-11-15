@@ -46,8 +46,9 @@ path may be `-` to read the dump from stdin.
 
 Anti-pattern findings for one expression. Exit code 0 when clean, 1 with
 `-` lines per finding. `--json` prints the findings as a JSON list (`[]`
-when clean). `--rule NAME` runs a single rule (function name, exit 2 with
-the rule list on stderr if unknown). `--list-rules` prints the rule
+when clean). `--rule NAME` runs one rule (function name) and may be
+repeated to run several — findings are the union; exit 2 with
+the rule list on stderr if any name is unknown. `--list-rules` prints the rule
 inventory with each rule's summary and exits 0. `--list-rules --json`
 prints that inventory as `[{"name": …, "summary": …}]` for editor
 plugins and CI allow-lists. `--file PATH` reads the
@@ -84,8 +85,9 @@ EARLIER is superseded by VAR capture — flat and type-checkable.
 ## `dxa lint-model model.json`
 
 Groups findings by `table.measure`; `--table T` restricts to one table.
-`--rule NAME` runs a single rule (function name, exit 2 with the rule list
-on stderr if unknown). Prints nothing and exits 0 for a clean model.
+`--rule NAME` runs one rule (function name) and may be repeated to run
+several — findings are the union; exit 2 with the rule list
+on stderr if any name is unknown. Prints nothing and exits 0 for a clean model.
 Findings exit 1 with `- ` lines per finding; `--json` prints the findings
 map. Both model commands (`lint-model` and `rank`) share one loader, so
 a missing file, broken JSON or a non-object payload exits 2 with a
