@@ -55,6 +55,7 @@ of aibi-toolkit — so one file feeds both tools.
 19. `COUNTROWS(VALUES(col))` / `COUNTROWS(DISTINCT(col))` (→ `DISTINCTCOUNT(col)`)
 20. `IF(ISBLANK(x), y, x)` (→ `COALESCE(x, y)`)
 21. `SUMMARIZE` with a computed argument (→ group with `SUMMARIZE`, compute with `ADDCOLUMNS`)
+22. `IF(ISERROR(x), y, x)` (→ `IFERROR(x, y)`)
 
 ## What the weight measures
 

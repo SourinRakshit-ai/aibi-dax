@@ -326,3 +326,28 @@ def test_summarize_extra_column_leaves_grouping_alone():
     assert flag("ADDCOLUMNS(SUMMARIZE('Sales', [R]), [Q] + 1)") is None  # correct pattern
     assert flag("SUM('Sales'[Qty])") is None  # not a SUMMARIZE
     assert flag("SUMMARIZE(") is None  # unparseable → silent
+
+
+def test_if_iserror_iferror_flags_hand_rolled_form():
+    flag = antipattern.if_iserror_iferror
+    assert flag("IF(ISERROR([A]), 0, [A])") is not None
+    assert flag("IF(ISERROR('Sales'[Qty]), BLANK(), 'Sales'[Qty])") is not None
+    assert flag("if(iserror([a]), 0, [a])") is not None  # case-insensitive
+    nested = "SUMX('Sales', IF(ISERROR([P]), [Q], [P]))"
+    assert flag(nested) is not None  # nested inside a larger expression
+
+
+def test_if_iserror_iferror_message_names_iferror():
+    msg = antipattern.if_iserror_iferror("IF(ISERROR([A]), 0, [A])")
+    assert msg is not None
+    assert "IFERROR(x, y)" in msg
+
+
+def test_if_iserror_iferror_leaves_genuine_conditionals_alone():
+    flag = antipattern.if_iserror_iferror
+    assert flag("IF(ISERROR([A]), 0, [B])") is None  # different else value
+    assert flag("IF([A] > 0, [A], 0)") is None  # not an ISERROR test
+    assert flag("IF(ISERROR([A]), 0)") is None  # two-argument IF
+    assert flag("ISERROR([A])") is None  # no IF at all
+    assert flag("IFERROR([A], 0)") is None
+    assert flag("IF(ISERROR(") is None  # unparseable → silent

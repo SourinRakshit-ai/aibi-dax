@@ -14,7 +14,8 @@
   `COUNTROWS(VALUES(col))` (→ `DISTINCTCOUNT(col)`); rule 20 flags
   `IF(ISBLANK(x), y, x)` (→ `COALESCE(x, y)`); rule 21 flags a
   computed argument inside `SUMMARIZE` (→ group with `SUMMARIZE`,
-  compute with `ADDCOLUMNS`).
+  compute with `ADDCOLUMNS`); rule 22 flags
+  `IF(ISERROR(x), y, x)` (→ `IFERROR(x, y)`).
 - `--table` on `rank` and `lint-model` matches table names
   case-insensitively (one shared filter): `--table sales` now finds
   `Sales` instead of silently reporting nothing — or, for

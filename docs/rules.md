@@ -112,6 +112,15 @@ then compute over the result with `ADDCOLUMNS`. AST-driven: only a
 plain `[Col]` or `'T'[Col]` argument after the table passes;
 `ADDCOLUMNS(SUMMARIZE(...), …)` — the correct pattern — never flags.
 
+### `IF(ISERROR(x), y, x)`
+`IF(ISERROR([Amount]), BLANK(), [Amount])` is a hand-spelled
+`IFERROR([Amount], BLANK())` — the long form only hides the intent.
+AST-driven: only a three-argument IF whose condition is a
+one-argument `ISERROR` **and** whose else-branch equals the tested
+expression flags; `IF(ISERROR([A]), 0, [B])` is a genuine
+conditional and stays silent. Distinct from the `IFERROR` overreach
+rule, which flags *using* IFERROR too liberally.
+
 ## Filter-safety rules
 
 ### Bare ALL(table)

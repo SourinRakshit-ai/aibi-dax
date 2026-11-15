@@ -759,6 +759,39 @@ def summarize_extra_column(expr: str) -> str | None:
     return None
 
 
+_IF_ISERROR_MSG = (
+    "IF(ISERROR(x), y, x) is a hand-rolled IFERROR(x, y) — "
+    "one function says it directly."
+)
+
+
+def if_iserror_iferror(expr: str) -> str | None:
+    """`IF(ISERROR(x), y, x)` collapses to `IFERROR(x, y)`.
+
+    AST-driven: a three-argument IF whose condition is a one-argument
+    ISERROR call and whose else-branch equals the tested expression
+    (frozen dataclasses compare structurally). A differing else-branch
+    (`IF(ISERROR([A]), 0, [B])`) is a genuine conditional and stays
+    silent, as does unparseable text.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "IF" or len(call.args) != 3:
+            continue
+        cond, _, other = call.args
+        if (
+            isinstance(cond, Call)
+            and cond.name.upper() == "ISERROR"
+            and len(cond.args) == 1
+            and other == cond.args[0]
+        ):
+            return _IF_ISERROR_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -781,4 +814,5 @@ ALL_RULES: list[Rule] = [
     countrows_values,
     if_isblank_coalesce,
     summarize_extra_column,
+    if_iserror_iferror,
 ]
