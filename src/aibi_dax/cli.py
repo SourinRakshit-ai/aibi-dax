@@ -236,6 +236,24 @@ def _model(path: str) -> tuple[Model | None, int]:
         return None, 2
 
 
+def _only_table(model: Model, name: str) -> Model:
+    """Restrict `model` to one table, matched case-insensitively.
+
+    DAX table names are case-insensitive, so `--table sales` must find
+    `Sales` — an exact-case miss would silently empty `rank` and, worse,
+    make `lint-model` report "model is clean" over findings that exist.
+    A table whose name is not a string never matches: typing `none`
+    must not select a nameless table.
+    """
+    wanted = name.lower()
+    return {
+        "tables": [
+            table for table in model.get("tables", [])
+            if isinstance(table.get("name"), str) and table["name"].lower() == wanted
+        ]
+    }
+
+
 def _rules_for(names: list[str] | None) -> tuple[list[Rule] | None, int]:
     """Resolve repeated `--rule` names to rules.
 
@@ -349,7 +367,7 @@ def main(argv: list[str] | None = None) -> int:
             return code
         only = getattr(args, "table", None)
         if only is not None:
-            model = {"tables": [t for t in model.get("tables", []) if t.get("name") == only]}
+            model = _only_table(model, only)
         rows = rank_measures(model, top=args.top, min_weight=getattr(args, "min_weight", None))
         if getattr(args, "json", False):
             print(json.dumps([{"table": t, "name": n, "weight": w} for t, n, w in rows]))
@@ -396,7 +414,7 @@ def main(argv: list[str] | None = None) -> int:
             return code
         only = getattr(args, "table", None)
         if only is not None:
-            model = {"tables": [t for t in model.get("tables", []) if t.get("name") == only]}
+            model = _only_table(model, only)
         if getattr(args, "summary", False):
             counts = lint_model_summary(model, rules)
             if getattr(args, "json", False):

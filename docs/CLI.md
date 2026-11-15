@@ -91,7 +91,8 @@ $ dxa rank model.json --top 3
 
 `--min-weight 40` keeps only measures at or above that weight, which is
 the review question "what crosses the line"; `--top N` then applies to
-the filtered set. It composes with `--table` and `--json`. The model
+the filtered set. It composes with `--table` — which matches table
+names case-insensitively — and `--json`. The model
 path may be `-` to read the dump from stdin.
 
 ## `dxa lint "EXPR"`
@@ -136,7 +137,8 @@ EARLIER is superseded by VAR capture — flat and type-checkable.
 
 ## `dxa lint-model model.json`
 
-Groups findings by `table.measure`; `--table T` restricts to one table.
+Groups findings by `table.measure`; `--table T` restricts to one table,
+matched case-insensitively.
 `--rule NAME` runs one rule (function name) and may be repeated to run
 several — findings are the union; exit 2 with the rule list
 on stderr if any name is unknown. Prints nothing and exits 0 for a clean model.

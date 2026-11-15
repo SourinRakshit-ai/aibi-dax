@@ -13,6 +13,11 @@
   redundant (→ merge the filter lists into one call); rule 19 flags
   `COUNTROWS(VALUES(col))` (→ `DISTINCTCOUNT(col)`); rule 20 flags
   `IF(ISBLANK(x), y, x)` (→ `COALESCE(x, y)`).
+- `--table` on `rank` and `lint-model` matches table names
+  case-insensitively (one shared filter): `--table sales` now finds
+  `Sales` instead of silently reporting nothing — or, for
+  `lint-model`, "model is clean" over findings that exist. A table
+  whose name is not a string never matches.
 - CLI: `dxa parse --tree` (indented AST), `dxa lint --rule` and
   `dxa lint-model --rule` to run one rule (exit 2 + rule list on stderr
   when unknown), `dxa lint --file PATH` to read a multiline measure from

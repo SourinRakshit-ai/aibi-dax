@@ -551,3 +551,43 @@ def test_metrics_empty_positional_in_a_multi_run_prints_nothing(capsys):
     err = capsys.readouterr()
     assert err.out == ""
     assert "empty expression" in err.err
+
+
+def test_table_filter_matches_case_insensitively(tmp_path, capsys):
+    other = dict(MODEL)
+    other["tables"] = MODEL["tables"] + [
+        {"name": "Other", "measures": [
+            {"name": "Heavy", "expression": "SUMX('S', AVERAGEX('S', CALCULATE([x])))"},
+        ]},
+    ]
+    p2 = tmp_path / "two.json"
+    p2.write_text(json.dumps(other), encoding="utf-8")
+
+    assert main(["rank", str(p2), "--table", "other"]) == 0
+    out = capsys.readouterr().out
+    assert "Other.Heavy" in out and "Sales" not in out
+
+    assert main(["lint-model", str(p2), "--table", "sales"]) == 1
+    out = capsys.readouterr().out
+    assert "Sales.Bad:" in out and "Other" not in out
+
+    assert main(["lint-model", str(p2), "--table", "OTHER"]) == 1
+    out = capsys.readouterr().out
+    assert "Other.Heavy:" in out and "Sales" not in out
+
+
+def test_table_filter_never_selects_a_nameless_table(tmp_path, capsys):
+    """A non-string name can't be selected by any spelling — even '?'."""
+    nameless = {"tables": [{"measures": [
+        {"name": "M", "expression": "SUMX('S', CALCULATE([x]))"},
+    ]}]}
+    p = tmp_path / "noname.json"
+    p.write_text(json.dumps(nameless), encoding="utf-8")
+
+    for spelling in ("none", "None", "?", ""):
+        assert main(["rank", str(p), "--table", spelling]) == 0
+        assert capsys.readouterr().out.strip() == "", spelling
+
+    # unfiltered, the nameless table still ranks (rendered as "?")
+    assert main(["rank", str(p), "--top", "1"]) == 0
+    assert "?" in capsys.readouterr().out
