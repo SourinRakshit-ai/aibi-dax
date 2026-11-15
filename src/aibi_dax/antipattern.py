@@ -698,6 +698,39 @@ def countrows_values(expr: str) -> str | None:
     return None
 
 
+_IF_ISBLANK_MSG = (
+    "IF(ISBLANK(x), y, x) — the blank test and the else value are the "
+    "same expression; write COALESCE(x, y) and say it once."
+)
+
+
+def if_isblank_coalesce(expr: str) -> str | None:
+    """`IF(ISBLANK(x), y, x)` collapses to `COALESCE(x, y)`.
+
+    AST-driven: a three-argument IF whose condition is a one-argument
+    ISBLANK call and whose else-branch equals the tested expression
+    (frozen dataclasses compare structurally). A differing else-branch
+    (`IF(ISBLANK([A]), 0, [B])`) is a genuine conditional and stays
+    silent, as does unparseable text.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "IF" or len(call.args) != 3:
+            continue
+        cond, _, other = call.args
+        if (
+            isinstance(cond, Call)
+            and cond.name.upper() == "ISBLANK"
+            and len(cond.args) == 1
+            and other == cond.args[0]
+        ):
+            return _IF_ISBLANK_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -718,4 +751,5 @@ ALL_RULES: list[Rule] = [
     filter_inside_aggregate,
     nested_calculate,
     countrows_values,
+    if_isblank_coalesce,
 ]

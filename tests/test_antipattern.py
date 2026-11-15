@@ -276,3 +276,28 @@ def test_countrows_values_leaves_other_shapes_alone():
     assert flag("COUNTROWS(FILTER('Sales', [A] > 0))") is None  # rule 17's shape
     assert flag("SUM([Amount])") is None
     assert flag("COUNTROWS(VALUES(") is None  # unparseable → no wrong advice
+
+
+def test_if_isblank_coalesce_flags_repeated_expression():
+    flag = antipattern.if_isblank_coalesce
+    assert flag("IF(ISBLANK([Amount]), 0, [Amount])") is not None
+    assert flag("IF(ISBLANK('Sales'[Qty]), 1, 'Sales'[Qty])") is not None
+    assert flag("if(isblank([a]), 0, [a])") is not None  # case-insensitive
+    nested = "SUMX('Sales', IF(ISBLANK([P]), [Q], [P]))"
+    assert flag(nested) is not None  # nested inside a larger expression
+
+
+def test_if_isblank_coalesce_message_names_coalesce():
+    msg = antipattern.if_isblank_coalesce("IF(ISBLANK([Amount]), 0, [Amount])")
+    assert msg is not None
+    assert "COALESCE(x, y)" in msg
+
+
+def test_if_isblank_coalesce_leaves_genuine_branches_alone():
+    flag = antipattern.if_isblank_coalesce
+    assert flag("IF(ISBLANK([A]), 0, [B])") is None  # different else value
+    assert flag("IF([Amount] > 0, [Amount], 0)") is None  # not an ISBLANK test
+    assert flag("IF(ISBLANK([Amount]), 0)") is None  # two-argument IF
+    assert flag("ISBLANK([Amount])") is None  # no IF at all
+    assert flag("COALESCE([Amount], 0)") is None
+    assert flag("IF(ISBLANK(") is None  # unparseable → silent

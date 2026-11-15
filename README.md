@@ -53,6 +53,7 @@ of aibi-toolkit — so one file feeds both tools.
 17. `FILTER(...)` as an aggregate's first argument (→ the filter condition in `CALCULATE`)
 18. `CALCULATE(CALCULATE(...))` — nested context transition (→ merge both filter lists into one `CALCULATE`)
 19. `COUNTROWS(VALUES(col))` / `COUNTROWS(DISTINCT(col))` (→ `DISTINCTCOUNT(col)`)
+20. `IF(ISBLANK(x), y, x)` (→ `COALESCE(x, y)`)
 
 ## What the weight measures
 
