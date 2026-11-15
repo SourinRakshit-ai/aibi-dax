@@ -62,6 +62,13 @@ matches the iterator's first argument against the column's table
 qualification on the AST, so mismatched tables stay flagged as real
 iteration.
 
+### `COUNTROWS(VALUES(...))`
+`COUNTROWS(VALUES('Sales'[Region]))` builds the distinct table only to
+count its rows; `DISTINCTCOUNT('Sales'[Region])` says the intent outright
+with no intermediate materialization. Same for `COUNTROWS(DISTINCT(col))`.
+Only a single-column `VALUES`/`DISTINCT` flags — `COUNTROWS(VALUES('Sales'))`
+counts rows of the whole table and has no `DISTINCTCOUNT` one-liner.
+
 ### ABS against an impossible bound
 `ABS(x)` is never negative, so `ABS(x) < 0` (and `<= n` for negative n,
 mirrored as `0 > ABS(x)` / `-1 >= ABS(x)`) can never hold — almost always

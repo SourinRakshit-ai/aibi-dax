@@ -253,3 +253,26 @@ def test_nested_calculate_leaves_legitimate_uses():
     assert flag("CALCULATE(SUM([x]))") is None
     assert flag("[x]") is None
     assert flag("CALCULATE(CALCULATE(") is not None  # literal fallback still catches it
+
+
+def test_countrows_values_flags_single_column_distinct_counts():
+    flag = antipattern.countrows_values
+    assert flag("COUNTROWS(VALUES('Sales'[Region]))") is not None
+    assert flag("COUNTROWS(DISTINCT('Sales'[Region]))") is not None
+    assert flag("countrows(values([Region]))") is not None  # case-insensitive
+    assert flag("DIVIDE(COUNTROWS(VALUES('T'[Col])), [Total])") is not None  # nested
+
+
+def test_countrows_values_message_names_distinctcount():
+    msg = antipattern.countrows_values("COUNTROWS(VALUES('T'[Col]))")
+    assert msg is not None
+    assert "DISTINCTCOUNT" in msg
+
+
+def test_countrows_values_leaves_other_shapes_alone():
+    flag = antipattern.countrows_values
+    assert flag("COUNTROWS('Sales')") is None  # plain table
+    assert flag("COUNTROWS(VALUES('Sales'))") is None  # whole table, not a column
+    assert flag("COUNTROWS(FILTER('Sales', [A] > 0))") is None  # rule 17's shape
+    assert flag("SUM([Amount])") is None
+    assert flag("COUNTROWS(VALUES(") is None  # unparseable → no wrong advice

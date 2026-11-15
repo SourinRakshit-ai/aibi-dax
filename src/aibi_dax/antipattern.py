@@ -665,6 +665,39 @@ def nested_calculate(expr: str) -> str | None:
     return None
 
 
+_COUNTROWS_VALUES_MSG = (
+    "COUNTROWS(VALUES(col)) over one column — DISTINCTCOUNT(col) returns "
+    "the same count without materializing the distinct table."
+)
+
+_DISTINCT_ONE_ARG = {"VALUES", "DISTINCT"}
+
+
+def countrows_values(expr: str) -> str | None:
+    """`COUNTROWS(VALUES('T'[Col]))` collapses to `DISTINCTCOUNT('T'[Col])`.
+
+    AST-driven: COUNTROWS whose only argument is a single-column VALUES
+    or DISTINCT call — the distinct table exists only to be counted, and
+    DISTINCTCOUNT says the intent outright. A table-valued argument —
+    `COUNTROWS(VALUES('T'))` — has no DISTINCTCOUNT one-liner and stays
+    silent, as does unparseable text: without the AST a column cannot be
+    told from a table and the rule must not offer wrong advice.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "COUNTROWS" or len(call.args) != 1:
+            continue
+        inner = call.args[0]
+        if not isinstance(inner, Call) or inner.name.upper() not in _DISTINCT_ONE_ARG:
+            continue
+        if len(inner.args) == 1 and isinstance(inner.args[0], (ColumnRef, QualifiedColumn)):
+            return _COUNTROWS_VALUES_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -684,4 +717,5 @@ ALL_RULES: list[Rule] = [
     if_true_false_branches,
     filter_inside_aggregate,
     nested_calculate,
+    countrows_values,
 ]

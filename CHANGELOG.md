@@ -10,7 +10,8 @@
   rule 17 flags `FILTER(...)` as an aggregate's first argument
   (→ pass the condition to `CALCULATE`); rule 18 flags a nested
   `CALCULATE(CALCULATE(...))` whose inner context transition is
-  redundant (→ merge the filter lists into one call).
+  redundant (→ merge the filter lists into one call); rule 19 flags
+  `COUNTROWS(VALUES(col))` (→ `DISTINCTCOUNT(col)`).
 - CLI: `dxa parse --tree` (indented AST), `dxa lint --rule` and
   `dxa lint-model --rule` to run one rule (exit 2 + rule list on stderr
   when unknown), `dxa lint --file PATH` to read a multiline measure from
