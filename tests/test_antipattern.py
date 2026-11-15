@@ -301,3 +301,28 @@ def test_if_isblank_coalesce_leaves_genuine_branches_alone():
     assert flag("ISBLANK([Amount])") is None  # no IF at all
     assert flag("COALESCE([Amount], 0)") is None
     assert flag("IF(ISBLANK(") is None  # unparseable → silent
+
+
+def test_summarize_extra_column_flags_computed_argument():
+    flag = antipattern.summarize_extra_column
+    assert flag("SUMMARIZE('Sales', [Region], [Qty] + 1)") is not None
+    assert flag("SUMMARIZE('Sales', [Region], COUNTROWS('U'))") is not None
+    assert flag("SUMMARIZE('Sales', [Region], 42)") is not None
+    assert flag("summarize('Sales', [R], [Q] * 2)") is not None  # case-insensitive
+    nested = "SUMX(SUMMARIZE('Sales', [R], [Q] + 1), [R])"
+    assert flag(nested) is not None  # nested inside a larger expression
+
+
+def test_summarize_extra_column_message_names_addcolumns():
+    msg = antipattern.summarize_extra_column("SUMMARIZE('T', [A], [B] + 1)")
+    assert msg is not None
+    assert "ADDCOLUMNS" in msg
+
+
+def test_summarize_extra_column_leaves_grouping_alone():
+    flag = antipattern.summarize_extra_column
+    assert flag("SUMMARIZE('Sales', [Region], 'Sales'[Product])") is None
+    assert flag("SUMMARIZE('Sales', [Region])") is None  # plain grouping
+    assert flag("ADDCOLUMNS(SUMMARIZE('Sales', [R]), [Q] + 1)") is None  # correct pattern
+    assert flag("SUM('Sales'[Qty])") is None  # not a SUMMARIZE
+    assert flag("SUMMARIZE(") is None  # unparseable → silent

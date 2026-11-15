@@ -731,6 +731,34 @@ def if_isblank_coalesce(expr: str) -> str | None:
     return None
 
 
+_SUMMARIZE_EXTRA_MSG = (
+    "SUMMARIZE only groups by plain column references — a computed "
+    "argument is silently ignored; group first with SUMMARIZE, then "
+    "compute with ADDCOLUMNS."
+)
+
+
+def summarize_extra_column(expr: str) -> str | None:
+    """`SUMMARIZE('T', [A], [B] + 1)` drops the computed argument.
+
+    AST-driven: every SUMMARIZE argument after the table must be a bare
+    `[Col]` or `'T'[Col]` reference. Anything else (an expression, a
+    function call, a literal) belongs in a wrapping ADDCOLUMNS over the
+    grouped result. Unparseable text stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "SUMMARIZE" or len(call.args) < 2:
+            continue
+        for arg in call.args[1:]:
+            if not isinstance(arg, (ColumnRef, QualifiedColumn)):
+                return _SUMMARIZE_EXTRA_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -752,4 +780,5 @@ ALL_RULES: list[Rule] = [
     nested_calculate,
     countrows_values,
     if_isblank_coalesce,
+    summarize_extra_column,
 ]

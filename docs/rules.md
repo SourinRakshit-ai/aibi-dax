@@ -104,6 +104,14 @@ condition is a one-argument `ISBLANK` **and** whose else-branch equals
 the tested expression flags; `IF(ISBLANK([A]), 0, [B])` is a genuine
 conditional and stays silent.
 
+### `SUMMARIZE` with a computed argument
+`SUMMARIZE('Sales', [Region], [Qty] + 1)` puts a computed expression in
+the grouping list, where it is silently ignored — `SUMMARIZE` only
+groups by plain columns. Group first (`SUMMARIZE('Sales', [Region])`),
+then compute over the result with `ADDCOLUMNS`. AST-driven: only a
+plain `[Col]` or `'T'[Col]` argument after the table passes;
+`ADDCOLUMNS(SUMMARIZE(...), …)` — the correct pattern — never flags.
+
 ## Filter-safety rules
 
 ### Bare ALL(table)

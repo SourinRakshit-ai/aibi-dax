@@ -54,6 +54,7 @@ of aibi-toolkit — so one file feeds both tools.
 18. `CALCULATE(CALCULATE(...))` — nested context transition (→ merge both filter lists into one `CALCULATE`)
 19. `COUNTROWS(VALUES(col))` / `COUNTROWS(DISTINCT(col))` (→ `DISTINCTCOUNT(col)`)
 20. `IF(ISBLANK(x), y, x)` (→ `COALESCE(x, y)`)
+21. `SUMMARIZE` with a computed argument (→ group with `SUMMARIZE`, compute with `ADDCOLUMNS`)
 
 ## What the weight measures
 
