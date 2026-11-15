@@ -49,6 +49,35 @@ weight      45
 `--file PATH` reads the expression from a file (`-` for stdin), matching
 `dxa lint`.
 
+Several expressions may be given at once — one block each, in argument
+order, every one validated before anything is printed:
+
+```
+$ dxa metrics "SUM('Sales'[Amount])" "SUMX('Sales', CALCULATE([Amount]))"
+expr: SUM('Sales'[Amount])
+tokens      5
+lines       1
+chars       20
+functions   1
+depth       1
+iterators   0
+weight      13
+
+expr: SUMX('Sales', CALCULATE([Amount]))
+tokens      9
+lines       1
+chars       34
+functions   2
+depth       2
+iterators   1
+weight      45
+```
+
+With `--json` a multi-expression run emits `{"results": [{"expr",
+"metrics", "weight"}, ...]}` in argument order; a single expression
+keeps the one-object payload shown above. `--file` always supplies
+exactly one expression, and mixing it with positionals exits 2.
+
 ## `dxa rank model.json [--top N] [--min-weight W]`
 
 Weighs every measure in a shared-schema model dump:

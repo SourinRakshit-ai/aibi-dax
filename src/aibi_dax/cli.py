@@ -79,9 +79,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="command")
 
-    p_metrics = sub.add_parser("metrics", help="complexity metrics for one expression")
-    p_metrics.add_argument("expr", nargs="?", help="DAX expression, quoted")
-    p_metrics.add_argument("--file", help="read the expression from this file instead")
+    p_metrics = sub.add_parser("metrics", help="complexity metrics for one or more expressions")
+    p_metrics.add_argument("expr", nargs="*", help="DAX expression(s), quoted")
+    p_metrics.add_argument("--file", help="read one expression from this file instead")
     p_metrics.add_argument("--json", action="store_true", help="emit JSON")
 
     p_rank = sub.add_parser("rank", help="most complex measures of a model dump")
@@ -128,6 +128,26 @@ def _rule_summary(rule: Rule) -> str:
     return text.partition(". ")[0]
 
 
+def _read_file(path: str) -> tuple[str | None, int]:
+    """Read `--file PATH` (`-` is stdin), or `(None, 2)` after one line.
+
+    Shared by the single- and multi-expression resolvers so a missing
+    file or unreadable stdin fails identically for every command.
+    """
+    if path == "-":
+        try:
+            return sys.stdin.read(), 0
+        except OSError as exc:
+            print(f"dxa: cannot read stdin: {exc.strerror or exc}", file=sys.stderr)
+            return None, 2
+    try:
+        return Path(path).read_text(encoding="utf-8"), 0
+    except OSError as exc:
+        reason = exc.strerror or str(exc)
+        print(f"dxa: cannot read {path}: {reason}", file=sys.stderr)
+        return None, 2
+
+
 def _expression(args: argparse.Namespace) -> tuple[str | None, int]:
     """Resolve the expression from the positional or `--file`.
 
@@ -140,31 +160,52 @@ def _expression(args: argparse.Namespace) -> tuple[str | None, int]:
         if expr is not None:
             print("dxa: give either an expression or --file, not both", file=sys.stderr)
             return None, 2
-        if path == "-":
-            try:
-                expr = sys.stdin.read()
-            except OSError as exc:
-                print(f"dxa: cannot read stdin: {exc.strerror or exc}", file=sys.stderr)
-                return None, 2
-        else:
-            try:
-                expr = Path(path).read_text(encoding="utf-8")
-            except OSError as exc:
-                reason = exc.strerror or str(exc)
-                print(f"dxa: cannot read {path}: {reason}", file=sys.stderr)
-                return None, 2
+        expr, code = _read_file(path)
+        if expr is None:
+            return None, code
     if expr is None:
         hint = " (or --list-rules)" if args.command == "lint" else ""
         print(f"dxa: {args.command} needs an expression, --file PATH{hint}",
               file=sys.stderr)
         return None, 2
     if not expr.strip():
-        path = getattr(args, "file", None)
         source = "stdin" if path == "-" else (path or "the command line")
         print(f"dxa: {args.command} got an empty expression from {source}",
               file=sys.stderr)
         return None, 2
     return expr, 0
+
+
+def _expressions(args: argparse.Namespace) -> tuple[list[str] | None, int]:
+    """Resolve every expression `metrics` will analyze.
+
+    `--file` supplies exactly one expression (a file holds one measure);
+    several positionals supply several. Every positional is validated
+    before anything is printed, so a multi-expression run never emits a
+    partial result.
+    """
+    path: str | None = getattr(args, "file", None)
+    given: list[str] | None = getattr(args, "expr", None)
+    exprs: list[str] = list(given) if given else []
+    if path is not None:
+        if exprs:
+            print("dxa: give either an expression or --file, not both", file=sys.stderr)
+            return None, 2
+        text, code = _read_file(path)
+        if text is None:
+            return None, code
+        exprs = [text]
+    if not exprs:
+        print(f"dxa: {args.command} needs an expression, --file PATH",
+              file=sys.stderr)
+        return None, 2
+    for text in exprs:
+        if not text.strip():
+            source = "stdin" if path == "-" else (path or "the command line")
+            print(f"dxa: {args.command} got an empty expression from {source}",
+                  file=sys.stderr)
+            return None, 2
+    return exprs, 0
 
 
 def _model(path: str) -> tuple[Model | None, int]:
@@ -277,16 +318,29 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "metrics":
-        expr, code = _expression(args)
-        if expr is None:
+        exprs, code = _expressions(args)
+        if exprs is None:
             return code
-        m = report(expr)
         if getattr(args, "json", False):
-            print(json.dumps({"metrics": m, "weight": weight(expr)}))
-        else:
+            if len(exprs) == 1:
+                single = exprs[0]
+                print(json.dumps({"metrics": report(single), "weight": weight(single)}))
+            else:
+                results = [
+                    {"expr": text, "metrics": report(text), "weight": weight(text)}
+                    for text in exprs
+                ]
+                print(json.dumps({"results": results}))
+            return 0
+        for index, text in enumerate(exprs):
+            if len(exprs) > 1:
+                if index:
+                    print()
+                print(f"expr: {' '.join(text.split())}")
+            m = report(text)
             for key, value in m.items():
                 print(f"{key:12}{value}")
-            print(f"{'weight':12}{weight(expr)}")
+            print(f"{'weight':12}{weight(text)}")
         return 0
 
     if args.command == "rank":

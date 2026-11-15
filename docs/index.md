@@ -16,7 +16,7 @@ dxa --version
 
 | Command | Purpose |
 |---|---|
-| `dxa metrics "EXPR"` | six complexity metrics plus a single weighted score (`--file`) |
+| `dxa metrics "EXPR"` | six complexity metrics plus a single weighted score (repeatable; `--file`) |
 | `dxa rank model.json --top N` | the most complex measures of a model dump (`--min-weight W`; `-` = stdin) |
 | `dxa lint "EXPR"` | anti-pattern findings for one expression (`--rule`, `--list-rules [--json]`, `--file`) |
 | `dxa explain RULE` | full documentation for one anti-pattern rule (`--json`) |
