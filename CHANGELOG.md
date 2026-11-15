@@ -34,6 +34,10 @@
   generated from the parser's own structure (subcommands, flags, rule
   names), so it cannot drift; an unknown or missing shell exits 2 with
   usage. `dxa` with no subcommand keeps argparse's exact error text.
+- CLI: `dxa metrics` accepts several expressions at once — one block
+  each in argument order (`--json` wraps them as `{"results": [...]}`);
+  a single expression keeps its exact old output, `--file` still means
+  one measure, and every positional is validated before any output.
 - Model loading: `dxa rank` and `dxa lint-model` report a missing file,
   broken JSON or a non-object payload as a one-line exit-2 error
   instead of a Python traceback, and both accept `-` to read the model

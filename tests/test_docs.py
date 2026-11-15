@@ -65,6 +65,18 @@ def test_metrics_json_weight_matches_doc_example(
     assert payload["weight"] == 45
 
 
+def test_metrics_multi_example_replays(capsys: pytest.CaptureFixture[str]) -> None:
+    """The second metrics fence is a two-expression run, replayed verbatim."""
+    fence = _fence("`dxa metrics \"EXPR\"`", index=1)
+    line = next(line for line in fence if line.lstrip().startswith("$"))
+    exprs = re.findall(r'"([^"]*)"', line)
+    assert len(exprs) == 2
+    expected = [ln for ln in fence if not ln.lstrip().startswith("$")]
+    assert main(["metrics", *exprs]) == 0
+    got = capsys.readouterr().out.strip().splitlines()
+    assert got == expected
+
+
 def test_lint_example_pinned(capsys: pytest.CaptureFixture[str]) -> None:
     """Exit code 1 and the exact '- ' finding lines from the fence."""
     fence = _fence("`dxa lint \"EXPR\"`")

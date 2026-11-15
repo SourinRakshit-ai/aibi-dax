@@ -496,3 +496,58 @@ def test_lint_model_rule_flag_is_repeatable(model_path, capsys):
     assert main(["lint-model", model_path, "--summary", "--rule", "raw_division",
                  "--rule", "single_column_iterator"]) == 0
     assert "model is clean" in capsys.readouterr().out
+
+
+def test_metrics_multiple_expressions_print_one_block_each(capsys):
+    assert main(["metrics", "SUM('Sales'[Amount])", "SUMX('S', CALCULATE([A]))"]) == 0
+    out = capsys.readouterr().out
+    blocks = [b for b in out.split("\n\n") if b.strip()]
+    assert len(blocks) == 2
+    assert blocks[0].startswith("expr: SUM('Sales'[Amount])\n")
+    assert blocks[1].startswith("expr: SUMX('S', CALCULATE([A]))\n")
+    assert out.count("weight") == 2
+    assert "iterators   1" in blocks[1]
+
+
+def test_metrics_single_expression_has_no_header(capsys):
+    """One expression stays byte-identical to the pre-multi output."""
+    assert main(["metrics", "SUM('Sales'[Amount])"]) == 0
+    out = capsys.readouterr().out
+    assert not out.startswith("expr:")
+    assert "expr:" not in out
+    assert out.startswith("tokens")
+
+
+def test_metrics_multiple_expressions_json_lists_them_in_order(capsys):
+    assert main(["metrics", "SUM('S'[A])", "SUMX('S', [A])", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    results = payload["results"]
+    assert [r["expr"] for r in results] == ["SUM('S'[A])", "SUMX('S', [A])"]
+    assert results[0]["metrics"]["functions"] == 1
+    assert results[1]["metrics"]["iterators"] == 1
+    assert results[0]["weight"] == 13
+    assert results[1]["weight"] == 34
+    assert all("metrics" in r and "weight" in r for r in results)
+
+
+def test_metrics_single_expression_json_stays_the_old_object(capsys):
+    assert main(["metrics", "SUM('S'[A])", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert set(payload) == {"metrics", "weight"}
+    assert "results" not in payload
+
+
+def test_metrics_file_plus_positional_is_rejected(tmp_path, capsys):
+    p = tmp_path / "m.dax"
+    p.write_text("SUM('S'[A])", encoding="utf-8")
+    assert main(["metrics", "--file", str(p), "SUM([x])"]) == 2
+    assert "not both" in capsys.readouterr().err
+    assert capsys.readouterr().out == ""
+
+
+def test_metrics_empty_positional_in_a_multi_run_prints_nothing(capsys):
+    """All positionals are validated before any block is emitted."""
+    assert main(["metrics", "SUM('S'[A])", ""]) == 2
+    err = capsys.readouterr()
+    assert err.out == ""
+    assert "empty expression" in err.err
