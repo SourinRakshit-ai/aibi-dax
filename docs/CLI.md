@@ -7,6 +7,29 @@ dxa --version        # dxa 0.2.1
 dxa --help
 ```
 
+## `dxa --completions bash|zsh|fish`
+
+Prints a completion script on stdout and exits 0 — subcommands, every
+flag, and rule names after `--rule` / for `explain`. The scripts are
+generated from the parser itself, so they cannot drift from the real
+CLI. An unknown shell (or none) exits 2 with usage and the three names:
+
+```
+$ dxa --completions tcsh
+usage: dxa [-h] [--version] [--completions [SHELL]]
+           {metrics,rank,explain,lint,lint-model,parse} ...
+dxa: error: unsupported shell 'tcsh' — one of: bash, zsh, fish
+```
+
+Install by writing the script where the shell looks for it:
+
+- **bash** — `dxa --completions bash > ~/.local/share/bash-completion/completions/dxa`
+  (needs `bash-completion` loaded)
+- **zsh** — `dxa --completions zsh > ~/.zfunc/_dxa`, with `fpath=(~/.zfunc $fpath)`
+  before `compinit`; or straight into the current shell with
+  `source <(dxa --completions zsh)`
+- **fish** — `dxa --completions fish > ~/.config/fish/completions/dxa.fish`
+
 ## `dxa metrics "EXPR"`
 
 Prints six aligned metrics plus the composite weight:

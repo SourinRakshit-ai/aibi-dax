@@ -27,6 +27,7 @@ dxa --version
 | `dxa explain RULE`         | full documentation for one anti-pattern rule (`--json`) |
 | `dxa lint-model model.json`| findings across every measure (`--table T`, `--rule R`, `--summary`; `-` = stdin) |
 | `dxa parse "EXPR"`         | the recursive-descent AST, human or `--json` (`--file PATH`)    |
+| `dxa --completions shell`  | bash/zsh/fish tab-completion script, generated from the parser   |
 
 Model dumps use the same JSON shape TMDL export produces — the shared schema
 of aibi-toolkit — so one file feeds both tools.

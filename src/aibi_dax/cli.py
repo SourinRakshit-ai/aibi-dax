@@ -11,6 +11,8 @@ from typing import TypeGuard
 
 from . import __version__
 from .antipattern import ALL_RULES, Rule
+from .completions import SHELLS
+from .completions import script as completion_script
 from .complexity import rank_measures, report, weight
 from .lint import lint_expression, lint_model, lint_model_summary
 from .model_io import Model, load_model
@@ -67,7 +69,15 @@ def _build_parser() -> argparse.ArgumentParser:
         description="DAX expression analysis: metrics, anti-pattern linting, ranking.",
     )
     parser.add_argument("--version", action="version", version=f"dxa {__version__}")
-    sub = parser.add_subparsers(dest="command", required=True)
+    parser.add_argument(
+        "--completions",
+        metavar="SHELL",
+        nargs="?",
+        const="",
+        default=None,
+        help=f"print a shell completion script and exit ({', '.join(SHELLS)})",
+    )
+    sub = parser.add_subparsers(dest="command")
 
     p_metrics = sub.add_parser("metrics", help="complexity metrics for one expression")
     p_metrics.add_argument("expr", nargs="?", help="DAX expression, quoted")
@@ -212,7 +222,40 @@ def _rules_for(names: list[str] | None) -> tuple[list[Rule] | None, int]:
 
 def main(argv: list[str] | None = None) -> int:
     """Entry point; returns a conventional exit code."""
-    args = _build_parser().parse_args(argv)
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+
+    if args.completions is not None:
+        shell = args.completions
+        if shell == "":
+            parser.print_usage(sys.stderr)
+            print(
+                f"dxa: error: --completions needs a shell — one of: "
+                f"{', '.join(SHELLS)}",
+                file=sys.stderr,
+            )
+            return 2
+        if shell not in SHELLS:
+            parser.print_usage(sys.stderr)
+            print(
+                f"dxa: error: unsupported shell {shell!r} — one of: "
+                f"{', '.join(SHELLS)}",
+                file=sys.stderr,
+            )
+            return 2
+        print(completion_script(shell, parser), end="")
+        return 0
+
+    if args.command is None:
+        # subparsers are optional so `--completions` can stand alone, so
+        # the missing-command error is ours to reproduce — same shape
+        # argparse printed when `required=True`.
+        parser.print_usage(sys.stderr)
+        print(
+            "dxa: error: the following arguments are required: command",
+            file=sys.stderr,
+        )
+        return 2
 
     if args.command == "explain":
         wanted = args.rule.strip().lower()

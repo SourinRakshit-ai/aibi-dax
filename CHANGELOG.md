@@ -26,6 +26,10 @@
 - CLI: `--rule` repeats on `lint` and `lint-model` (and `--summary`) —
   findings are the union of the named rules; an unknown name anywhere in
   the list exits 2 before any output.
+- CLI: `dxa --completions bash|zsh|fish` prints a tab-completion script
+  generated from the parser's own structure (subcommands, flags, rule
+  names), so it cannot drift; an unknown or missing shell exits 2 with
+  usage. `dxa` with no subcommand keeps argparse's exact error text.
 - Model loading: `dxa rank` and `dxa lint-model` report a missing file,
   broken JSON or a non-object payload as a one-line exit-2 error
   instead of a Python traceback, and both accept `-` to read the model
