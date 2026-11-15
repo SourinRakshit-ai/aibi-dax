@@ -22,6 +22,7 @@ dxa --version
 | `dxa explain RULE` | full documentation for one anti-pattern rule (`--json`) |
 | `dxa lint-model model.json` | findings across every measure, grouped (`--table`, `--rule`, `--summary`; `-` = stdin) |
 | `dxa parse "EXPR"` | the recursive-descent AST, human or `--json` (`--file`) |
+| `dxa --completions shell` | bash/zsh/fish tab-completion script, generated from the parser |
 
 ## The weight
 
