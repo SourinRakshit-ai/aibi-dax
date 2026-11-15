@@ -13,7 +13,7 @@ from . import __version__
 from .antipattern import ALL_RULES, Rule
 from .complexity import rank_measures, report, weight
 from .lint import lint_expression, lint_model, lint_model_summary
-from .model_io import load_model
+from .model_io import Model, load_model
 from .parser import Node, ParseError, parse
 
 
@@ -155,6 +155,27 @@ def _expression(args: argparse.Namespace) -> tuple[str | None, int]:
     return expr, 0
 
 
+def _model(path: str) -> tuple[Model | None, int]:
+    """Load a model dump or exit 2 with a one-line reason.
+
+    Missing files, broken JSON and non-object payloads are input errors,
+    not crashes — every other CLI error already prints one line and
+    returns 2, so the loaders must behave the same way.
+    """
+    try:
+        return load_model(path), 0
+    except OSError as exc:
+        reason = exc.strerror or str(exc)
+        print(f"dxa: cannot read {path}: {reason}", file=sys.stderr)
+        return None, 2
+    except json.JSONDecodeError as exc:
+        print(f"dxa: {path} is not valid JSON: {exc}", file=sys.stderr)
+        return None, 2
+    except TypeError as exc:
+        print(f"dxa: {path} is not a model dump: {exc}", file=sys.stderr)
+        return None, 2
+
+
 def main(argv: list[str] | None = None) -> int:
     """Entry point; returns a conventional exit code."""
     args = _build_parser().parse_args(argv)
@@ -192,7 +213,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "rank":
-        model = load_model(args.model)
+        model, code = _model(args.model)
+        if model is None:
+            return code
         only = getattr(args, "table", None)
         if only is not None:
             model = {"tables": [t for t in model.get("tables", []) if t.get("name") == only]}
@@ -247,7 +270,9 @@ def main(argv: list[str] | None = None) -> int:
                 names = ", ".join(r.__name__ for r in ALL_RULES)
                 print(f"dxa: unknown rule {rule_name} — one of: {names}", file=sys.stderr)
                 return 2
-        model = load_model(args.model)
+        model, code = _model(args.model)
+        if model is None:
+            return code
         only = getattr(args, "table", None)
         if only is not None:
             model = {"tables": [t for t in model.get("tables", []) if t.get("name") == only]}

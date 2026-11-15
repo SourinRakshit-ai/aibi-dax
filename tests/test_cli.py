@@ -392,3 +392,30 @@ def test_explain_json_matches_the_list_rules_inventory(capsys):
 
     assert main(["explain", "nope", "--json"]) == 2
     assert "unknown rule nope" in capsys.readouterr().err
+
+
+def test_model_loader_errors_are_one_line_not_tracebacks(tmp_path, capsys):
+    missing = str(tmp_path / "nope.json")
+    broken = tmp_path / "broken.json"
+    broken.write_text("not json", encoding="utf-8")
+    array = tmp_path / "array.json"
+    array.write_text("[1, 2, 3]", encoding="utf-8")
+
+    for command in ("rank", "lint-model"):
+        for path, needle in [
+            (missing, "cannot read"),
+            (str(broken), "is not valid JSON"),
+            (str(array), "is not a model dump"),
+        ]:
+            assert main([command, path]) == 2
+            err = capsys.readouterr().err
+            assert needle in err
+            assert "Traceback" not in err
+            assert err.startswith("dxa: ") and err.endswith("\n")
+
+    # a valid model still uses the conventional 0/1 codes
+    good = tmp_path / "good.json"
+    good.write_text(json.dumps(MODEL), encoding="utf-8")
+    assert main(["rank", str(good)]) == 0
+    assert main(["lint-model", str(good)]) == 1
+    capsys.readouterr()
