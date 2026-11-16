@@ -270,6 +270,28 @@ def _walk_binaries(node: Node) -> Iterator[Binary]:
             return
 
 
+def _walk_unaries(node: Node) -> Iterator[Unary]:
+    """Yield every Unary node in the tree."""
+    match node:
+        case Call(_, args):
+            for a in args:
+                yield from _walk_unaries(a)
+        case Binary(left=left, right=right):
+            yield from _walk_unaries(left)
+            yield from _walk_unaries(right)
+        case List(items=items):
+            for item in items:
+                yield from _walk_unaries(item)
+        case Unary():
+            yield node
+            yield from _walk_unaries(node.operand)
+        case Var(value=value, body=body):
+            yield from _walk_unaries(value)
+            yield from _walk_unaries(body)
+        case _:
+            return
+
+
 _ABS_MSG = (
     "ABS(...) is never negative — this comparison can never hold. "
     "Check the sign or drop the condition."
@@ -908,6 +930,32 @@ def countrows_zero(expr: str) -> str | None:
     return None
 
 
+_DOUBLE_NEGATION_MSG = (
+    "NOT(NOT(x)) is just x — the double wrapper cancels; write the "
+    "inner expression directly."
+)
+
+
+def double_negation(expr: str) -> str | None:
+    """`NOT(NOT(x))` collapses to `x`.
+
+    AST-driven: NOT parses as a prefix operator, so flag a NOT/!
+    Unary whose operand is another NOT/! Unary — mixed spellings
+    (`NOT(!x)`) cancel too. Unparseable text stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for unary in _walk_unaries(tree):
+        if unary.op.upper() not in {"NOT", "!"}:
+            continue
+        inner = unary.operand
+        if isinstance(inner, Unary) and inner.op.upper() in {"NOT", "!"}:
+            return _DOUBLE_NEGATION_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -934,4 +982,5 @@ ALL_RULES: list[Rule] = [
     and_in_calculate,
     unused_variable,
     countrows_zero,
+    double_negation,
 ]

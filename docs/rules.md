@@ -138,6 +138,15 @@ the long form; `ISEMPTY('Sales')` says it in one call. AST-driven: a
 either operand order for `=`). Comparisons against other values, and
 impossible tests like `COUNTROWS(t) < 0`, stay silent.
 
+### `NOT(NOT(x))`
+Double negation cancels — `NOT(NOT(cond))` is `cond`. The wrapped
+form reads as if some transformation happened when none did, and
+usually means a refactor left a redundant wrapper behind. AST-driven:
+`NOT` parses as a prefix operator, so a `NOT`/`!` whose operand is
+another `NOT`/`!` flags (mixed spellings like `NOT(!x)` cancel too);
+`NOT(NOT(NOT(x)))` reports once. Arithmetic `-(-x)` and single
+negations stay silent.
+
 ## Filter-safety rules
 
 ### `AND(...)` as a `CALCULATE` filter

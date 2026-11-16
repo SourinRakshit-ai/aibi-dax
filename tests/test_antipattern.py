@@ -430,3 +430,29 @@ def test_countrows_zero_leaves_other_comparisons_alone():
     assert flag("SUM([Amount]) = 0") is None  # not COUNTROWS
     assert flag("COUNTROWS('Sales') + 1") is None  # not a comparison
     assert flag("COUNTROWS(") is None  # unparseable → silent
+
+
+def test_double_negation_flags_wrapped_not():
+    flag = antipattern.double_negation
+    assert flag("NOT(NOT(x))") is not None
+    assert flag("!(!x)") is not None
+    assert flag("NOT(!x)") is not None  # mixed spellings cancel too
+    assert flag("IF(NOT(NOT(x)), 1, 2)") is not None  # nested in a larger expression
+    assert flag("VAR a = NOT(NOT(x)) RETURN a") is not None  # inside a VAR block
+    assert flag("{NOT(NOT(x))}") is not None  # inside a list literal
+    assert flag("NOT(NOT(NOT(x)))") is not None  # reports once
+
+
+def test_double_negation_message_says_it_cancels():
+    msg = antipattern.double_negation("NOT(NOT(x))")
+    assert msg is not None
+    assert "is just x" in msg
+
+
+def test_double_negation_leaves_single_negation_alone():
+    flag = antipattern.double_negation
+    assert flag("NOT(x)") is None
+    assert flag("!x") is None
+    assert flag("SUM(NOT(x))") is None
+    assert flag("-(-x)") is None  # arithmetic negation, not NOT
+    assert flag("NOT(") is None  # unparseable → silent
