@@ -619,3 +619,55 @@ def test_explain_without_argument_json_matches_list_rules(capsys):
     assert payload == json.loads(capsys.readouterr().out)
     assert len(payload) == 27
     assert all({"name", "summary"} == set(item) for item in payload)
+
+
+def test_metrics_top_keeps_heaviest_first(capsys):
+    """--top N keeps the N heaviest expressions, reported heaviest-first."""
+    exprs = ["SUM([x])", "SUMX('T', [a] / [b])", "IF(1, 2, 3)"]  # weights 12, 36, 16
+    assert main(["metrics", *exprs, "--top", "2"]) == 0
+    out = capsys.readouterr().out
+    blocks = [b for b in out.strip().split("\n\n") if b.startswith("expr:")]
+    assert [b.splitlines()[0] for b in blocks] == [
+        "expr: SUMX('T', [a] / [b])",
+        "expr: IF(1, 2, 3)",
+    ]
+    assert blocks[0].splitlines()[-1].split()[-1] == "36"
+    assert blocks[1].splitlines()[-1].split()[-1] == "16"
+
+
+def test_metrics_top_one_still_reports_as_a_multi_run(capsys):
+    """Several expressions given → {"results": ...} even when one survives."""
+    assert main(["metrics", "SUM([x])", "IF(1, 2, 3)", "--top", "1", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert set(payload) == {"results"}
+    assert [r["expr"] for r in payload["results"]] == ["IF(1, 2, 3)"]
+
+
+def test_metrics_top_larger_than_count_keeps_all(capsys):
+    assert main(["metrics", "SUM([x])", "IF(1, 2, 3)", "--top", "10"]) == 0
+    out = capsys.readouterr().out
+    assert out.count("expr:") == 2
+    assert out.index("IF(1, 2, 3)") < out.index("SUM([x])")  # still heaviest-first
+
+
+def test_metrics_top_ties_keep_argument_order(capsys):
+    """The sort is stable: equal weights stay in the order given."""
+    assert main(["metrics", "SUM([x])", "SUM([y])", "--top", "1"]) == 0
+    assert "SUM([x])" in capsys.readouterr().out
+
+
+def test_metrics_top_below_one_exits_two(capsys):
+    assert main(["metrics", "SUM([x])", "--top", "0"]) == 2
+    assert "--top must be at least 1" in capsys.readouterr().err
+    # the argument error precedes expression resolution entirely
+    assert main(["metrics", "--top", "-1"]) == 2
+
+
+def test_metrics_top_single_expression_shape_is_unchanged(capsys):
+    """One expression (with or without --file) keeps the one-object payload."""
+    assert main(["metrics", "SUM([x])", "--top", "3"]) == 0
+    plain = capsys.readouterr().out
+    assert plain.startswith("tokens")
+    assert main(["metrics", "SUM([x])", "--top", "3", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert set(payload) == {"metrics", "weight"}

@@ -143,3 +143,16 @@ def test_recipe_fences_replay(capsys: pytest.CaptureFixture[str]) -> None:
         assert main(["lint", expr]) == want_exit, expr
         got = capsys.readouterr().out.strip().splitlines()
         assert got == expected, expr
+
+
+def test_metrics_top_example_replays(capsys: pytest.CaptureFixture[str]) -> None:
+    """The --top fence in CLI.md must match the binary byte for byte."""
+    fence = _fence("`dxa metrics \"EXPR\"`", index=2)
+    line = next(ln for ln in fence if ln.lstrip().startswith("$"))
+    exprs = re.findall(r'"([^"]*)"', line)
+    top = re.search(r"--top (\d+)", line)
+    assert len(exprs) == 2 and top, line
+    expected = [ln for ln in fence if not ln.lstrip().startswith("$")]
+    assert main(["metrics", *exprs, "--top", top.group(1)]) == 0
+    got = capsys.readouterr().out.strip().splitlines()
+    assert got == expected

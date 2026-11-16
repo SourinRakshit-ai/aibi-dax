@@ -78,6 +78,27 @@ With `--json` a multi-expression run emits `{"results": [{"expr",
 keeps the one-object payload shown above. `--file` always supplies
 exactly one expression, and mixing it with positionals exits 2.
 
+`--top N` keeps only the N heaviest expressions by weight and reports
+them heaviest-first (ties keep argument order), mirroring `dxa rank
+--top` — the "which of these costs the most" question:
+
+```
+$ dxa metrics "SUM([x])" "IF(1, 2, 3)" --top 1
+expr: IF(1, 2, 3)
+tokens      8
+lines       1
+chars       11
+functions   1
+depth       1
+iterators   0
+weight      16
+```
+
+A multi-expression run stays a multi-expression run in `--json`
+(`{"results": [...]}` even when one survives); a single expression's
+payload is unchanged. `N` below 1 exits 2 (`dxa: --top must be at
+least 1`); `N` larger than the count keeps everything.
+
 ## `dxa rank model.json [--top N] [--min-weight W]`
 
 Weighs every measure in a shared-schema model dump:
