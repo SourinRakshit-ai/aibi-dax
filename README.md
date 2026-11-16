@@ -71,6 +71,7 @@ of aibi-toolkit — so one file feeds both tools.
 35. `UPPER(UPPER(x))`, `ABS(ABS(x))`, `INT(INT(x))` (→ one call suffices)
 36. `COUNTX(t, k)` with a constant (→ `COUNTROWS(t)`)
 37. `POWER(x, 1)` (→ `x`) and `POWER(x, 0)` (→ `1`)
+38. `OR(TRUE(), x)` (→ `TRUE()`), `AND(FALSE(), x)` (→ `FALSE()`)
 
 ## What the weight measures
 

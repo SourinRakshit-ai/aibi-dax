@@ -722,3 +722,29 @@ def test_power_identity_leaves_real_powers_alone():
     assert flag("POWER(1, [x])") is None  # base, not exponent
     assert flag("POWER([x], [y])") is None  # non-literal exponent
     assert flag("POW(") is None  # unparseable → silent
+
+
+def test_absorbed_boolean_flags_absorbing_constants():
+    flag = antipattern.absorbed_boolean
+    assert flag("OR(TRUE(), [x])") is not None
+    assert flag("OR([x], TRUE())") is not None  # either side
+    assert flag("TRUE() || [x]") is not None  # infix
+    assert flag("[x] || TRUE()") is not None
+    assert flag("AND(FALSE(), [x])") is not None
+    assert flag("FALSE() && [x]") is not None
+    assert flag("IF(OR(TRUE(), [x]), 1, 0)") is not None  # nested
+
+
+def test_absorbed_boolean_message_says_drop_the_rest():
+    msg = antipattern.absorbed_boolean("OR(TRUE(), [x])")
+    assert msg is not None
+    assert "absorbs" in msg
+
+
+def test_absorbed_boolean_leaves_identities_and_real_logic_alone():
+    flag = antipattern.absorbed_boolean
+    assert flag("OR(FALSE(), [x])") is None  # identity, not absorption
+    assert flag("AND(TRUE(), [x])") is None  # identity, not absorption
+    assert flag("OR([x], [y])") is None
+    assert flag("AND([x], [y])") is None
+    assert flag("OR(TRUE") is None  # unparseable → silent

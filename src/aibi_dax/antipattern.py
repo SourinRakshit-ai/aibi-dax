@@ -1099,6 +1099,48 @@ def if_same_branches(expr: str) -> str | None:
     return None
 
 
+_ABSORBED_OR_MSG = (
+    "OR(TRUE(), x) is TRUE() — TRUE absorbs every other operand; "
+    "drop the rest."
+)
+_ABSORBED_AND_MSG = (
+    "AND(FALSE(), x) is FALSE() — FALSE absorbs every other "
+    "operand; drop the rest."
+)
+
+
+def absorbed_boolean(expr: str) -> str | None:
+    """`OR(TRUE(), x)` is `TRUE()`; `AND(FALSE(), x)` is `FALSE()`.
+
+    AST-driven: an OR call or || binary with a zero-argument TRUE()
+    call anywhere (OR), or an AND call or && binary with a
+    zero-argument FALSE() call anywhere (AND) — the constant absorbs
+    every other operand. The identity pair (OR(FALSE(), x) ≡ x,
+    AND(TRUE(), x) ≡ x) is not flagged here; unparseable text stays
+    silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        name = call.name.upper()
+        if name == "OR" and any(_zero_arg_call(a, "TRUE") for a in call.args):
+            return _ABSORBED_OR_MSG
+        if name == "AND" and any(_zero_arg_call(a, "FALSE") for a in call.args):
+            return _ABSORBED_AND_MSG
+    for binary in _walk_binaries(tree):
+        if binary.op == "||" and (
+            _zero_arg_call(binary.left, "TRUE") or _zero_arg_call(binary.right, "TRUE")
+        ):
+            return _ABSORBED_OR_MSG
+        elif binary.op == "&&" and (
+            _zero_arg_call(binary.left, "FALSE") or _zero_arg_call(binary.right, "FALSE")
+        ):
+            return _ABSORBED_AND_MSG
+    return None
+
+
 _POWER_ONE_MSG = (
     "POWER(x, 1) returns the base — write x directly."
 )
@@ -1350,4 +1392,5 @@ ALL_RULES: list[Rule] = [
     idempotent_nested,
     countx_constant,
     power_identity,
+    absorbed_boolean,
 ]
