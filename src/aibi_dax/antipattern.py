@@ -1099,6 +1099,43 @@ def if_same_branches(expr: str) -> str | None:
     return None
 
 
+_NESTED_SAME_PREDICATE_MSG = (
+    "IF(c, … IF(c, …) …) — the inner condition is implied by the "
+    "outer one; collapse the nesting."
+)
+
+
+def nested_same_predicate(expr: str) -> str | None:
+    """`IF(c, IF(c, a, b), d)` is `IF(c, a, d)`; same for the else branch.
+
+    AST-driven: a three-argument IF whose second or third argument
+    is another three-argument IF with a canonically equal predicate
+    (the rule 29 signature — identifiers fold case, numbers compare
+    by value). In the true-branch case the inner c is known true (the
+    outer picked it), so the inner IF reduces to its true branch; in
+    the else branch it is known false, so it reduces to its final
+    argument. Deeper nesting and unparseable text stay silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "IF" or len(call.args) != 3:
+            continue
+        predicate = _canonical(call.args[0])
+        for index in (1, 2):
+            inner = call.args[index]
+            if (
+                isinstance(inner, Call)
+                and inner.name.upper() == "IF"
+                and len(inner.args) == 3
+                and _canonical(inner.args[0]) == predicate
+            ):
+                return _NESTED_SAME_PREDICATE_MSG
+    return None
+
+
 _COALESCE_TRAILING_BLANK_MSG = (
     "COALESCE with a trailing BLANK() adds nothing — the shorter "
     "COALESCE(a, …) says the same thing."
@@ -1426,4 +1463,5 @@ ALL_RULES: list[Rule] = [
     power_identity,
     absorbed_boolean,
     coalesce_trailing_blank,
+    nested_same_predicate,
 ]

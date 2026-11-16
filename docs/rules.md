@@ -126,6 +126,15 @@ condition is a one-argument `ISBLANK` **and** whose else-branch equals
 the tested expression flags; `IF(ISBLANK([A]), 0, [B])` is a genuine
 conditional and stays silent.
 
+### `IF(c, … IF(c, …) …)`
+When the outer branch is reached, the condition is already decided —
+`IF([c], IF([c], 1, 2), 3)` reduces to `IF([c], 1, 3)`, and the else
+branch symmetric: `IF([c], 3, IF([c], 1, 2))` reduces to `IF([c], 3, 2)`.
+AST-driven: a three-argument IF whose second or third argument is
+another three-argument IF with a canonically equal predicate (idents
+fold case, numbers compare by value) flags; deeper nesting and
+unparseable text stay silent.
+
 ### `COALESCE(..., BLANK())` / `COALESCE(x)`
 `COALESCE([x], BLANK())` says the same thing as `COALESCE([x])` — the
 trailing alternative is the default anyway. And a single-argument

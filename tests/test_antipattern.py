@@ -772,3 +772,25 @@ def test_coalesce_trailing_blank_leaves_meaningful_shapes_alone():
     assert flag("COALESCE([x], 0)") is None
     assert flag("COALESCE([x], [y])") is None
     assert flag("COALESCE(") is None  # unparseable → silent
+
+
+def test_nested_same_predicate_flags_both_branch_positions():
+    flag = antipattern.nested_same_predicate
+    assert flag("IF([c], IF([c], 1, 2), 3)") is not None  # true branch
+    assert flag("IF([c], 3, IF([c], 1, 2))") is not None  # else branch
+    assert flag("IF([c], IF([C], 1, 2), 3)") is not None  # predicate folds case
+
+
+def test_nested_same_predicate_message_says_collapse():
+    msg = antipattern.nested_same_predicate("IF([c], IF([c], 1, 2), 3)")
+    assert msg is not None
+    assert "collapse" in msg
+
+
+def test_nested_same_predicate_leaves_other_nesting_alone():
+    flag = antipattern.nested_same_predicate
+    assert flag("IF([c], IF([d], 1, 2), 3)") is None  # different predicates
+    assert flag("IF([c], SUMX('T', IF([c], 1, 2)), 3)") is None  # not a direct branch
+    assert flag("IF([c], IF([c] * 1, 1, 2), 3)") is None  # different tree shape
+    assert flag("IF([c], 1, 2)") is None
+    assert flag("IF(") is None  # unparseable → silent
