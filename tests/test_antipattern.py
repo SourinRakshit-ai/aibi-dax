@@ -351,3 +351,29 @@ def test_if_iserror_iferror_leaves_genuine_conditionals_alone():
     assert flag("ISERROR([A])") is None  # no IF at all
     assert flag("IFERROR([A], 0)") is None
     assert flag("IF(ISERROR(") is None  # unparseable → silent
+
+
+def test_and_in_calculate_flags_and_filters():
+    flag = antipattern.and_in_calculate
+    assert flag("CALCULATE([m], AND([A] > 0, [B] < 10))") is not None
+    assert flag("CALCULATE([m], a && b)") is not None
+    assert flag("CALCULATETABLE('T', AND(a, b))") is not None
+    nested = "SUMX('T', CALCULATE([m], AND(a, b)))"
+    assert flag(nested) is not None  # nested inside a larger expression
+
+
+def test_and_in_calculate_message_says_split_arguments():
+    msg = antipattern.and_in_calculate("CALCULATE(m, AND(a, b))")
+    assert msg is not None
+    assert "own filter argument" in msg
+
+
+def test_and_in_calculate_leaves_or_and_split_filters_alone():
+    flag = antipattern.and_in_calculate
+    assert flag("CALCULATE([m], OR(a, b))") is None  # OR must not be split
+    assert flag("CALCULATE([m], a || b)") is None
+    assert flag("CALCULATE([m], [A] > 0, [B] < 10)") is None  # already split
+    assert flag("CALCULATE([m], [A] > 0)") is None
+    assert flag("AND(a, b)") is None  # not inside CALCULATE
+    assert flag("IF(AND(a, b), 1, 2)") is None
+    assert flag("CALCULATE(") is None  # unparseable → silent

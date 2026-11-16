@@ -56,6 +56,7 @@ of aibi-toolkit — so one file feeds both tools.
 20. `IF(ISBLANK(x), y, x)` (→ `COALESCE(x, y)`)
 21. `SUMMARIZE` with a computed argument (→ group with `SUMMARIZE`, compute with `ADDCOLUMNS`)
 22. `IF(ISERROR(x), y, x)` (→ `IFERROR(x, y)`)
+23. `AND(...)` as a `CALCULATE` filter argument (→ one filter argument per conjunct)
 
 ## What the weight measures
 

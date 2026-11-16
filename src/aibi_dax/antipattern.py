@@ -792,6 +792,36 @@ def if_iserror_iferror(expr: str) -> str | None:
     return None
 
 
+_AND_IN_CALCULATE_MSG = (
+    "AND(...) in a CALCULATE filter is one boolean over the current "
+    "context — pass each conjunct as its own filter argument; "
+    "CALCULATE already ANDs them."
+)
+
+
+def and_in_calculate(expr: str) -> str | None:
+    """`CALCULATE(m, AND(a, b))` should be `CALCULATE(m, a, b)`.
+
+    AST-driven: every filter argument (all but the first) of a
+    CALCULATE / CALCULATETABLE call that is an `AND(` call or a `&&`
+    binary flags. `OR(` / `||` must not be split — splitting would
+    change semantics — so they stay silent, as does unparseable text.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() not in {"CALCULATE", "CALCULATETABLE"}:
+            continue
+        for arg in call.args[1:]:
+            if isinstance(arg, Call) and arg.name.upper() == "AND":
+                return _AND_IN_CALCULATE_MSG
+            if isinstance(arg, Binary) and arg.op == "&&":
+                return _AND_IN_CALCULATE_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -815,4 +845,5 @@ ALL_RULES: list[Rule] = [
     if_isblank_coalesce,
     summarize_extra_column,
     if_iserror_iferror,
+    and_in_calculate,
 ]

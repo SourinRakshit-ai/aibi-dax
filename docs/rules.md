@@ -123,6 +123,15 @@ rule, which flags *using* IFERROR too liberally.
 
 ## Filter-safety rules
 
+### `AND(...)` as a `CALCULATE` filter
+`CALCULATE([m], AND([A] > 0, [B] < 10))` passes one boolean over the
+current filter context instead of two independent filters — pass each
+conjunct as its own argument (`CALCULATE([m], [A] > 0, [B] < 10)`);
+`CALCULATE` already ANDs its filter arguments together. AST-driven:
+an `AND(` call or a `&&` binary among the filter arguments of
+`CALCULATE`/`CALCULATETABLE` flags. `OR(` and `||` stay silent —
+splitting them would change semantics.
+
 ### Bare ALL(table)
 As a filter eraser `REMOVEFILTERS(table)` says exactly that; keep ALL
 where you need its modifying semantics.

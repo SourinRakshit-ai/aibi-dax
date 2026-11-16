@@ -15,7 +15,10 @@
   `IF(ISBLANK(x), y, x)` (→ `COALESCE(x, y)`); rule 21 flags a
   computed argument inside `SUMMARIZE` (→ group with `SUMMARIZE`,
   compute with `ADDCOLUMNS`); rule 22 flags
-  `IF(ISERROR(x), y, x)` (→ `IFERROR(x, y)`).
+  `IF(ISERROR(x), y, x)` (→ `IFERROR(x, y)`); rule 23 flags an
+  `AND(...)` (or `&&`) filter argument inside `CALCULATE` (→ pass
+  each conjunct as its own argument — `CALCULATE` already ANDs
+  them).
 - `--table` on `rank` and `lint-model` matches table names
   case-insensitively (one shared filter): `--table sales` now finds
   `Sales` instead of silently reporting nothing — or, for
