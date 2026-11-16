@@ -1013,6 +1013,66 @@ def true_comparison(expr: str) -> str | None:
     return None
 
 
+_IF_SAME_BRANCHES_MSG = (
+    "IF(cond, x, x) returns the same value either way — the condition "
+    "computes for nothing; write x directly."
+)
+
+
+def _canonical(node: Node) -> object:
+    """Hashable shape of a subtree with DAX's case rules folded in.
+
+    DAX identifiers (columns, tables, variables, function names) are
+    case-insensitive, so `[X] * 2` and `[x] * 2` are the same branch.
+    String literals keep their case; numbers compare by value, so
+    `2` and `2.0` match.
+    """
+    if isinstance(node, Literal):
+        value = _number(node.text)
+        return ("lit", value) if value is not None else ("lit", node.text)
+    if isinstance(node, ColumnRef):
+        return ("col", node.name.upper())
+    if isinstance(node, QualifiedColumn):
+        return ("qcol", node.table.upper(), node.name.upper())
+    if isinstance(node, TableRef):
+        return ("table", node.name.upper())
+    if isinstance(node, Ident):
+        return ("ident", node.name.upper())
+    if isinstance(node, Call):
+        return ("call", node.name.upper(), tuple(_canonical(a) for a in node.args))
+    if isinstance(node, Binary):
+        return ("bin", node.op, _canonical(node.left), _canonical(node.right))
+    if isinstance(node, List):
+        return ("list", tuple(_canonical(i) for i in node.items))
+    if isinstance(node, Unary):
+        return ("unary", node.op.upper(), _canonical(node.operand))
+    if isinstance(node, Var):
+        return ("var", node.name.upper(), _canonical(node.value), _canonical(node.body))
+    return ("unknown",)
+
+
+def if_same_branches(expr: str) -> str | None:
+    """`IF(cond, x, x)` is `x` — the predicate computes for nothing.
+
+    AST-driven: a three-argument IF whose last two arguments have the
+    same shape, compared case-insensitively (`[X] * 2` ≡ `[x] * 2`) and
+    by numeric value (`2` ≡ `2.0`). Only AST-equal branches collapse —
+    branches that are merely textually similar stay silent, as does
+    unparseable text.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "IF" or len(call.args) != 3:
+            continue
+        yes, no = call.args[1], call.args[2]
+        if _canonical(yes) == _canonical(no):
+            return _IF_SAME_BRANCHES_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1042,4 +1102,5 @@ ALL_RULES: list[Rule] = [
     double_negation,
     true_comparison,
     distinctcount_values,
+    if_same_branches,
 ]

@@ -503,3 +503,39 @@ def test_distinctcount_values_leaves_real_uses_alone():
     assert flag("VALUES('Sales'[Region])") is None  # VALUES alone is fine
     assert flag("COUNTROWS(VALUES([Region]))") is None  # rule 19's shape
     assert flag("DISTINCTCOUNT(") is None  # unparseable → silent
+
+
+def test_if_same_branches_flags_identical_branches():
+    flag = antipattern.if_same_branches
+    assert flag("IF([cond], [x] * 2, [x] * 2)") is not None
+    assert flag("IF([cond], [X] * 2, [x] * 2)") is not None  # case-insensitive
+    assert flag("IF([cond], 2, 2.0)") is not None  # numbers compare by value
+    assert flag("SUMX('T', IF([c], [x], [x]))") is not None  # nested
+    assert flag("IF([c], SUM([a]), SUM([a]))") is not None  # whole calls
+
+
+def test_if_same_branches_message_says_drop_the_condition():
+    msg = antipattern.if_same_branches("IF([c], [x], [x])")
+    assert msg is not None
+    assert "condition" in msg
+
+
+def test_if_same_branches_leaves_other_ifs_alone():
+    flag = antipattern.if_same_branches
+    assert flag("IF([cond], [x], [y])") is None  # genuinely different
+    assert flag("IF([cond], 2, 3)") is None
+    assert flag("IF(TRUE(), [x], [y])") is None  # rule 16's territory
+    assert flag('IF([c], "a", "A")') is None  # strings keep their case
+    assert flag("IF([c], 't', 'T')") is not None  # table refs fold case
+    assert flag("IF(") is None  # unparseable → silent
+
+
+def test_if_same_branches_compares_composite_shapes():
+    flag = antipattern.if_same_branches
+    assert flag("IF([c], {[a], 2}, {[a], 2})") is not None  # list literals
+    assert flag("IF([c], NOT([a]), NOT([A]))") is not None  # unary operators
+    assert flag("IF([c], VAR v = 1 RETURN v, VAR v = 1 RETURN v)") is not None  # VAR blocks
+    assert flag("IF([c], 'T', 'T')") is not None  # table-ref branches
+    assert flag("IF([c], 't', 'T')") is not None  # table names fold case
+    assert flag("IF([c], 'Sales'[X] * 2, 'Sales'[x] * 2)") is not None  # qualified columns
+    assert flag("IF([c], {[a], 2}, {[a], 3})") is None  # different lists

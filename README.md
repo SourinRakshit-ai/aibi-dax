@@ -62,6 +62,7 @@ of aibi-toolkit — so one file feeds both tools.
 26. `NOT(NOT(x))` (→ `x`; the double wrapper cancels)
 27. `[flag] = TRUE()` (→ the column itself; `= FALSE()` → `NOT col`)
 28. `DISTINCTCOUNT(VALUES(col))` (→ `DISTINCTCOUNT(col)`)
+29. `IF(cond, x, x)` (→ `x`; the predicate computes for nothing)
 
 ## What the weight measures
 

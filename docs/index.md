@@ -29,4 +29,4 @@ dxa --version
 `weight = tokens + 3·functions + 5·depth + 20·iterators` — iterators cost the
 most because row context is where DAX quietly goes wrong.
 
-See the [twenty-eight anti-pattern rules](rules.md) for what the linter flags and why, and the [cookbook](recipes.md) for whole measures going from flagged to clean.
+See the [twenty-nine anti-pattern rules](rules.md) for what the linter flags and why, and the [cookbook](recipes.md) for whole measures going from flagged to clean.
