@@ -876,6 +876,38 @@ def unused_variable(expr: str) -> str | None:
     return None
 
 
+_COUNTROWS_ZERO_MSG = (
+    "COUNTROWS(t) = 0 is ISEMPTY(t) — one call states the emptiness "
+    "test directly (<> 0 and > 0 become NOT(ISEMPTY(t)))."
+)
+
+
+def countrows_zero(expr: str) -> str | None:
+    """`COUNTROWS(t) = 0` is `ISEMPTY(t)`.
+
+    AST-driven: a COUNTROWS call compared against the numeric literal 0
+    with `=`, `<>`, or `>` (either operand order for `=`, COUNTROWS on
+    the left for `<>`/`>`, on the right for `0 <`). Comparisons against
+    anything other than 0, and COUNTROWS used as a value rather than a
+    test, stay silent. Unparseable text stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for binary in _walk_binaries(tree):
+        if binary.op not in {"=", "<>", ">", "<"}:
+            continue
+        left, right = binary.left, binary.right
+        zero_right = _numeric_literal(right) == 0
+        zero_left = _numeric_literal(left) == 0
+        if isinstance(left, Call) and left.name.upper() == "COUNTROWS" and len(left.args) == 1 and zero_right and binary.op in {"=", "<>", ">"}:
+            return _COUNTROWS_ZERO_MSG
+        if isinstance(right, Call) and right.name.upper() == "COUNTROWS" and len(right.args) == 1 and zero_left and binary.op in {"=", "<"}:
+            return _COUNTROWS_ZERO_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -901,4 +933,5 @@ ALL_RULES: list[Rule] = [
     if_iserror_iferror,
     and_in_calculate,
     unused_variable,
+    countrows_zero,
 ]

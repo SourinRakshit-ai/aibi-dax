@@ -58,6 +58,7 @@ of aibi-toolkit — so one file feeds both tools.
 22. `IF(ISERROR(x), y, x)` (→ `IFERROR(x, y)`)
 23. `AND(...)` as a `CALCULATE` filter argument (→ one filter argument per conjunct)
 24. A `VAR` never referenced before `RETURN` (→ drop it or use it)
+25. `COUNTROWS(t) = 0` (→ `ISEMPTY(t)`; `<> 0` / `> 0` → `NOT(ISEMPTY(t))`)
 
 ## What the weight measures
 

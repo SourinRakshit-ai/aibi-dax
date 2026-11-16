@@ -19,7 +19,9 @@
   `AND(...)` (or `&&`) filter argument inside `CALCULATE` (→ pass
   each conjunct as its own argument — `CALCULATE` already ANDs
   them); rule 24 flags a `VAR` never referenced before `RETURN`
-  (→ drop the dead binding or use it).
+  (→ drop the dead binding or use it); rule 25 flags
+  `COUNTROWS(t) = 0` (→ `ISEMPTY(t)`; `<> 0` / `> 0` →
+  `NOT(ISEMPTY(t))`).
 - `--table` on `rank` and `lint-model` matches table names
   case-insensitively (one shared filter): `--table sales` now finds
   `Sales` instead of silently reporting nothing — or, for

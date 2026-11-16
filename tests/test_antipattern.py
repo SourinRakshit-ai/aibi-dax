@@ -405,3 +405,28 @@ def test_unused_variable_accepts_live_bindings():
     assert flag("SUM([Amount])") is None  # no VAR block at all
     assert flag("VAR a = 1 RETURN a") is None
     assert flag("VAR a = ") is None  # unparseable → silent
+
+
+def test_countrows_zero_flags_emptiness_comparisons():
+    flag = antipattern.countrows_zero
+    assert flag("IF(COUNTROWS('Sales') = 0, 1, 2)") is not None
+    assert flag("COUNTROWS('Sales') <> 0") is not None
+    assert flag("COUNTROWS('Sales') > 0") is not None
+    assert flag("0 = COUNTROWS('Sales')") is not None  # reversed operands
+    assert flag("0 < COUNTROWS('Sales')") is not None  # reversed >
+
+
+def test_countrows_zero_message_names_isempty():
+    msg = antipattern.countrows_zero("COUNTROWS('T') = 0")
+    assert msg is not None
+    assert "ISEMPTY" in msg
+
+
+def test_countrows_zero_leaves_other_comparisons_alone():
+    flag = antipattern.countrows_zero
+    assert flag("COUNTROWS('Sales') = 1") is None  # not an emptiness test
+    assert flag("COUNTROWS('Sales') < 0") is None  # impossible, not emptiness
+    assert flag("0 > COUNTROWS('Sales')") is None  # impossible, reversed
+    assert flag("SUM([Amount]) = 0") is None  # not COUNTROWS
+    assert flag("COUNTROWS('Sales') + 1") is None  # not a comparison
+    assert flag("COUNTROWS(") is None  # unparseable → silent

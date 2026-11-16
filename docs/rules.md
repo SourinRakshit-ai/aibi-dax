@@ -130,6 +130,14 @@ expression flags; `IF(ISERROR([A]), 0, [B])` is a genuine
 conditional and stays silent. Distinct from the `IFERROR` overreach
 rule, which flags *using* IFERROR too liberally.
 
+### `COUNTROWS(t) = 0`
+`IF(COUNTROWS('Sales') = 0, …)` states "this table has no rows" in
+the long form; `ISEMPTY('Sales')` says it in one call. AST-driven: a
+`COUNTROWS(` call compared against the numeric literal 0 with `=`,
+`<>`, or `>` flags (`<> 0` and `> 0` become `NOT(ISEMPTY(t))`;
+either operand order for `=`). Comparisons against other values, and
+impossible tests like `COUNTROWS(t) < 0`, stay silent.
+
 ## Filter-safety rules
 
 ### `AND(...)` as a `CALCULATE` filter
