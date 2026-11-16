@@ -63,6 +63,7 @@ of aibi-toolkit — so one file feeds both tools.
 27. `[flag] = TRUE()` (→ the column itself; `= FALSE()` → `NOT col`)
 28. `DISTINCTCOUNT(VALUES(col))` (→ `DISTINCTCOUNT(col)`)
 29. `IF(cond, x, x)` (→ `x`; the predicate computes for nothing)
+30. `SUMX(t, k)` with a constant (→ `COUNTROWS(t) * k`)
 
 ## What the weight measures
 

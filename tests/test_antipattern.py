@@ -539,3 +539,27 @@ def test_if_same_branches_compares_composite_shapes():
     assert flag("IF([c], 't', 'T')") is not None  # table names fold case
     assert flag("IF([c], 'Sales'[X] * 2, 'Sales'[x] * 2)") is not None  # qualified columns
     assert flag("IF([c], {[a], 2}, {[a], 3})") is None  # different lists
+
+
+def test_sumx_constant_flags_literal_constants():
+    flag = antipattern.sumx_constant
+    assert flag("SUMX('Sales', 1)") is not None
+    assert flag("SUMX('Sales', 3)") is not None
+    assert flag("SUMX('Sales', -1)") is not None  # negated literal
+    assert flag("SUMX(FILTER('Sales', [x] > 0), 2)") is not None  # any table arg
+    assert flag("CALCULATE(SUMX('T', 1))") is not None  # nested
+
+
+def test_sumx_constant_message_suggests_countrows():
+    msg = antipattern.sumx_constant("SUMX('T', 1)")
+    assert msg is not None
+    assert "COUNTROWS" in msg
+
+
+def test_sumx_constant_leaves_expressions_and_other_iterators_alone():
+    flag = antipattern.sumx_constant
+    assert flag("SUMX('Sales', [Amount])") is None  # real column
+    assert flag("SUMX('Sales', 1 + 1)") is None  # not a bare literal
+    assert flag("AVERAGEX('T', 1)") is None  # BLANK on empty tables
+    assert flag("MAXX('T', 1)") is None  # same empty-table caveat
+    assert flag("SUMX(") is None  # unparseable → silent

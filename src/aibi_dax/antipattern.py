@@ -1073,6 +1073,34 @@ def if_same_branches(expr: str) -> str | None:
     return None
 
 
+_SUMX_CONSTANT_MSG = (
+    "SUMX(t, k) with a constant k sums the same number per row — "
+    "COUNTROWS(t) * k counts the rows without the loop "
+    "(just COUNTROWS(t) for k = 1)."
+)
+
+
+def sumx_constant(expr: str) -> str | None:
+    """`SUMX(t, k)` with a numeric literal k is `COUNTROWS(t) * k`.
+
+    AST-driven: a SUMX call whose second argument is a (possibly
+    negated) numeric literal. SUMX is the only iterator where the
+    collapse holds on empty tables (0 = 0); AVERAGEX/MAXX return
+    BLANK there, so they stay silent. An expression k, an unparseable
+    text — all silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "SUMX" or len(call.args) != 2:
+            continue
+        if _numeric_literal(call.args[1]) is not None:
+            return _SUMX_CONSTANT_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1103,4 +1131,5 @@ ALL_RULES: list[Rule] = [
     true_comparison,
     distinctcount_values,
     if_same_branches,
+    sumx_constant,
 ]
