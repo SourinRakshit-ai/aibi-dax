@@ -108,6 +108,12 @@ AST-driven: only non-constant denominators flag — `[x] / 2` is
 safe, `[x] / [Scale]` is the trap, and slashes inside string
 literals never count.
 
+### `[x] <> BLANK()`
+The not-equal twin of the `= BLANK()` habit — `NOT(ISBLANK([x]))` states
+the test outright. AST-driven: a `<>` binary with a zero-argument
+`BLANK()` call on either side flags; `= BLANK()` stays the other rule's
+territory, as do other operators and unparseable text.
+
 ### `= BLANK()` equality
 Equality against BLANK is unreliable for non-numeric types; `ISBLANK(x)`
 is the intended test.

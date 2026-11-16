@@ -168,6 +168,32 @@ def blank_comparison(expr: str) -> str | None:
     return _BLANK_MSG if _eq_blank(tree) else None
 
 
+_BLANK_NOT_EQUAL_MSG = (
+    "Compare with NOT(ISBLANK(x)), not `x <> BLANK()` — "
+    "inequality against BLANK is just as unreliable as equality."
+)
+
+
+def blank_not_equal(expr: str) -> str | None:
+    """`[x] <> BLANK()` is `NOT(ISBLANK([x]))`.
+
+    AST-driven: a `<>` binary with a zero-argument BLANK() call on
+    either side — the not-equal twin of rule 4 (`= BLANK()`). Other
+    comparisons, other operators, and unparseable text stay silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for binary in _walk_binaries(tree):
+        if binary.op != "<>":
+            continue
+        for side in (binary.left, binary.right):
+            if _zero_arg_call(side, "BLANK"):
+                return _BLANK_NOT_EQUAL_MSG
+    return None
+
+
 def _eq_blank(node: Node) -> bool:
     """An `=` comparison with a zero-argument BLANK() call on either side."""
     match node:
@@ -1132,4 +1158,5 @@ ALL_RULES: list[Rule] = [
     distinctcount_values,
     if_same_branches,
     sumx_constant,
+    blank_not_equal,
 ]

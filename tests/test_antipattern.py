@@ -563,3 +563,24 @@ def test_sumx_constant_leaves_expressions_and_other_iterators_alone():
     assert flag("AVERAGEX('T', 1)") is None  # BLANK on empty tables
     assert flag("MAXX('T', 1)") is None  # same empty-table caveat
     assert flag("SUMX(") is None  # unparseable → silent
+
+
+def test_blank_not_equal_flags_inequality_against_blank():
+    flag = antipattern.blank_not_equal
+    assert flag("FILTER('T', [x] <> BLANK())") is not None
+    assert flag("BLANK() <> [x]") is not None  # reversed operands
+    assert flag("CALCULATE([m], [x] <> BLANK())") is not None  # nested
+
+
+def test_blank_not_equal_message_names_not_isblank():
+    msg = antipattern.blank_not_equal("[x] <> BLANK()")
+    assert msg is not None
+    assert "NOT(ISBLANK(x))" in msg
+
+
+def test_blank_not_equal_leaves_equality_and_others_alone():
+    flag = antipattern.blank_not_equal
+    assert flag("IF([x] = BLANK(), 1, 2)") is None  # rule 4's territory
+    assert flag("[x] > BLANK()") is None  # not the <> operator
+    assert flag("[x] <> 3") is None  # not a BLANK() call
+    assert flag("<> BLANK()") is None  # unparseable → silent
