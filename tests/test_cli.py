@@ -5,6 +5,8 @@ import json
 
 import pytest
 
+import aibi_dax
+from aibi_dax.antipattern import ALL_RULES
 from aibi_dax.cli import main
 
 MODEL = {
@@ -678,3 +680,35 @@ def test_metrics_top_single_expression_shape_is_unchanged(capsys):
     assert main(["metrics", "SUM([x])", "--top", "3", "--json"]) == 0
     payload = json.loads(capsys.readouterr().out)
     assert set(payload) == {"metrics", "weight"}
+
+
+def test_lint_sarif_emits_valid_document(capsys):
+    assert main(["lint", "SUM([x] / [y])", "--sarif"]) == 0
+    doc = json.loads(capsys.readouterr().out)
+    assert doc["$schema"].endswith("sarif-2.1.0.json")
+    assert doc["version"] == "2.1.0"
+    run = doc["runs"][0]
+    assert run["tool"]["driver"]["name"] == "aibi-dax"
+    assert run["tool"]["driver"]["version"] == aibi_dax.__version__
+    assert len(run["tool"]["driver"]["rules"]) == len(ALL_RULES)
+    assert [r["ruleId"] for r in run["results"]] == ["raw_division"]
+    assert run["results"][0]["level"] == "warning"
+
+
+def test_lint_sarif_clean_expression_has_no_results_but_exits_zero(capsys):
+    assert main(["lint", "SUM([x])", "--sarif"]) == 0
+    doc = json.loads(capsys.readouterr().out)
+    assert doc["runs"][0]["results"] == []
+
+
+def test_lint_sarif_respects_the_rule_filter(capsys):
+    assert main(["lint", "SUM([x] / [y])", "--rule", "unused_variable", "--sarif"]) == 0
+    doc = json.loads(capsys.readouterr().out)
+    assert doc["runs"][0]["results"] == []
+    rule_ids = [r["id"] for r in doc["runs"][0]["tool"]["driver"]["rules"]]
+    assert rule_ids == ["unused_variable"]
+
+
+def test_lint_sarif_conflicts_with_json(capsys):
+    assert main(["lint", "SUM([x])", "--sarif", "--json"]) == 2
+    assert "mutually exclusive" in capsys.readouterr().err

@@ -129,7 +129,16 @@ plugins and CI allow-lists. `--file PATH` reads the
 expression from a file instead, so a measure copied from a model keeps
 its newlines and quotes; `--file -` reads stdin, so
 `cat measure.dax | dxa lint --file -` works in a pipeline. Pass one
-source or the other, never both. A blank expression — nothing, or only
+source or the other, never both. `--sarif` prints a SARIF 2.1.0
+document for CI code scanning (GitHub's `upload-sarif` action, say):
+one `runs[]` entry whose `tool.driver` names `aibi-dax` and the
+current version, `driver.rules[]` mirroring the `--list-rules`
+summaries, and `results[]` carrying `ruleId`, `level: "warning"` and
+`message.text`. With `--sarif` the exit code is always 0 — findings
+travel inside the document, not the exit status; usage errors remain
+exit 2. `--json` and `--sarif` are mutually exclusive.
+`lint-model --sarif` is deliberately not offered — an artifact
+location per measure is its own design. A blank expression — nothing, or only
 whitespace, from any source — exits 2 with `got an empty expression
 from …` rather than passing silently:
 

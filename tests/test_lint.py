@@ -1,6 +1,7 @@
 """Crossover tests: metrics + rules end-to-end against a realistic model."""
 
 from aibi_dax import complexity, lint
+from aibi_dax.antipattern import ALL_RULES, raw_division
 
 DIRTY_MODEL = {
     "tables": [
@@ -44,3 +45,19 @@ def test_metrics_and_lint_agree_on_complexity_surface():
     heaviest = ranked[0]
     assert heaviest[1] == "If Stair"  # most tokens, depth and operators together
     assert lint.lint_expression(DIRTY_MODEL["tables"][0]["measures"][1]["expression"])
+
+
+def test_lint_findings_attribution_matches_expression_output():
+    expr = "IF(a, 1, IF(b, 2, IF(c, 3, [D] / 0)))"
+    pairs = lint.lint_findings(expr)
+    assert pairs
+    assert all(name in {r.__name__ for r in ALL_RULES} for name, _ in pairs)
+    assert [msg for _, msg in pairs] == lint.lint_expression(expr)
+    assert any(name == "too_many_ifs" for name, _ in pairs)
+
+
+def test_lint_findings_respects_a_rule_filter():
+    expr = "IF(a, 1, IF(b, 2, IF(c, 3, [D] / 0)))"
+    assert all(name != "too_many_ifs" for name, _ in lint.lint_findings(expr, [raw_division]))
+    (name, _), = lint.lint_findings("[x] / [y]", [raw_division])
+    assert name == "raw_division"

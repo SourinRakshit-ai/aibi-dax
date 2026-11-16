@@ -10,13 +10,14 @@ from pathlib import Path
 from typing import TypeGuard
 
 from . import __version__
-from .antipattern import ALL_RULES, Rule
+from .antipattern import ALL_RULES, Rule, rule_summary
 from .completions import SHELLS
 from .completions import script as completion_script
 from .complexity import rank_measures, report, weight
-from .lint import lint_expression, lint_model, lint_model_summary
+from .lint import lint_expression, lint_findings, lint_model, lint_model_summary
 from .model_io import Model, load_model
 from .parser import Node, ParseError, parse
+from .sarif import build_sarif
 
 
 def format_tree(node: Node) -> str:
@@ -107,6 +108,9 @@ def _build_parser() -> argparse.ArgumentParser:
     p_lint.add_argument("expr", nargs="?", help="DAX expression, quoted")
     p_lint.add_argument("--file", help="read the expression from this file instead")
     p_lint.add_argument("--json", action="store_true", help="emit JSON")
+    p_lint.add_argument(
+        "--sarif", action="store_true", help="emit SARIF 2.1.0 for CI code scanning (exit 0)"
+    )
     p_lint.add_argument("--rule", action="append", metavar="NAME",
                         help="run only this rule (function name; repeatable)")
     p_lint.add_argument("--list-rules", action="store_true", help="print the rule inventory and exit")
@@ -127,12 +131,6 @@ def _build_parser() -> argparse.ArgumentParser:
     p_parse.add_argument("--json", action="store_true", help="emit JSON")
     p_parse.add_argument("--tree", action="store_true", help="indented one-node-per-line tree")
     return parser
-
-
-def _rule_summary(rule: Rule) -> str:
-    """First sentence of a rule's docstring, for --list-rules lines."""
-    text = " ".join((rule.__doc__ or "").strip().splitlines())
-    return text.partition(". ")[0]
 
 
 def _read_file(path: str) -> tuple[str | None, int]:
@@ -328,12 +326,12 @@ def main(argv: list[str] | None = None) -> int:
             # no argument → the rule inventory, same data as --list-rules
             if getattr(args, "json", False):
                 print(json.dumps(
-                    [{"name": rule.__name__, "summary": _rule_summary(rule)}
+                    [{"name": rule.__name__, "summary": rule_summary(rule)}
                      for rule in ALL_RULES]
                 ))
                 return 0
             for rule in ALL_RULES:
-                summary = _rule_summary(rule)
+                summary = rule_summary(rule)
                 print(f"{rule.__name__:26}{summary}")
             print("\nrun `dxa explain RULE` for the full documentation of one rule")
             return 0
@@ -348,7 +346,7 @@ def main(argv: list[str] | None = None) -> int:
         if getattr(args, "json", False):
             print(json.dumps({
                 "name": rule.__name__,
-                "summary": _rule_summary(rule),
+                "summary": rule_summary(rule),
                 "doc": doc,
             }))
             return 0
@@ -408,12 +406,12 @@ def main(argv: list[str] | None = None) -> int:
         if getattr(args, "list_rules", False):
             if getattr(args, "json", False):
                 print(json.dumps(
-                    [{"name": rule.__name__, "summary": _rule_summary(rule)}
+                    [{"name": rule.__name__, "summary": rule_summary(rule)}
                      for rule in ALL_RULES]
                 ))
                 return 0
             for rule in ALL_RULES:
-                summary = _rule_summary(rule)
+                summary = rule_summary(rule)
                 print(f"{rule.__name__:26}{summary}")
             return 0
         expr, code = _expression(args)
@@ -422,6 +420,12 @@ def main(argv: list[str] | None = None) -> int:
         rules, code = _rules_for(getattr(args, "rule", None))
         if code:
             return code
+        if getattr(args, "sarif", False):
+            if getattr(args, "json", False):
+                print("dxa: --sarif and --json are mutually exclusive — pick one format", file=sys.stderr)
+                return 2
+            print(json.dumps(build_sarif(lint_findings(expr, rules), rules or ALL_RULES)))
+            return 0
         findings = lint_expression(expr, rules)
         if getattr(args, "json", False):
             print(json.dumps(findings))

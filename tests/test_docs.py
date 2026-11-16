@@ -156,3 +156,12 @@ def test_metrics_top_example_replays(capsys: pytest.CaptureFixture[str]) -> None
     assert main(["metrics", *exprs, "--top", top.group(1)]) == 0
     got = capsys.readouterr().out.strip().splitlines()
     assert got == expected
+
+
+def test_lint_section_documents_sarif() -> None:
+    """The lint section of CLI.md must document the --sarif contract."""
+    text = DOC.read_text(encoding="utf-8")
+    section = text.split("## `dxa lint \"EXPR\"`", 1)[1].split("\n## ", 1)[0]
+    assert "--sarif" in section
+    assert "SARIF 2.1.0" in section
+    assert "always 0" in section or "exit 0" in section.lower()
