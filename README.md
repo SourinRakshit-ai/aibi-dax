@@ -65,6 +65,7 @@ of aibi-toolkit — so one file feeds both tools.
 29. `IF(cond, x, x)` (→ `x`; the predicate computes for nothing)
 30. `SUMX(t, k)` with a constant (→ `COUNTROWS(t) * k`)
 31. `[x] <> BLANK()` (→ `NOT(ISBLANK(x))`)
+32. `TRIM(TRIM(x))` (→ `TRIM(x)`; one call is all it takes)
 
 ## What the weight measures
 

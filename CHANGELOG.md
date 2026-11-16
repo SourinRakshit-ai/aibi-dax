@@ -28,7 +28,8 @@
   rule 29 flags `IF(cond, x, x)` (→ `x`; branches compared with
   DAX's case rules and numbers by value); rule 30 flags
   `SUMX(t, k)` with a constant `k` (→ `COUNTROWS(t) * k`);
-  rule 31 flags `[x] <> BLANK()` (→ `NOT(ISBLANK(x))`).
+  rule 31 flags `[x] <> BLANK()` (→ `NOT(ISBLANK(x))`);
+  rule 32 flags `TRIM(TRIM(x))` (→ `TRIM(x)`).
 - `--table` on `rank` and `lint-model` matches table names
   case-insensitively (one shared filter): `--table sales` now finds
   `Sales` instead of silently reporting nothing — or, for

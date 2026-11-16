@@ -1127,6 +1127,32 @@ def sumx_constant(expr: str) -> str | None:
     return None
 
 
+_TRIM_NESTED_MSG = (
+    "TRIM(TRIM(x)) — TRIM is idempotent; one call trims everything "
+    "the nested pair can."
+)
+
+
+def trim_nested(expr: str) -> str | None:
+    """`TRIM(TRIM(x))` collapses to `TRIM(x)`.
+
+    AST-driven: a TRIM call whose single argument is another TRIM
+    call. Wrapped forms like `TRIM(LOWER(TRIM(x)))` and single TRIMs
+    stay silent, as does unparseable text.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "TRIM" or len(call.args) != 1:
+            continue
+        inner = call.args[0]
+        if isinstance(inner, Call) and inner.name.upper() == "TRIM" and len(inner.args) == 1:
+            return _TRIM_NESTED_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1159,4 +1185,5 @@ ALL_RULES: list[Rule] = [
     if_same_branches,
     sumx_constant,
     blank_not_equal,
+    trim_nested,
 ]

@@ -584,3 +584,23 @@ def test_blank_not_equal_leaves_equality_and_others_alone():
     assert flag("[x] > BLANK()") is None  # not the <> operator
     assert flag("[x] <> 3") is None  # not a BLANK() call
     assert flag("<> BLANK()") is None  # unparseable → silent
+
+
+def test_trim_nested_flags_double_trim():
+    flag = antipattern.trim_nested
+    assert flag("TRIM(TRIM([Name]))") is not None
+    assert flag("TRIM(TRIM(TRIM([Name])))") is not None  # triple reports once
+    assert flag('IF(TRIM(TRIM([Name])) = "x", 1, 0)') is not None  # nested
+
+
+def test_trim_nested_message_says_one_call():
+    msg = antipattern.trim_nested("TRIM(TRIM([Name]))")
+    assert msg is not None
+    assert "idempotent" in msg
+
+
+def test_trim_nested_leaves_other_strings_alone():
+    flag = antipattern.trim_nested
+    assert flag("TRIM([Name])") is None
+    assert flag("TRIM(LOWER(TRIM([Name])))") is None  # not adjacent pair
+    assert flag("TRIM(TRIM(") is None  # unparseable → silent
