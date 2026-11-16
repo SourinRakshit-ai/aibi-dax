@@ -40,6 +40,9 @@
   `dxa explain` with no argument now prints the rule inventory
   (name + summary, with a hint to pass a rule) instead of dying on
   an argparse error; `--json` emits the `--list-rules` array.
+  `dxa metrics --top N` keeps the N heaviest expressions by weight,
+  reported heaviest-first (ties keep argument order) — the
+  expression-side twin of `rank --top`; below 1 exits 2.
 - CLI: `dxa rank --min-weight W` keeps only measures at or above the
   threshold, with `--top N` applying to the filtered set. A blank
   expression (including a blank `--file`/stdin) now exits 2 on

@@ -20,7 +20,7 @@ dxa --version
 
 | Command                    | What it does                                   |
 | -------------------------- | ---------------------------------------------- |
-| `dxa metrics "EXPR"`       | token/function/depth/iterator counts + weight (repeatable; `--file PATH`)  |
+| `dxa metrics "EXPR"`       | token/function/depth/iterator counts + weight (repeatable; `--file PATH`; `--top N` keeps the N heaviest)  |
 | `dxa metrics "EXPR" --json`| the same as a JSON payload (`{"results": …}` for several expressions) |
 | `dxa rank model.json`      | heaviest measures first (`--top N`, `--table T` any case, `--min-weight W`; `-` = stdin) |
 | `dxa lint "EXPR"`          | anti-pattern findings for one expression (`--rule R`, `--list-rules [--json]`, `--file PATH`) |

@@ -82,6 +82,9 @@ def _build_parser() -> argparse.ArgumentParser:
     p_metrics = sub.add_parser("metrics", help="complexity metrics for one or more expressions")
     p_metrics.add_argument("expr", nargs="*", help="DAX expression(s), quoted")
     p_metrics.add_argument("--file", help="read one expression from this file instead")
+    p_metrics.add_argument(
+        "--top", type=int, metavar="N", help="keep only the N heaviest expressions (heaviest first)"
+    )
     p_metrics.add_argument("--json", action="store_true", help="emit JSON")
 
     p_rank = sub.add_parser("rank", help="most complex measures of a model dump")
@@ -353,11 +356,19 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "metrics":
+        top = getattr(args, "top", None)
+        if top is not None and top < 1:
+            print("dxa: --top must be at least 1", file=sys.stderr)
+            return 2
         exprs, code = _expressions(args)
         if exprs is None:
             return code
+        multi = len(exprs) > 1
+        if top is not None and multi:
+            # stable sort: ties keep input order; the N heaviest survive
+            exprs = sorted(exprs, key=weight, reverse=True)[:top]
         if getattr(args, "json", False):
-            if len(exprs) == 1:
+            if not multi:
                 single = exprs[0]
                 print(json.dumps({"metrics": report(single), "weight": weight(single)}))
             else:
@@ -368,7 +379,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps({"results": results}))
             return 0
         for index, text in enumerate(exprs):
-            if len(exprs) > 1:
+            if multi:
                 if index:
                     print()
                 print(f"expr: {' '.join(text.split())}")
