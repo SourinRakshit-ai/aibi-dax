@@ -11,6 +11,7 @@ theme:
 nav:
   - Home: index.md
   - CLI reference: CLI.md
+  - Cookbook: recipes.md
   - Anti-pattern rules: rules.md
   - Performance: performance.md
 

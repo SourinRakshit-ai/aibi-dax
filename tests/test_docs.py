@@ -122,3 +122,24 @@ def test_changelog_leads_with_the_current_version() -> None:
     version = re.search(r'^version = "(\S+)"', pyproject, re.MULTILINE)
     assert version, "no version key in pyproject.toml"
     assert heading.group(1) == version.group(1)
+
+RECIPES = Path("docs/recipes.md")
+
+
+def test_recipe_fences_replay(capsys: pytest.CaptureFixture[str]) -> None:
+    """Every `$ dxa lint` fence in recipes.md must match real CLI output.
+
+    The cookbook's whole value is that its before/after pairs are true;
+    a rule-message change that isn't reflected here fails here first.
+    """
+    text = RECIPES.read_text(encoding="utf-8")
+    blocks = re.findall(r"```\n(.*?)```", text, re.DOTALL)
+    assert len(blocks) == 10, "five recipes, before and after each"
+    for block in blocks:
+        fence = block.strip().splitlines()
+        expr = _expr_of(fence)
+        expected = [ln for ln in fence if not ln.lstrip().startswith("$")]
+        want_exit = 1 if expected[0].startswith("- ") else 0
+        assert main(["lint", expr]) == want_exit, expr
+        got = capsys.readouterr().out.strip().splitlines()
+        assert got == expected, expr
