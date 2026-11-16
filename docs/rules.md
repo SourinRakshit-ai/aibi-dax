@@ -126,6 +126,15 @@ condition is a one-argument `ISBLANK` **and** whose else-branch equals
 the tested expression flags; `IF(ISBLANK([A]), 0, [B])` is a genuine
 conditional and stays silent.
 
+### `COALESCE(..., BLANK())` / `COALESCE(x)`
+`COALESCE([x], BLANK())` says the same thing as `COALESCE([x])` — the
+trailing alternative is the default anyway. And a single-argument
+`COALESCE([x])` is exactly `[x]`. AST-driven: a zero-argument
+`BLANK()` in the LAST argument flags (a middle `BLANK()` short-
+circuits to blank and hides later arguments from evaluation — it
+changes what runs, not just what's returned, so it stays silent), as
+does a one-argument call; unparseable text stays silent.
+
 ### `SUMMARIZE` with a computed argument
 `SUMMARIZE('Sales', [Region], [Qty] + 1)` puts a computed expression in
 the grouping list, where it is silently ignored — `SUMMARIZE` only

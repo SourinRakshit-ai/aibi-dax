@@ -1099,6 +1099,38 @@ def if_same_branches(expr: str) -> str | None:
     return None
 
 
+_COALESCE_TRAILING_BLANK_MSG = (
+    "COALESCE with a trailing BLANK() adds nothing — the shorter "
+    "COALESCE(a, …) says the same thing."
+)
+_COALESCE_SINGLE_ARG_MSG = (
+    "COALESCE(x) is just x — one argument, no fallback, no call."
+)
+
+
+def coalesce_trailing_blank(expr: str) -> str | None:
+    """`COALESCE(..., BLANK())` drops the trailing default; `COALESCE(x)` is `x`.
+
+    AST-driven: a single-argument COALESCE, or a zero-argument
+    BLANK() call in the LAST argument position. A middle BLANK()
+    (`COALESCE([x], BLANK(), [y])`) short-circuits to blank and hides
+    later arguments from evaluation, which is meaningful — silent, as
+    is unparseable text.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "COALESCE":
+            continue
+        if len(call.args) == 1:
+            return _COALESCE_SINGLE_ARG_MSG
+        if _zero_arg_call(call.args[-1], "BLANK"):
+            return _COALESCE_TRAILING_BLANK_MSG
+    return None
+
+
 _ABSORBED_OR_MSG = (
     "OR(TRUE(), x) is TRUE() — TRUE absorbs every other operand; "
     "drop the rest."
@@ -1393,4 +1425,5 @@ ALL_RULES: list[Rule] = [
     countx_constant,
     power_identity,
     absorbed_boolean,
+    coalesce_trailing_blank,
 ]

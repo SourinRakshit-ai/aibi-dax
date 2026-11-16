@@ -72,6 +72,7 @@ of aibi-toolkit — so one file feeds both tools.
 36. `COUNTX(t, k)` with a constant (→ `COUNTROWS(t)`)
 37. `POWER(x, 1)` (→ `x`) and `POWER(x, 0)` (→ `1`)
 38. `OR(TRUE(), x)` (→ `TRUE()`), `AND(FALSE(), x)` (→ `FALSE()`)
+39. `COALESCE(x, BLANK())` and `COALESCE(x)` (→ drop the trailing blank / the call)
 
 ## What the weight measures
 

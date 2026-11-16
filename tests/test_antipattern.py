@@ -748,3 +748,27 @@ def test_absorbed_boolean_leaves_identities_and_real_logic_alone():
     assert flag("OR([x], [y])") is None
     assert flag("AND([x], [y])") is None
     assert flag("OR(TRUE") is None  # unparseable → silent
+
+
+def test_coalesce_trailing_blank_flags_trailing_and_single():
+    flag = antipattern.coalesce_trailing_blank
+    assert flag("COALESCE([x], BLANK())") is not None
+    assert flag("COALESCE([x], [y], BLANK())") is not None  # after alternatives
+    assert flag("COALESCE([x])") is not None  # single argument
+    assert flag("SUMX('T', COALESCE([a], BLANK()))") is not None  # nested
+
+
+def test_coalesce_trailing_blank_messages_distinguish_shapes():
+    trailing = antipattern.coalesce_trailing_blank("COALESCE([x], BLANK())")
+    single = antipattern.coalesce_trailing_blank("COALESCE([x])")
+    assert trailing is not None and single is not None
+    assert "trailing" in trailing
+    assert "one argument" in single
+
+
+def test_coalesce_trailing_blank_leaves_meaningful_shapes_alone():
+    flag = antipattern.coalesce_trailing_blank
+    assert flag("COALESCE([x], BLANK(), [y])") is None  # middle BLANK short-circuits
+    assert flag("COALESCE([x], 0)") is None
+    assert flag("COALESCE([x], [y])") is None
+    assert flag("COALESCE(") is None  # unparseable → silent
