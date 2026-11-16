@@ -69,6 +69,7 @@ of aibi-toolkit — so one file feeds both tools.
 33. `FILTER(t, TRUE())` (→ `t`; the predicate keeps every row)
 34. No-op arithmetic (`x + 0`, `x * 1`, `x / 1`, …) (→ drop the operation)
 35. `UPPER(UPPER(x))`, `ABS(ABS(x))`, `INT(INT(x))` (→ one call suffices)
+36. `COUNTX(t, k)` with a constant (→ `COUNTROWS(t)`)
 
 ## What the weight measures
 

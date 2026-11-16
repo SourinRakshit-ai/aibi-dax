@@ -675,3 +675,25 @@ def test_idempotent_nested_leaves_other_shapes_alone():
     assert flag("UPPER([s])") is None
     assert flag("ABS(ABS(ABS([x])))") is not None  # triple reports once
     assert flag("INT(") is None  # unparseable → silent
+
+
+def test_countx_constant_flags_constant_tallies():
+    flag = antipattern.countx_constant
+    assert flag("COUNTX('Sales', 1)") is not None
+    assert flag("COUNTAX('Sales', 3)") is not None  # also COUNTAX
+    assert flag("COUNTX('Sales', -1)") is not None  # negated literal
+    assert flag("CALCULATE(COUNTX('T', 1))") is not None  # nested
+
+
+def test_countx_constant_message_suggests_countrows():
+    msg = antipattern.countx_constant("COUNTX('T', 1)")
+    assert msg is not None
+    assert "COUNTROWS" in msg
+
+
+def test_countx_constant_leaves_expressions_alone():
+    flag = antipattern.countx_constant
+    assert flag("COUNTX('Sales', [Amount])") is None
+    assert flag("COUNTAX('Sales', TRUE())") is None  # not a numeric literal
+    assert flag("SUMX('T', 1)") is None  # SUM's, rule 30's territory
+    assert flag("COUNTX(") is None  # unparseable → silent

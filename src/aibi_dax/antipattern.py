@@ -1099,6 +1099,32 @@ def if_same_branches(expr: str) -> str | None:
     return None
 
 
+_COUNTX_CONSTANT_MSG = (
+    "{name}(t, k) with a constant k counts every row — "
+    "COUNTROWS(t) says the same thing with no loop."
+)
+
+
+def countx_constant(expr: str) -> str | None:
+    """`COUNTX(t, k)` (or `COUNTAX(t, k)`) with numeric literal k is `COUNTROWS(t)`.
+
+    AST-driven: a COUNTX or COUNTAX call whose second argument is a
+    (possibly negated) numeric literal — a constant is never blank, so
+    every row counts. Expressions and unparseable text stay silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        name = call.name.upper()
+        if name not in {"COUNTX", "COUNTAX"} or len(call.args) != 2:
+            continue
+        if _numeric_literal(call.args[1]) is not None:
+            return _COUNTX_CONSTANT_MSG.format(name=name)
+    return None
+
+
 _SUMX_CONSTANT_MSG = (
     "SUMX(t, k) with a constant k sums the same number per row — "
     "COUNTROWS(t) * k counts the rows without the loop "
@@ -1290,4 +1316,5 @@ ALL_RULES: list[Rule] = [
     filter_true,
     identity_arithmetic,
     idempotent_nested,
+    countx_constant,
 ]
