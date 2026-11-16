@@ -67,6 +67,7 @@ of aibi-toolkit — so one file feeds both tools.
 31. `[x] <> BLANK()` (→ `NOT(ISBLANK(x))`)
 32. `TRIM(TRIM(x))` (→ `TRIM(x)`; one call is all it takes)
 33. `FILTER(t, TRUE())` (→ `t`; the predicate keeps every row)
+34. No-op arithmetic (`x + 0`, `x * 1`, `x / 1`, …) (→ drop the operation)
 
 ## What the weight measures
 

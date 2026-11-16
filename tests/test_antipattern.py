@@ -625,3 +625,31 @@ def test_filter_true_leaves_real_filters_alone():
     assert flag("FILTER('Sales', TRUE)") is None  # bare identifier
     assert flag("FILTER('Sales', 1)") is None  # 1 is not TRUE() in DAX
     assert flag("FILTER(") is None  # unparseable → silent
+
+
+def test_identity_arithmetic_flags_no_op_operations():
+    flag = antipattern.identity_arithmetic
+    assert flag("[x] + 0") is not None
+    assert flag("0 + [x]") is not None
+    assert flag("[x] - 0") is not None
+    assert flag("[x] * 1") is not None
+    assert flag("1 * [x]") is not None
+    assert flag("[x] / 1") is not None
+    assert flag("[x] + -0") is not None  # negated zero
+    assert flag("SUMX('T', [a] + 0)") is not None  # nested
+
+
+def test_identity_arithmetic_message_says_drop_the_operation():
+    msg = antipattern.identity_arithmetic("[x] + 0")
+    assert msg is not None
+    assert "drop the operation" in msg
+
+
+def test_identity_arithmetic_leaves_real_arithmetic_alone():
+    flag = antipattern.identity_arithmetic
+    assert flag("0 - [x]") is None  # negation, not identity
+    assert flag("1 / [x]") is None  # reciprocal, not identity
+    assert flag("[x] + BLANK()") is None  # not a numeric literal
+    assert flag("0 * [x]") is None  # absorbing, not identity
+    assert flag("[x] * 2") is None
+    assert flag("+ 0") is None  # unparseable → silent

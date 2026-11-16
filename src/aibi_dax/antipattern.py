@@ -1179,6 +1179,45 @@ def filter_true(expr: str) -> str | None:
     return None
 
 
+_IDENTITY_ARITHMETIC_MSG = (
+    "Identity arithmetic — x + 0, 0 + x, x - 0, x * 1, 1 * x, "
+    "x / 1 all return x; drop the operation."
+)
+
+
+def identity_arithmetic(expr: str) -> str | None:
+    """No-op arithmetic returns the other operand.
+
+    AST-driven: a binary +/-/*// with a (possibly negated) numeric
+    literal on the identity side — `+ 0` either side, `- 0` on the
+    right only (`0 - x` negates), `* 1` either side, `/ 1` on the
+    right only (`1 / x` is a reciprocal). Numbers only — `x * BLANK()`
+    is 0, not x, so BLANK() plays no part here, and neither does
+    `0 * x` (absorbing, not identity). Unparseable text stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for binary in _walk_binaries(tree):
+        left = _numeric_literal(binary.left)
+        right = _numeric_literal(binary.right)
+        match binary.op:
+            case "+":
+                if left == 0 or right == 0:
+                    return _IDENTITY_ARITHMETIC_MSG
+            case "-":
+                if right == 0:
+                    return _IDENTITY_ARITHMETIC_MSG
+            case "*":
+                if left == 1 or right == 1:
+                    return _IDENTITY_ARITHMETIC_MSG
+            case "/":
+                if right == 1:
+                    return _IDENTITY_ARITHMETIC_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1213,4 +1252,5 @@ ALL_RULES: list[Rule] = [
     blank_not_equal,
     trim_nested,
     filter_true,
+    identity_arithmetic,
 ]
