@@ -93,7 +93,11 @@ def _build_parser() -> argparse.ArgumentParser:
     p_rank.add_argument("--json", action="store_true", help="emit JSON")
 
     p_explain = sub.add_parser("explain", help="full documentation for one rule")
-    p_explain.add_argument("rule", help="rule name as shown by dxa lint --list-rules")
+    p_explain.add_argument(
+        "rule",
+        nargs="?",
+        help="rule name as shown by dxa lint --list-rules (omit to list all rules)",
+    )
     p_explain.add_argument("--json", action="store_true", help="emit JSON")
 
     p_lint = sub.add_parser("lint", help="anti-pattern findings for one expression")
@@ -317,6 +321,19 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     if args.command == "explain":
+        if args.rule is None:
+            # no argument → the rule inventory, same data as --list-rules
+            if getattr(args, "json", False):
+                print(json.dumps(
+                    [{"name": rule.__name__, "summary": _rule_summary(rule)}
+                     for rule in ALL_RULES]
+                ))
+                return 0
+            for rule in ALL_RULES:
+                summary = _rule_summary(rule)
+                print(f"{rule.__name__:26}{summary}")
+            print("\nrun `dxa explain RULE` for the full documentation of one rule")
+            return 0
         wanted = args.rule.strip().lower()
         match = [r for r in ALL_RULES if r.__name__.lower() == wanted]
         if not match:
