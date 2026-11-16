@@ -147,6 +147,15 @@ another `NOT`/`!` flags (mixed spellings like `NOT(!x)` cancel too);
 `NOT(NOT(NOT(x)))` reports once. Arithmetic `-(-x)` and single
 negations stay silent.
 
+### `[flag] = TRUE()`
+`FILTER('Sales', [Active] = TRUE())` compares a boolean against
+`TRUE()` when the column already *is* the boolean — the comparison
+adds a coercion and a word that carries no information. Write
+`[Active]`; `[Active] = FALSE()` becomes `NOT [Active]`. AST-driven:
+an `=`/`<>` binary with a zero-argument `TRUE()`/`FALSE()` call on
+either side flags; `TRUE()` in an IF branch (the `IF(cond, TRUE(),
+FALSE())` rule's territory) and bare `TRUE` identifiers stay silent.
+
 ## Filter-safety rules
 
 ### `AND(...)` as a `CALCULATE` filter

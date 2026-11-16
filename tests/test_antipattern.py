@@ -456,3 +456,28 @@ def test_double_negation_leaves_single_negation_alone():
     assert flag("SUM(NOT(x))") is None
     assert flag("-(-x)") is None  # arithmetic negation, not NOT
     assert flag("NOT(") is None  # unparseable → silent
+
+
+def test_true_comparison_flags_boolean_against_literal():
+    flag = antipattern.true_comparison
+    assert flag("FILTER('Sales', [Active] = TRUE())") is not None
+    assert flag("FILTER('Sales', TRUE() = [Active])") is not None  # reversed
+    assert flag("IF([Active] = FALSE(), 1, 2)") is not None
+    assert flag("IF([Active] <> TRUE(), 1, 2)") is not None
+    assert flag("CALCULATE([m], [Active] = TRUE())") is not None  # nested
+
+
+def test_true_comparison_message_says_drop_the_comparison():
+    msg = antipattern.true_comparison("[f] = TRUE()")
+    assert msg is not None
+    assert "NOT col" in msg  # names the FALSE() spelling too
+
+
+def test_true_comparison_leaves_real_boolean_uses_alone():
+    flag = antipattern.true_comparison
+    assert flag("IF(x, TRUE(), FALSE())") is None  # rule 16's shape, no == comparison
+    assert flag("IF([f], TRUE, FALSE)") is None  # bare identifiers, not calls
+    assert flag("FILTER('T', [f])") is None  # no comparison at all
+    assert flag("[f] = [g]") is None  # no TRUE()/FALSE() call
+    assert flag("IF(TRUE(), 1, 2)") is None  # TRUE() not in a comparison
+    assert flag("[f] = ") is None  # unparseable → silent

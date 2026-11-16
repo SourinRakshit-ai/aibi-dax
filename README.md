@@ -60,6 +60,7 @@ of aibi-toolkit — so one file feeds both tools.
 24. A `VAR` never referenced before `RETURN` (→ drop it or use it)
 25. `COUNTROWS(t) = 0` (→ `ISEMPTY(t)`; `<> 0` / `> 0` → `NOT(ISEMPTY(t))`)
 26. `NOT(NOT(x))` (→ `x`; the double wrapper cancels)
+27. `[flag] = TRUE()` (→ the column itself; `= FALSE()` → `NOT col`)
 
 ## What the weight measures
 

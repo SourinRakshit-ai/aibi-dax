@@ -956,6 +956,33 @@ def double_negation(expr: str) -> str | None:
     return None
 
 
+_TRUE_COMPARISON_MSG = (
+    "[flag] = TRUE() compares a boolean against TRUE() — the column "
+    "is the test; drop the comparison (= FALSE() becomes NOT col)."
+)
+
+
+def true_comparison(expr: str) -> str | None:
+    """`[flag] = TRUE()` is `[flag]`; `[flag] = FALSE()` is `NOT [flag]`.
+
+    AST-driven: an `=`/`<>` binary with a zero-argument TRUE() or
+    FALSE() call on either side. A TRUE()/FALSE() in any other position
+    (an IF branch, say) is not this pattern, and neither is a bare
+    `TRUE` identifier. Unparseable text stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for binary in _walk_binaries(tree):
+        if binary.op not in {"=", "<>"}:
+            continue
+        for side in (binary.left, binary.right):
+            if _zero_arg_call(side, "TRUE") or _zero_arg_call(side, "FALSE"):
+                return _TRUE_COMPARISON_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -983,4 +1010,5 @@ ALL_RULES: list[Rule] = [
     unused_variable,
     countrows_zero,
     double_negation,
+    true_comparison,
 ]
