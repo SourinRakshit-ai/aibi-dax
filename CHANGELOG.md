@@ -55,6 +55,10 @@
   driver's rule descriptions, exit 0 whether or not findings exist);
   findings now carry rule names via `lint_findings`, with
   `lint_expression` as a thin projection.
+- Docs: new CI integration page — exit-code contract and a GitHub
+  Actions SARIF workflow (`--file -` + `upload-sarif`), plus the
+  plain-`--json` idiom; every CLI fence on the page is replayed by a
+  docs test.
 - CLI: `dxa rank --min-weight W` keeps only measures at or above the
   threshold, with `--top N` applying to the filtered set. A blank
   expression (including a blank `--file`/stdin) now exits 2 on

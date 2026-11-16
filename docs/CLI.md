@@ -138,7 +138,8 @@ summaries, and `results[]` carrying `ruleId`, `level: "warning"` and
 travel inside the document, not the exit status; usage errors remain
 exit 2. `--json` and `--sarif` are mutually exclusive.
 `lint-model --sarif` is deliberately not offered — an artifact
-location per measure is its own design. A blank expression — nothing, or only
+location per measure is its own design. See the
+[CI integration page](ci.md) for the GitHub Actions recipe. A blank expression — nothing, or only
 whitespace, from any source — exits 2 with `got an empty expression
 from …` rather than passing silently:
 
