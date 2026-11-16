@@ -70,6 +70,7 @@ of aibi-toolkit — so one file feeds both tools.
 34. No-op arithmetic (`x + 0`, `x * 1`, `x / 1`, …) (→ drop the operation)
 35. `UPPER(UPPER(x))`, `ABS(ABS(x))`, `INT(INT(x))` (→ one call suffices)
 36. `COUNTX(t, k)` with a constant (→ `COUNTROWS(t)`)
+37. `POWER(x, 1)` (→ `x`) and `POWER(x, 0)` (→ `1`)
 
 ## What the weight measures
 

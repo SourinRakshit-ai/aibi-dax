@@ -1099,6 +1099,38 @@ def if_same_branches(expr: str) -> str | None:
     return None
 
 
+_POWER_ONE_MSG = (
+    "POWER(x, 1) returns the base — write x directly."
+)
+_POWER_ZERO_MSG = (
+    "POWER(x, 0) returns 1 — write the literal."
+)
+
+
+def power_identity(expr: str) -> str | None:
+    """`POWER(x, 1)` is `x`; `POWER(x, 0)` is `1`.
+
+    AST-driven: a POWER call whose second argument is a (possibly
+    negated) numeric literal equal to 1 or 0. The `^` operator is out
+    of scope (it does not parse in this linter); `POWER(x, 2)` is real
+    work and stays silent, as do non-literal exponents and
+    unparseable text.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "POWER" or len(call.args) != 2:
+            continue
+        exponent = _numeric_literal(call.args[1])
+        if exponent == 1:
+            return _POWER_ONE_MSG
+        if exponent == 0:
+            return _POWER_ZERO_MSG
+    return None
+
+
 _COUNTX_CONSTANT_MSG = (
     "{name}(t, k) with a constant k counts every row — "
     "COUNTROWS(t) says the same thing with no loop."
@@ -1317,4 +1349,5 @@ ALL_RULES: list[Rule] = [
     identity_arithmetic,
     idempotent_nested,
     countx_constant,
+    power_identity,
 ]

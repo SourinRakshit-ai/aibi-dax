@@ -697,3 +697,28 @@ def test_countx_constant_leaves_expressions_alone():
     assert flag("COUNTAX('Sales', TRUE())") is None  # not a numeric literal
     assert flag("SUMX('T', 1)") is None  # SUM's, rule 30's territory
     assert flag("COUNTX(") is None  # unparseable → silent
+
+
+def test_power_identity_flags_trivial_exponents():
+    flag = antipattern.power_identity
+    assert flag("POWER([x], 1)") is not None
+    assert flag("POWER([x], 0)") is not None
+    assert flag("POWER([x], -0)") is not None  # negated zero is still 0
+    assert flag("IF(POWER([x], 1) > 0, 1, 0)") is not None  # nested
+
+
+def test_power_identity_messages_distinguish_the_two():
+    one = antipattern.power_identity("POWER([x], 1)")
+    zero = antipattern.power_identity("POWER([x], 0)")
+    assert one is not None and zero is not None
+    assert "base" in one
+    assert "1" in zero
+
+
+def test_power_identity_leaves_real_powers_alone():
+    flag = antipattern.power_identity
+    assert flag("POWER([x], 2)") is None
+    assert flag("POWER([x], -1)") is None  # reciprocal, not identity
+    assert flag("POWER(1, [x])") is None  # base, not exponent
+    assert flag("POWER([x], [y])") is None  # non-literal exponent
+    assert flag("POW(") is None  # unparseable → silent
