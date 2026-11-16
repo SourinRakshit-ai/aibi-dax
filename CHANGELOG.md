@@ -50,6 +50,11 @@
   `dxa metrics --top N` keeps the N heaviest expressions by weight,
   reported heaviest-first (ties keep argument order) — the
   expression-side twin of `rank --top`; below 1 exits 2.
+  `dxa lint --sarif` prints a SARIF 2.1.0 document for CI code
+  scanning (rule attribution, `--list-rules` summaries for the
+  driver's rule descriptions, exit 0 whether or not findings exist);
+  findings now carry rule names via `lint_findings`, with
+  `lint_expression` as a thin projection.
 - CLI: `dxa rank --min-weight W` keeps only measures at or above the
   threshold, with `--top N` applying to the filtered set. A blank
   expression (including a blank `--file`/stdin) now exits 2 on

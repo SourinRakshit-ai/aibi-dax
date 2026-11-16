@@ -1218,6 +1218,12 @@ def identity_arithmetic(expr: str) -> str | None:
     return None
 
 
+def rule_summary(rule: Rule) -> str:
+    """First sentence of a rule's docstring, for rule inventories."""
+    text = " ".join((rule.__doc__ or "").strip().splitlines())
+    return text.partition(". ")[0]
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,

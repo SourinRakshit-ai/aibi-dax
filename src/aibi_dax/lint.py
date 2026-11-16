@@ -7,13 +7,26 @@ from .lexer import strip_comments
 from .model_io import Model
 
 
-def lint_expression(expr: str, rules: list[Rule] | None = None) -> list[str]:
-    """All findings a single expression trips, human-readable.
+def lint_findings(expr: str, rules: list[Rule] | None = None) -> list[tuple[str, str]]:
+    """All findings a single expression trips, as (rule, message) pairs.
 
     Comments are blanked before the rules see the text — `-- note about
     CALCULATE` must not trip the calculate_inside_iterator fallback.
+    Machine consumers (SARIF) need the rule attribution, so this is
+    the shared entry point and `lint_expression` is a thin projection.
     """
-    return [msg for rule in (rules or ALL_RULES) for msg in [rule(strip_comments(expr))] if msg]
+    stripped = strip_comments(expr)
+    out: list[tuple[str, str]] = []
+    for rule in rules or ALL_RULES:
+        msg = rule(stripped)
+        if msg:
+            out.append((rule.__name__, msg))
+    return out
+
+
+def lint_expression(expr: str, rules: list[Rule] | None = None) -> list[str]:
+    """All findings a single expression trips, human-readable."""
+    return [msg for _, msg in lint_findings(expr, rules)]
 
 
 def lint_model(model: Model, rules: list[Rule] | None = None) -> dict[str, list[str]]:
