@@ -84,6 +84,15 @@ three-argument IF whose last two arguments are zero-argument `TRUE()` /
 `FALSE()` calls flags, so bare `TRUE` identifiers and two-argument IFs
 stay silent.
 
+### A `VAR` never referenced before `RETURN`
+`VAR a = 1 RETURN 2` defines a binding the measure never reads — dead
+variables hide a measure's real inputs and suggest a half-finished
+refactor. AST-driven: walk the `VAR` left spine and search every later
+value plus the `RETURN` body for a matching bare identifier
+(case-insensitive). A variable read by a later `VAR` counts as used
+(`VAR a = 1 VAR b = a + 1 RETURN b` is clean); the first dead binding
+reports, naming the variable.
+
 ## Data-shape rules
 
 ### Raw division

@@ -377,3 +377,31 @@ def test_and_in_calculate_leaves_or_and_split_filters_alone():
     assert flag("AND(a, b)") is None  # not inside CALCULATE
     assert flag("IF(AND(a, b), 1, 2)") is None
     assert flag("CALCULATE(") is None  # unparseable → silent
+
+
+def test_unused_variable_flags_dead_binding():
+    flag = antipattern.unused_variable
+    assert flag("VAR a = 1 RETURN 2") is not None
+    assert flag("VAR a = 1 VAR b = 2 RETURN b") is not None  # first is dead
+    assert flag("VAR a = 1 VAR b = 2 RETURN 3") is not None  # both dead, first reports
+
+
+def test_unused_variable_message_names_the_variable():
+    msg = antipattern.unused_variable("VAR Total = 1 RETURN 2")
+    assert msg is not None
+    assert "Total" in msg
+
+
+def test_unused_variable_accepts_live_bindings():
+    flag = antipattern.unused_variable
+    assert flag("VAR a = 1 RETURN a + 1") is None  # read in RETURN
+    assert flag("VAR a = 1 VAR b = a + 1 RETURN b") is None  # read by later VAR
+    assert flag("VAR Total = 1 RETURN total * 2") is None  # case-insensitive
+    assert flag("VAR a = VAR b = 1 RETURN b RETURN a") is None  # nested VAR value
+    assert flag("VAR a = 1 RETURN -a") is None  # read under a unary operator
+    assert flag("VAR a = 1 RETURN {a, 2}") is None  # read inside a list literal
+    # nested VAR value + binary right operand: walks every _walk_idents branch
+    assert flag("VAR a = 1 VAR b = VAR c = 2 RETURN c + a RETURN b") is None
+    assert flag("SUM([Amount])") is None  # no VAR block at all
+    assert flag("VAR a = 1 RETURN a") is None
+    assert flag("VAR a = ") is None  # unparseable → silent

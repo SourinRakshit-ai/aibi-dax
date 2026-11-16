@@ -822,6 +822,60 @@ def and_in_calculate(expr: str) -> str | None:
     return None
 
 
+_UNUSED_VAR_MSG = (
+    "VAR {name} is never referenced before RETURN — drop it, or "
+    "use it; a dead binding hides the measure's real inputs."
+)
+
+
+def _walk_idents(node: Node) -> Iterator[Ident]:
+    """Every bare identifier occurrence in the subtree."""
+    if isinstance(node, Ident):
+        yield node
+    elif isinstance(node, Var):
+        yield from _walk_idents(node.value)
+        yield from _walk_idents(node.body)
+    elif isinstance(node, Call):
+        for arg in node.args:
+            yield from _walk_idents(arg)
+    elif isinstance(node, Binary):
+        yield from _walk_idents(node.left)
+        yield from _walk_idents(node.right)
+    elif isinstance(node, Unary):
+        yield from _walk_idents(node.operand)
+    elif isinstance(node, List):
+        for item in node.items:
+            yield from _walk_idents(item)
+
+
+def unused_variable(expr: str) -> str | None:
+    """A `VAR` never referenced before `RETURN` is a dead binding.
+
+    AST-driven: walk the VAR left spine, then for each assignment
+    search every later value plus the RETURN body for an identifier
+    match (case-insensitive — DAX identifiers are). A variable used by
+    a later assignment counts as used. Unparseable text stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    bindings: list[tuple[str, Node]] = []
+    node = tree
+    while isinstance(node, Var):
+        bindings.append((node.name, node.value))
+        node = node.body
+    if not bindings:
+        return None
+    for index, (name, _) in enumerate(bindings):
+        later = [value for _, value in bindings[index + 1 :]]
+        scope: list[Node] = later + [node]  # later values + the RETURN body
+        wanted = name.upper()
+        if not any(ident.name.upper() == wanted for n in scope for ident in _walk_idents(n)):
+            return _UNUSED_VAR_MSG.format(name=name)
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -846,4 +900,5 @@ ALL_RULES: list[Rule] = [
     summarize_extra_column,
     if_iserror_iferror,
     and_in_calculate,
+    unused_variable,
 ]

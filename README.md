@@ -57,6 +57,7 @@ of aibi-toolkit — so one file feeds both tools.
 21. `SUMMARIZE` with a computed argument (→ group with `SUMMARIZE`, compute with `ADDCOLUMNS`)
 22. `IF(ISERROR(x), y, x)` (→ `IFERROR(x, y)`)
 23. `AND(...)` as a `CALCULATE` filter argument (→ one filter argument per conjunct)
+24. A `VAR` never referenced before `RETURN` (→ drop it or use it)
 
 ## What the weight measures
 

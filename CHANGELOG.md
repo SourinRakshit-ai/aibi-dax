@@ -18,7 +18,8 @@
   `IF(ISERROR(x), y, x)` (→ `IFERROR(x, y)`); rule 23 flags an
   `AND(...)` (or `&&`) filter argument inside `CALCULATE` (→ pass
   each conjunct as its own argument — `CALCULATE` already ANDs
-  them).
+  them); rule 24 flags a `VAR` never referenced before `RETURN`
+  (→ drop the dead binding or use it).
 - `--table` on `rank` and `lint-model` matches table names
   case-insensitively (one shared filter): `--table sales` now finds
   `Sales` instead of silently reporting nothing — or, for
