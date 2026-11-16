@@ -14,5 +14,6 @@ nav:
   - Cookbook: recipes.md
   - Anti-pattern rules: rules.md
   - Performance: performance.md
+  - CI integration: ci.md
 
 strict: true

@@ -24,7 +24,7 @@ def _fence(after_heading: str, index: int = 0) -> list[str]:
     """Lines of the index-th ``` fence below the given CLI.md heading."""
     text = DOC.read_text(encoding="utf-8")
     body = text.split(f"## {after_heading}", 1)[1]
-    blocks = re.findall(r"```\n(.*?)```", body, re.DOTALL)
+    blocks = re.findall(r"^```[^\n]*\n(.*?)^```", body, re.DOTALL | re.MULTILINE)
     assert len(blocks) > index, f"fence #{index} missing under '## {after_heading}'"
     return blocks[index].strip().splitlines()
 
@@ -165,3 +165,32 @@ def test_lint_section_documents_sarif() -> None:
     assert "--sarif" in section
     assert "SARIF 2.1.0" in section
     assert "always 0" in section or "exit 0" in section.lower()
+
+
+CI_DOC = Path("docs/ci.md")
+
+
+def _ci_fence(after_heading: str, index: int = 0) -> list[str]:
+    text = CI_DOC.read_text(encoding="utf-8")
+    body = text.split(f"## {after_heading}", 1)[1]
+    blocks = re.findall(r"^```[^\n]*\n(.*?)^```", body, re.DOTALL | re.MULTILINE)
+    assert len(blocks) > index, f"fence #{index} missing under '## {after_heading}'"
+    return blocks[index].strip().splitlines()
+
+
+def test_ci_page_lint_fence_replays(capsys: pytest.CaptureFixture[str]) -> None:
+    fence = _ci_fence("The exit-code contract")
+    expr = _expr_of(fence)
+    expected = [ln for ln in fence if not ln.lstrip().startswith("$")]
+    assert main(["lint", expr]) == 0
+    got = capsys.readouterr().out.strip().splitlines()
+    assert got == expected
+
+
+def test_ci_page_json_fence_replays(capsys: pytest.CaptureFixture[str]) -> None:
+    fence = _ci_fence("A plain gate", index=1)  # first fence is the yaml block
+    expr = _expr_of(fence)
+    expected = [ln for ln in fence if not ln.lstrip().startswith("$")]
+    assert main(["lint", expr, "--json"]) == 0
+    got = capsys.readouterr().out.strip().splitlines()
+    assert got == expected

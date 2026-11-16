@@ -110,3 +110,5 @@ For the non-empty case (`<> 0` or `> 0`) wrap it: `NOT(ISEMPTY(...))`.
 - [Performance](performance.md) — what the weight measures and where
   the cost actually goes.
 - [CLI reference](CLI.md) — flags, JSON shapes, and exit codes.
+- [Continuous integration](ci.md) — wiring the linter into a pipeline,
+  with a GitHub Actions SARIF example.
