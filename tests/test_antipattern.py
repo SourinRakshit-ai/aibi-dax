@@ -653,3 +653,25 @@ def test_identity_arithmetic_leaves_real_arithmetic_alone():
     assert flag("0 * [x]") is None  # absorbing, not identity
     assert flag("[x] * 2") is None
     assert flag("+ 0") is None  # unparseable → silent
+
+
+def test_idempotent_nested_flags_all_four_functions():
+    flag = antipattern.idempotent_nested
+    for fn in ("UPPER", "LOWER", "ABS", "INT"):
+        assert flag(f"{fn}({fn}([x]))") is not None, fn
+    assert flag("CALCULATE([m], ABS(ABS([x])) > 0)") is not None  # nested
+
+
+def test_idempotent_nested_message_names_the_function():
+    msg = antipattern.idempotent_nested("ABS(ABS([x]))")
+    assert msg is not None
+    assert "ABS" in msg
+
+
+def test_idempotent_nested_leaves_other_shapes_alone():
+    flag = antipattern.idempotent_nested
+    assert flag("TRIM(TRIM([s]))") is None  # rule 32's territory
+    assert flag("UPPER(LOWER([s]))") is None  # compose, not cancel
+    assert flag("UPPER([s])") is None
+    assert flag("ABS(ABS(ABS([x])))") is not None  # triple reports once
+    assert flag("INT(") is None  # unparseable → silent

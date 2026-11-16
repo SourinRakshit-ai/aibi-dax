@@ -1224,6 +1224,36 @@ def rule_summary(rule: Rule) -> str:
     return text.partition(". ")[0]
 
 
+_IDEMPOTENT_NESTED = frozenset({"UPPER", "LOWER", "ABS", "INT"})
+
+_IDEMPOTENT_NESTED_MSG = (
+    "{name}({name}(x)) — {name} is idempotent; one call does what "
+    "the pair can."
+)
+
+
+def idempotent_nested(expr: str) -> str | None:
+    """`UPPER(UPPER(x))` is `UPPER(x)` — same for LOWER, ABS, INT.
+
+    AST-driven: a single-argument call whose argument is the same
+    function. Exact idempotents only — TRIM has rule 32, mixed pairs
+    like `UPPER(LOWER(x))` compose rather than cancel, and everything
+    else stays silent, as does unparseable text.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        name = call.name.upper()
+        if name not in _IDEMPOTENT_NESTED or len(call.args) != 1:
+            continue
+        inner = call.args[0]
+        if isinstance(inner, Call) and inner.name.upper() == name and len(inner.args) == 1:
+            return _IDEMPOTENT_NESTED_MSG.format(name=name)
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1259,4 +1289,5 @@ ALL_RULES: list[Rule] = [
     trim_nested,
     filter_true,
     identity_arithmetic,
+    idempotent_nested,
 ]

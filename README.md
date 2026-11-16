@@ -68,6 +68,7 @@ of aibi-toolkit — so one file feeds both tools.
 32. `TRIM(TRIM(x))` (→ `TRIM(x)`; one call is all it takes)
 33. `FILTER(t, TRUE())` (→ `t`; the predicate keeps every row)
 34. No-op arithmetic (`x + 0`, `x * 1`, `x / 1`, …) (→ drop the operation)
+35. `UPPER(UPPER(x))`, `ABS(ABS(x))`, `INT(INT(x))` (→ one call suffices)
 
 ## What the weight measures
 
