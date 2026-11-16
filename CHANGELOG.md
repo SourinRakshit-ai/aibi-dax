@@ -37,6 +37,9 @@
   `[{"name", "summary"}]` for tooling; `dxa metrics --file` and
   `dxa parse --file` share the same resolver (`--file -` reads stdin),
   and `dxa explain` matches rule names case-insensitively.
+  `dxa explain` with no argument now prints the rule inventory
+  (name + summary, with a hint to pass a rule) instead of dying on
+  an argparse error; `--json` emits the `--list-rules` array.
 - CLI: `dxa rank --min-weight W` keeps only measures at or above the
   threshold, with `--top N` applying to the filtered set. A blank
   expression (including a blank `--file`/stdin) now exits 2 on

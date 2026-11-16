@@ -19,7 +19,7 @@ dxa --version
 | `dxa metrics "EXPR"` | six complexity metrics plus a single weighted score (repeatable; `--file`) |
 | `dxa rank model.json --top N` | the most complex measures of a model dump (`--min-weight W`; `-` = stdin) |
 | `dxa lint "EXPR"` | anti-pattern findings for one expression (`--rule`, `--list-rules [--json]`, `--file`) |
-| `dxa explain RULE` | full documentation for one anti-pattern rule (`--json`) |
+| `dxa explain [RULE]` | full documentation for one anti-pattern rule; no argument lists them all (`--json`) |
 | `dxa lint-model model.json` | findings across every measure, grouped (`--table` any case, `--rule`, `--summary`; `-` = stdin) |
 | `dxa parse "EXPR"` | the recursive-descent AST, human or `--json` (`--file`) |
 | `dxa --completions shell` | bash/zsh/fish tab-completion script, generated from the parser |

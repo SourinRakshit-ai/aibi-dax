@@ -119,9 +119,12 @@ $ dxa lint "IF(a, 1, IF(b, 2, IF(c, 3, [D]/[E])))"
 (exit 1)
 ```
 
-## `dxa explain RULE`
+## `dxa explain [RULE]`
 
-Full documentation for one rule — its docstring, underlined. Exit 2 with
+Full documentation for one rule — its docstring, underlined. With no
+argument, prints the rule inventory (the same name + summary lines as
+`dxa lint --list-rules`) followed by a hint, and exits 0 — `--json`
+then emits the same JSON array `--list-rules --json` does. Exit 2 with
 the complete rule list on stderr if the name is unknown. Names match
 case-insensitively and ignore surrounding whitespace; the heading always
 prints the canonical lower-case name. `--json` emits

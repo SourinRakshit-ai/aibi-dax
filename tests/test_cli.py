@@ -598,3 +598,24 @@ def test_table_filter_never_selects_a_nameless_table(tmp_path, capsys):
     # unfiltered, the nameless table still ranks (rendered as "?")
     assert main(["rank", str(p), "--top", "1"]) == 0
     assert "?" in capsys.readouterr().out
+
+
+def test_explain_without_argument_lists_the_inventory(capsys):
+    """`dxa explain` alone prints the rule list instead of an argparse error."""
+    assert main(["explain"]) == 0
+    inventory = capsys.readouterr().out.strip().splitlines()
+    assert main(["lint", "--list-rules"]) == 0
+    listed = capsys.readouterr().out.strip().splitlines()
+    assert inventory[: len(listed)] == listed  # same name + summary lines
+    assert len(inventory) == len(listed) + 2  # blank line + hint
+    assert inventory[-1].startswith("run `dxa explain RULE`")
+    assert all(line.startswith("  ") is False for line in inventory[: len(listed)])
+
+
+def test_explain_without_argument_json_matches_list_rules(capsys):
+    assert main(["explain", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert main(["lint", "--list-rules", "--json"]) == 0
+    assert payload == json.loads(capsys.readouterr().out)
+    assert len(payload) == 27
+    assert all({"name", "summary"} == set(item) for item in payload)
