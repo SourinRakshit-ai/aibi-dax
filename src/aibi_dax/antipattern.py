@@ -1153,6 +1153,32 @@ def trim_nested(expr: str) -> str | None:
     return None
 
 
+_FILTER_TRUE_MSG = (
+    "FILTER(t, TRUE()) passes every row — the table is the filter; "
+    "write t instead of the iterator."
+)
+
+
+def filter_true(expr: str) -> str | None:
+    """`FILTER(t, TRUE())` is `t`.
+
+    AST-driven: a FILTER call whose second argument is a zero-argument
+    TRUE() call. FALSE() has no one-call replacement (there is no
+    empty-table literal in DAX) and stays silent, as do bare TRUE
+    identifiers and non-literal second arguments, and unparseable text.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "FILTER" or len(call.args) != 2:
+            continue
+        if _zero_arg_call(call.args[1], "TRUE"):
+            return _FILTER_TRUE_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1186,4 +1212,5 @@ ALL_RULES: list[Rule] = [
     sumx_constant,
     blank_not_equal,
     trim_nested,
+    filter_true,
 ]

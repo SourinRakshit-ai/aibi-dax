@@ -604,3 +604,24 @@ def test_trim_nested_leaves_other_strings_alone():
     assert flag("TRIM([Name])") is None
     assert flag("TRIM(LOWER(TRIM([Name])))") is None  # not adjacent pair
     assert flag("TRIM(TRIM(") is None  # unparseable → silent
+
+
+def test_filter_true_flags_pass_through_filter():
+    flag = antipattern.filter_true
+    assert flag("FILTER('Sales', TRUE())") is not None
+    assert flag("CALCULATE([m], FILTER('T', TRUE()))") is not None  # nested
+
+
+def test_filter_true_message_says_write_the_table():
+    msg = antipattern.filter_true("FILTER('T', TRUE())")
+    assert msg is not None
+    assert "write t" in msg
+
+
+def test_filter_true_leaves_real_filters_alone():
+    flag = antipattern.filter_true
+    assert flag("FILTER('Sales', [x] > 0)") is None  # real condition
+    assert flag("FILTER('Sales', FALSE())") is None  # no one-call replacement
+    assert flag("FILTER('Sales', TRUE)") is None  # bare identifier
+    assert flag("FILTER('Sales', 1)") is None  # 1 is not TRUE() in DAX
+    assert flag("FILTER(") is None  # unparseable → silent
