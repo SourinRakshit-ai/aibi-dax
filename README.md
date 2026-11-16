@@ -61,6 +61,7 @@ of aibi-toolkit — so one file feeds both tools.
 25. `COUNTROWS(t) = 0` (→ `ISEMPTY(t)`; `<> 0` / `> 0` → `NOT(ISEMPTY(t))`)
 26. `NOT(NOT(x))` (→ `x`; the double wrapper cancels)
 27. `[flag] = TRUE()` (→ the column itself; `= FALSE()` → `NOT col`)
+28. `DISTINCTCOUNT(VALUES(col))` (→ `DISTINCTCOUNT(col)`)
 
 ## What the weight measures
 

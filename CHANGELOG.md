@@ -23,7 +23,8 @@
   `COUNTROWS(t) = 0` (→ `ISEMPTY(t)`; `<> 0` / `> 0` →
   `NOT(ISEMPTY(t))`); rule 26 flags `NOT(NOT(x))` (→ `x`);
   rule 27 flags `[flag] = TRUE()` (→ the column itself;
-  `= FALSE()` → `NOT col`).
+  `= FALSE()` → `NOT col`); rule 28 flags
+  `DISTINCTCOUNT(VALUES(col))` (→ `DISTINCTCOUNT(col)`).
 - `--table` on `rank` and `lint-model` matches table names
   case-insensitively (one shared filter): `--table sales` now finds
   `Sales` instead of silently reporting nothing — or, for

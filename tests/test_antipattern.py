@@ -481,3 +481,25 @@ def test_true_comparison_leaves_real_boolean_uses_alone():
     assert flag("[f] = [g]") is None  # no TRUE()/FALSE() call
     assert flag("IF(TRUE(), 1, 2)") is None  # TRUE() not in a comparison
     assert flag("[f] = ") is None  # unparseable → silent
+
+
+def test_distinctcount_values_flags_redundant_wrap():
+    flag = antipattern.distinctcount_values
+    assert flag("DISTINCTCOUNT(VALUES('Sales'[Region]))") is not None
+    assert flag("DISTINCTCOUNT(DISTINCT([Region]))") is not None
+    assert flag("IF(DISTINCTCOUNT(VALUES([R])) > 3, 1, 0)") is not None  # nested
+
+
+def test_distinctcount_values_message_names_direct_call():
+    msg = antipattern.distinctcount_values("DISTINCTCOUNT(VALUES([R]))")
+    assert msg is not None
+    assert "DISTINCTCOUNT(col)" in msg
+
+
+def test_distinctcount_values_leaves_real_uses_alone():
+    flag = antipattern.distinctcount_values
+    assert flag("DISTINCTCOUNT([Region])") is None  # already direct
+    assert flag("DISTINCTCOUNT(VALUES('Sales'))") is None  # table arg, not a column
+    assert flag("VALUES('Sales'[Region])") is None  # VALUES alone is fine
+    assert flag("COUNTROWS(VALUES([Region]))") is None  # rule 19's shape
+    assert flag("DISTINCTCOUNT(") is None  # unparseable → silent

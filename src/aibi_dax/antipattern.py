@@ -720,6 +720,36 @@ def countrows_values(expr: str) -> str | None:
     return None
 
 
+_DISTINCTCOUNT_VALUES_MSG = (
+    "DISTINCTCOUNT(VALUES(col)) counts an already-distinct set — "
+    "DISTINCTCOUNT(col) says the same thing in one call."
+)
+
+
+def distinctcount_values(expr: str) -> str | None:
+    """`DISTINCTCOUNT(VALUES('T'[Col]))` collapses to `DISTINCTCOUNT('T'[Col])`.
+
+    AST-driven: DISTINCTCOUNT whose only argument is a single-column
+    VALUES or DISTINCT call — the distinct pass exists only to be
+    counted again. A table-valued argument, or an argument that is not
+    a bare VALUES/DISTINCT call, stays silent, as does unparseable
+    text (without the AST a column cannot be told from a table).
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "DISTINCTCOUNT" or len(call.args) != 1:
+            continue
+        inner = call.args[0]
+        if not isinstance(inner, Call) or inner.name.upper() not in _DISTINCT_ONE_ARG:
+            continue
+        if len(inner.args) == 1 and isinstance(inner.args[0], (ColumnRef, QualifiedColumn)):
+            return _DISTINCTCOUNT_VALUES_MSG
+    return None
+
+
 _IF_ISBLANK_MSG = (
     "IF(ISBLANK(x), y, x) — the blank test and the else value are the "
     "same expression; write COALESCE(x, y) and say it once."
@@ -1011,4 +1041,5 @@ ALL_RULES: list[Rule] = [
     countrows_zero,
     double_negation,
     true_comparison,
+    distinctcount_values,
 ]

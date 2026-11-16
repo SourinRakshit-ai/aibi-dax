@@ -62,6 +62,13 @@ matches the iterator's first argument against the column's table
 qualification on the AST, so mismatched tables stay flagged as real
 iteration.
 
+### `DISTINCTCOUNT(VALUES(col))`
+`DISTINCTCOUNT(VALUES('Sales'[Region]))` runs a distinct pass and then
+counts the distinct set — `DISTINCTCOUNT('Sales'[Region])` returns the
+same number in one call. AST-driven: a single-argument `DISTINCTCOUNT`
+whose argument is a single-column `VALUES`/`DISTINCT` call flags;
+table-valued arguments and everything else stays silent.
+
 ### `COUNTROWS(VALUES(...))`
 `COUNTROWS(VALUES('Sales'[Region]))` builds the distinct table only to
 count its rows; `DISTINCTCOUNT('Sales'[Region])` says the intent outright
