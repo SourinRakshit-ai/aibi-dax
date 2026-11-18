@@ -839,3 +839,16 @@ def test_duplicate_coalesce_leaves_distinct_arguments_alone():
     assert flag("COALESCE([x], [y], [z])") is None
     assert flag("COALESCE([x])") is None  # single argument, rule 39's territory
     assert flag("COALESCE(") is None  # unparseable → silent
+
+
+def test_if_isblank_coalesce_blank_branch_collapses_to_the_expression():
+    msg = antipattern.if_isblank_coalesce("IF(ISBLANK([x]), BLANK(), [x])")
+    assert msg is not None
+    assert "write x directly" in msg  # no COALESCE detour
+    assert "COALESCE" not in msg
+
+
+def test_if_isblank_coalesce_non_blank_yes_branch_keeps_coalesce_advice():
+    msg = antipattern.if_isblank_coalesce("IF(ISBLANK([Amt]), 0, [Amt])")
+    assert msg is not None
+    assert "COALESCE(x, y)" in msg

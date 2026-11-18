@@ -45,6 +45,10 @@
   rule 41 flags `IF(TRUE(), x, y)` (→ `x`) and `IF(FALSE(), x, y)`
   (→ `y`); rule 42 flags `COALESCE(..., x, ..., x)` (→ the duplicate
   is unreachable; drop it).
+- Fix: rule 20 (`if_isblank_coalesce`) special-cases a zero-argument
+  `BLANK()` yes-branch — `IF(ISBLANK(x), BLANK(), x)` — and now says
+  the IF collapses to `x` directly, instead of suggesting
+  `COALESCE(x, BLANK())`, which rule 39 then reduces to the same thing.
 - `--table` on `rank` and `lint-model` matches table names
   case-insensitively (one shared filter): `--table sales` now finds
   `Sales` instead of silently reporting nothing — or, for

@@ -780,6 +780,10 @@ _IF_ISBLANK_MSG = (
     "IF(ISBLANK(x), y, x) — the blank test and the else value are the "
     "same expression; write COALESCE(x, y) and say it once."
 )
+_IF_ISBLANK_BLANK_MSG = (
+    "IF(ISBLANK(x), BLANK(), x) — the IF returns the tested "
+    "expression either way; write x directly."
+)
 
 
 def if_isblank_coalesce(expr: str) -> str | None:
@@ -787,9 +791,11 @@ def if_isblank_coalesce(expr: str) -> str | None:
 
     AST-driven: a three-argument IF whose condition is a one-argument
     ISBLANK call and whose else-branch equals the tested expression
-    (frozen dataclasses compare structurally). A differing else-branch
-    (`IF(ISBLANK([A]), 0, [B])`) is a genuine conditional and stays
-    silent, as does unparseable text.
+    (frozen dataclasses compare structurally). If the yes-branch is a
+    zero-argument BLANK() the whole IF is the tested expression — the
+    message says that outright (COALESCE(t, BLANK()) is t, per rule
+    39). A differing else-branch (`IF(ISBLANK([A]), 0, [B])`) is a
+    genuine conditional and stays silent, as does unparseable text.
     """
     try:
         tree = parse(expr)
@@ -798,13 +804,16 @@ def if_isblank_coalesce(expr: str) -> str | None:
     for call in _walk_calls(tree):
         if call.name.upper() != "IF" or len(call.args) != 3:
             continue
-        cond, _, other = call.args
+        cond, yes, other = call.args
         if (
             isinstance(cond, Call)
             and cond.name.upper() == "ISBLANK"
             and len(cond.args) == 1
             and other == cond.args[0]
         ):
+            if _zero_arg_call(yes, "BLANK"):
+                # COALESCE(t, BLANK()) is t itself — rule 39 says so
+                return _IF_ISBLANK_BLANK_MSG
             return _IF_ISBLANK_MSG
     return None
 
