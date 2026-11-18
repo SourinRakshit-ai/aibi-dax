@@ -2,6 +2,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- Published to PyPI via trusted publishing (OIDC). `pip install aibi-dax`.
 - Rules 1 and 14: `calculate_inside_iterator` rewritten over the AST
   (string-literal mentions no longer fire), and new rule 14 — a
   single-column row iterator (`SUMX('S', 'S'[Amount])`) collapses to a

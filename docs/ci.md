@@ -45,7 +45,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.13" }
-      - run: pip install git+https://github.com/SourinRakshit-ai/aibi-dax.git@v0.2.1
+      - run: pip install aibi-dax
       - name: Lint the measure
         run: cat measure.dax | dxa lint --file - --sarif > results.sarif
       - uses: github/codeql-action/upload-sarif@v3
@@ -70,7 +70,7 @@ If you do not want the Security tab, the plain form is the gate
 itself — exit 1 fails the step when findings exist:
 
 ```yaml
-      - run: pip install git+https://github.com/SourinRakshit-ai/aibi-dax.git@v0.2.1
+      - run: pip install aibi-dax
       - run: dxa lint --file measure.dax
 ```
 

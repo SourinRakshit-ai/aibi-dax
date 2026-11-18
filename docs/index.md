@@ -8,9 +8,11 @@ hygiene), aibi-dax checks the expressions *inside* them.
 ## Quick start
 
 ```bash
-pip install .
+pip install aibi-dax
 dxa --version
 ```
+
+Or install from the source tree: `pip install .`.
 
 ## Commands
 

@@ -44,12 +44,14 @@ wrong it trips on.
 
 ## How to use it
 
-Install from the source tree and check the binary works:
+Install from PyPI and check the binary works:
 
 ```bash
-pip install .
+pip install aibi-dax
 dxa --version
 ```
+
+Or install from the source tree: `pip install .`.
 
 Score one expression (the weight is the number you sort on):
 
@@ -207,10 +209,10 @@ is the one thing you cannot eyeball, so it dominates the score.
 - **Issues:** [issue tracker](https://github.com/SourinRakshit-ai/aibi-dax/issues).
   Before filing, run `dxa lint "your expression"` so the rule names
   match the report.
-- **Status:** 0.2.1 ships early and untagged until trusted publishing
-  to PyPI is registered (blocked on the maintainer's PyPI account
-  setup, tracked in [#3](https://github.com/SourinRakshit-ai/aibi-dax/issues/3)).
-  Until then, installing from source is the supported path.
+- **Status:** [`aibi-dax`](https://pypi.org/project/aibi-dax/) is on
+  PyPI (0.2.1), installed via `pip install aibi-dax`. Trusted
+  publishing is set up with a pending publisher for this repo, so
+  every release from here on ships the same way.
 
 ## Development
 
