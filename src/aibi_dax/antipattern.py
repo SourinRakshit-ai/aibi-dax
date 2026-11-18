@@ -784,18 +784,23 @@ _IF_ISBLANK_BLANK_MSG = (
     "IF(ISBLANK(x), BLANK(), x) — the IF returns the tested "
     "expression either way; write x directly."
 )
+_IF_NOT_ISBLANK_MSG = (
+    "IF(NOT(ISBLANK(x)), x, BLANK()) — the IF returns the tested "
+    "expression either way; write x directly."
+)
 
 
 def if_isblank_coalesce(expr: str) -> str | None:
     """`IF(ISBLANK(x), y, x)` collapses to `COALESCE(x, y)`.
 
     AST-driven: a three-argument IF whose condition is a one-argument
-    ISBLANK call and whose else-branch equals the tested expression
-    (frozen dataclasses compare structurally). If the yes-branch is a
-    zero-argument BLANK() the whole IF is the tested expression — the
-    message says that outright (COALESCE(t, BLANK()) is t, per rule
-    39). A differing else-branch (`IF(ISBLANK([A]), 0, [B])`) is a
-    genuine conditional and stays silent, as does unparseable text.
+    ISBLANK call and whose else-branch equals the tested expression,
+    or whose condition is NOT(ISBLANK(t)) and whose yes-branch equals
+    the tested expression with a BLANK() else-branch (structural
+    dataclass equality). The first shape gets COALESCE(t, y) (or a
+    direct "write x" when y is BLANK()); the negated twin gets the
+    direct "write x" message. A differing branch (`IF(ISBLANK([A]), 0, [B])`)
+    is a genuine conditional and stays silent, as does unparseable text.
     """
     try:
         tree = parse(expr)
@@ -805,6 +810,17 @@ def if_isblank_coalesce(expr: str) -> str | None:
         if call.name.upper() != "IF" or len(call.args) != 3:
             continue
         cond, yes, other = call.args
+        # `IF(NOT(ISBLANK(x)), x, BLANK())` — the negated twin
+        if (
+            isinstance(cond, Unary)
+            and cond.op.upper() in {"NOT", "!"}
+            and isinstance(cond.operand, Call)
+            and cond.operand.name.upper() == "ISBLANK"
+            and len(cond.operand.args) == 1
+            and yes == cond.operand.args[0]
+            and _zero_arg_call(other, "BLANK")
+        ):
+            return _IF_NOT_ISBLANK_MSG
         if (
             isinstance(cond, Call)
             and cond.name.upper() == "ISBLANK"

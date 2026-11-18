@@ -51,6 +51,8 @@
   `BLANK()` yes-branch — `IF(ISBLANK(x), BLANK(), x)` — and now says
   the IF collapses to `x` directly, instead of suggesting
   `COALESCE(x, BLANK())`, which rule 39 then reduces to the same thing.
+  The negated twin `IF(NOT(ISBLANK(x)), x, BLANK())` (and the `!`-spelling)
+  collapses the same way.
 - `--table` on `rank` and `lint-model` matches table names
   case-insensitively (one shared filter): `--table sales` now finds
   `Sales` instead of silently reporting nothing — or, for

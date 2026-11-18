@@ -915,3 +915,20 @@ def test_power_identity_caret_message_mentions_caret():
     msg = antipattern.power_identity("[x] ^ 1")
     assert msg is not None
     assert "^ 1" in msg
+
+
+def test_if_isblank_coalesce_not_isblank_collapses_to_the_expression():
+    msg = antipattern.if_isblank_coalesce("IF(NOT(ISBLANK([x])), [x], BLANK())")
+    assert msg is not None
+    assert "write x directly" in msg
+    # bang-spelling must also collapse
+    bang = antipattern.if_isblank_coalesce("IF(!ISBLANK([x]), [x], BLANK())")
+    assert bang is not None
+    assert "write x directly" in bang
+
+
+def test_if_isblank_coalesce_not_isblank_requires_matching_branches():
+    flag = antipattern.if_isblank_coalesce
+    assert flag("IF(NOT(ISBLANK([x])), [x], [y])") is None  # else not BLANK()
+    assert flag("IF(NOT(ISBLANK([x])), [y], BLANK())") is None  # yes not the tested expr
+    assert flag("IF([cond], [x], BLANK())") is None  # condition not ISBLANK

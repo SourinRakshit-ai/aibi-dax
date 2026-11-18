@@ -216,10 +216,13 @@ is the intended test.
 its own else-branch — `COALESCE([Amount], 0)` says it once and reads as
 "first non-blank wins". The special case `IF(ISBLANK([Amount]), BLANK(),
 [Amount])` goes straight to `COALESCE(t, BLANK())`, which is `t` — the
-message says write the expression directly (no COALESCE detour).
-AST-driven: only a three-argument IF whose condition is a one-argument
-`ISBLANK` **and** whose else-branch equals the tested expression
-flags; `IF(ISBLANK([A]), 0, [B])` is a genuine
+message says write the expression directly (no COALESCE detour). The
+negated twin `IF(NOT(ISBLANK(t)), t, BLANK())` is the same collapse
+written upside-down — it also collapses to `t` and flags with the same
+"write the tested expression" message. AST-driven: only a
+three-argument IF whose condition is a one-argument `ISBLANK` (or a
+`NOT`/`!`-wrapped one) **and** whose matching branch equals the
+tested expression flags; `IF(ISBLANK([A]), 0, [B])` is a genuine
 conditional and stays silent.
 
 ### `IF(c, … IF(c, …) …)`
