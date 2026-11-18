@@ -194,3 +194,27 @@ def test_ci_page_json_fence_replays(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["lint", expr, "--json"]) == 0
     got = capsys.readouterr().out.strip().splitlines()
     assert got == expected
+
+
+def test_rules_md_mentions_every_rule_name() -> None:
+    """Every rule in ALL_RULES must appear in rules.md (the reference).
+
+    Regression for the silent anchor failure that left nine rules out
+    of the reference and off the changelog: the reference must mention
+    every rule name explicitly.
+    """
+    from aibi_dax.antipattern import ALL_RULES
+
+    text = Path("docs/rules.md").read_text(encoding="utf-8")
+    missing = [rule.__name__ for rule in ALL_RULES if rule.__name__ not in text]
+    assert not missing, f"rule reference missing sections for: {missing}"
+
+
+def test_rules_md_rule_index_lists_all_rules() -> None:
+    """The trailing Rule index must name every rule exactly."""
+    from aibi_dax.antipattern import ALL_RULES
+
+    text = Path("docs/rules.md").read_text(encoding="utf-8")
+    index = text.split("## Rule index", 1)[1]
+    names = [ln[3:].lstrip("`").split("`", 1)[0] for ln in index.splitlines() if ln.startswith("- `")]
+    assert sorted(names) == sorted(rule.__name__ for rule in ALL_RULES)

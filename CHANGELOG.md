@@ -30,7 +30,18 @@
   `SUMX(t, k)` with a constant `k` (→ `COUNTROWS(t) * k`);
   rule 31 flags `[x] <> BLANK()` (→ `NOT(ISBLANK(x))`);
   rule 32 flags `TRIM(TRIM(x))` (→ `TRIM(x)`); rule 33 flags
-  `FILTER(t, TRUE())` (→ `t`).
+  `FILTER(t, TRUE())` (→ `t`); rule 34 flags `x * 1` / `1 * x` /
+  `x / 1` (→ drop the operation — additive zero is deliberately not
+  flagged; see the Fix bullet); rule 35 flags nested idempotents
+  (`UPPER(UPPER(x))`, `LOWER`, `ABS`, `INT`) — one call suffices;
+  rule 36 flags `COUNTX(t, k)` with a constant `k` (→
+  `COUNTROWS(t)`; `COUNTAX` too); rule 37 flags `POWER(x, 1)` (→
+  `x`) and `POWER(x, 0)` (→ `1`); rule 38 flags `OR(TRUE(), x)` (→
+  `TRUE()`) and `AND(FALSE(), x)` (→ `FALSE()`), call and
+  `||`/`&&` forms; rule 39 flags `COALESCE(..., BLANK())` (→
+  drop the trailing alternative) and single-argument `COALESCE(x)`
+  (→ `x`); rule 40 flags a branch-nested IF whose predicate matches
+  the outer one (→ collapse; rule 29's canonical signature).
 - `--table` on `rank` and `lint-model` matches table names
   case-insensitively (one shared filter): `--table sales` now finds
   `Sales` instead of silently reporting nothing — or, for

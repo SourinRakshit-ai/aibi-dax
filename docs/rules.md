@@ -91,6 +91,54 @@ three-argument IF whose last two arguments are zero-argument `TRUE()` /
 `FALSE()` calls flags, so bare `TRUE` identifiers and two-argument IFs
 stay silent.
 
+### `IF(cond, x, x)`
+`IF([cond], [x] * 2, [x] * 2)` returns the same value whichever way the
+condition resolves — the condition computes for nothing. AST-driven: the
+last two arguments of a three-argument `IF` are compared with a canonical
+subtree signature (DAX identifiers case-insensitive, numbers by value,
+strings case-sensitive); any shared shape flags (`if_same_branches`).
+
+### `NAME(NAME(x))` idempotents
+`UPPER`, `LOWER`, `ABS` and `INT` are exact idempotents — the nested
+call adds a function hop and nothing else. AST-driven: a single-argument
+call whose argument is the same function flags, and the message names the
+function (`idempotent_nested`); `TRIM(TRIM(x))` has its own rule.
+
+### `POWER(x, 1)` / `POWER(x, 0)`
+`POWER([x], 1)` returns the base, `POWER([x], 0)` returns 1 — the
+exponent rules give you exactly that (`power_identity`). AST-driven:
+a `POWER(` call whose second argument is a (possibly negated) numeric
+literal equal to 1 or 0 flags; `POWER(x, 2)` and non-literal exponents
+stay silent.
+
+### `SUMX(t, k)` with a constant
+`SUMX('Sales', 1)` adds up the same number once per row —
+`COUNTROWS('Sales')` (or `COUNTROWS(t) * k`) is the value with no row
+loop (`sumx_constant`). Only SUMX-level: on an empty table `SUMX`
+returns 0, which equals `COUNTROWS * k`, while `AVERAGEX`/`MAXX`
+return BLANK — suggesting one call for those would be wrong advice.
+
+### `COUNTX(t, k)` with a constant
+`COUNTX('Sales', 1)` walks every row to tally the same constant —
+`COUNTROWS('Sales')` is the value without the loop (same for
+`COUNTAX`; `countx_constant`). AST-driven: a numeric literal (possibly
+negated) on the second argument flags; a constant is never blank, so
+every row counts exactly — the count sibling of the `SUMX(t, k)` rule.
+
+### `TRIM(TRIM(x))`
+`TRIM` is idempotent — the nested pair changes nothing the outer call
+cannot (`trim_nested`). AST-driven: a `TRIM(` call whose only argument
+is another `TRIM(` call flags; mixed wrappers like
+`TRIM(LOWER(TRIM(x)))` stay silent.
+
+### `OR(TRUE(), x)` / `AND(FALSE(), x)`
+A constant absorbs every other operand: `OR(TRUE(), [x])` is `TRUE()`,
+`AND(FALSE(), [x])` is `FALSE()` — the rest of the expression is dead
+weight (`absorbed_boolean`). AST-driven: a zero-argument `TRUE()`
+anywhere in an `OR(` call or a `||` binary, or a zero-argument
+`FALSE()` anywhere in an `AND(` call or a `&&` binary, flags. The
+identity pair — `OR(FALSE(), x)` and `AND(TRUE(), x)` — is not flagged.
+
 ### A `VAR` never referenced before `RETURN`
 `VAR a = 1 RETURN 2` defines a binding the measure never reads — dead
 variables hide a measure's real inputs and suggest a half-finished
@@ -99,6 +147,15 @@ value plus the `RETURN` body for a matching bare identifier
 (case-insensitive). A variable read by a later `VAR` counts as used
 (`VAR a = 1 VAR b = a + 1 RETURN b` is clean); the first dead binding
 reports, naming the variable.
+
+### Identity arithmetic
+`[x] * 1`, `1 * [x]` and `[x] / 1` return exactly the other operand —
+BLANKs propagate in multiplication and division, so these hold for
+every value (`identity_arithmetic`). AST-driven: a binary `*` or `/`
+with the numeric literal 1 on the identity side flags; `1 / x` is a
+reciprocal, `0 * x` is absorbing, and `[x] + 0` is NOT an identity —
+BLANK converts to 0 in sums and subtractions, so additive zero is the
+documented idiom to display blank measures as zeros and stays silent.
 
 ## Data-shape rules
 
@@ -198,6 +255,13 @@ an `AND(` call or a `&&` binary among the filter arguments of
 `CALCULATE`/`CALCULATETABLE` flags. `OR(` and `||` stay silent —
 splitting them would change semantics.
 
+### `FILTER(t, TRUE())`
+`FILTER('Sales', TRUE())` passes every row, so it returns every row —
+write the table instead of the iterator (`filter_true`). AST-driven:
+a `FILTER(` call whose second argument is a zero-argument `TRUE()`
+flags; `FALSE()` (no empty-table literal) and bare `TRUE` identifiers
+stay silent.
+
 ### Bare ALL(table)
 As a filter eraser `REMOVEFILTERS(table)` says exactly that; keep ALL
 where you need its modifying semantics.
@@ -218,3 +282,48 @@ proven otherwise. Literal strings and bracketed columns are exempt.
 for every iterator on the path. Capture the outer step in a `VAR` and
 aggregate over it. This rule runs over the parser AST — the tree is why it
 knows how deep the iterators stack.
+
+## Rule index
+
+Machine-checked by the test suite: every rule in the linter appears here.
+
+- `calculate_inside_iterator` — CALCULATE inside a row-iterator: filter context is overridden per-row by the iterator, so the result is usually wrong or misleading
+- `too_many_ifs` — Three or more IF( call sites: SWITCH(TRUE(), ...) is flatter
+- `raw_division` — / without DIVIDE( raises #NUM! on zero denominators
+- `blank_comparison` — `= BLANK()` misses semantics; ISBLANK expresses intent
+- `bare_all_table` — Single-argument ALL(table) used as a filter eraser — REMOVEFILTERS is unambiguous
+- `concat_ampersand` — String concatenation '&' inside CONCATENATEX is redundant
+- `earlier_var` — EARLIER is superseded by VAR capture — flat and type-checkable.
+- `all_first_argument` — An iterator or CALCULATE aggregating directly over ALL / FILTER(ALL(...)) walks every row through the filter machinery; a boolean filter in CALCULATE prunes earlier and reads better.
+- `iferror_overuse` — IFERROR masks model bugs behind silent blanks — an explicit error contract (or DIVIDE's third argument) says what you mean
+- `values_with_hasonevalue` — HASONEVALUE + VALUES is the long-form SELECTEDVALUE.
+- `lowercase_function` — DAX has no lowercase callable identifiers, so a bare lowercase word before ( is almost always a mistyped function name
+- `nested_iterators` — An iterator inside another iterator pays a context transition per row — usually a VAR capture of the outer step computes the same result for a fraction of the effort
+- `switch_missing_default` — A SWITCH whose argument list holds only value/result pairs falls through to BLANK when nothing matches; the optional final argument makes the miss explicit
+- `single_column_iterator` — `SUMX('Sales', 'Sales'[Amount])` is a plain aggregate in disguise
+- `abs_negative_comparison` — `ABS(x) < 0` and friends can never hold: ABS returns a non-negative
+- `if_true_false_branches` — `IF(cond, TRUE(), FALSE())` is `cond`; the branch is pure waste
+- `filter_inside_aggregate` — `COUNTROWS(FILTER(…))` / `SUMX(FILTER(…), …)` materialize a table
+- `nested_calculate` — `CALCULATE(CALCULATE(...))`: the inner transition is redundant
+- `countrows_values` — `COUNTROWS(VALUES('T'[Col]))` collapses to `DISTINCTCOUNT('T'[Col])`
+- `if_isblank_coalesce` — `IF(ISBLANK(x), y, x)` collapses to `COALESCE(x, y)`
+- `summarize_extra_column` — `SUMMARIZE('T', [A], [B] + 1)` drops the computed argument
+- `if_iserror_iferror` — `IF(ISERROR(x), y, x)` collapses to `IFERROR(x, y)`
+- `and_in_calculate` — `CALCULATE(m, AND(a, b))` should be `CALCULATE(m, a, b)`
+- `unused_variable` — A `VAR` never referenced before `RETURN` is a dead binding
+- `countrows_zero` — `COUNTROWS(t) = 0` is `ISEMPTY(t)`
+- `double_negation` — `NOT(NOT(x))` collapses to `x`
+- `true_comparison` — `[flag] = TRUE()` is `[flag]`; `[flag] = FALSE()` is `NOT [flag]`
+- `distinctcount_values` — `DISTINCTCOUNT(VALUES('T'[Col]))` collapses to `DISTINCTCOUNT('T'[Col])`
+- `if_same_branches` — `IF(cond, x, x)` is `x` — the predicate computes for nothing
+- `sumx_constant` — `SUMX(t, k)` with a numeric literal k is `COUNTROWS(t) * k`
+- `blank_not_equal` — `[x] <> BLANK()` is `NOT(ISBLANK([x]))`
+- `trim_nested` — `TRIM(TRIM(x))` collapses to `TRIM(x)`
+- `filter_true` — `FILTER(t, TRUE())` is `t`
+- `identity_arithmetic` — `x * 1`, `1 * x` and `x / 1` return x — even for blanks
+- `idempotent_nested` — `UPPER(UPPER(x))` is `UPPER(x)` — same for LOWER, ABS, INT
+- `countx_constant` — `COUNTX(t, k)` (or `COUNTAX(t, k)`) with numeric literal k is `COUNTROWS(t)`
+- `power_identity` — `POWER(x, 1)` is `x`; `POWER(x, 0)` is `1`
+- `absorbed_boolean` — `OR(TRUE(), x)` is `TRUE()`; `AND(FALSE(), x)` is `FALSE()`
+- `coalesce_trailing_blank` — `COALESCE(..., BLANK())` drops the trailing default; `COALESCE(x)` is `x`
+- `nested_same_predicate` — `IF(c, IF(c, a, b), d)` is `IF(c, a, d)`; same for the else branch
