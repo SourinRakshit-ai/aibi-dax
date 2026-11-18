@@ -210,7 +210,7 @@ is the one thing you cannot eyeball, so it dominates the score.
   Before filing, run `dxa lint "your expression"` so the rule names
   match the report.
 - **Status:** [`aibi-dax`](https://pypi.org/project/aibi-dax/) is on
-  PyPI (0.2.1), installed via `pip install aibi-dax`. Trusted
+  PyPI (0.2.2), installed via `pip install aibi-dax`. Trusted
   publishing is set up with a pending publisher for this repo, so
   every release from here on ships the same way.
 

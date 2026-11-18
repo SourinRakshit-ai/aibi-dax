@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.2 - 2026-11-18
+
+- Published to PyPI via trusted publishing (OIDC) — `pip install
+  aibi-dax`. Tag `v0.2.1` ships the first release.
+- Docs: README restructured to what/how/why/use-cases, install
+  section switched to `pip install aibi-dax`; docs site and CI
+  recipes ship the same install command.
+
 ## 0.2.1 - 2026-11-12
 
 - Published to PyPI via trusted publishing (OIDC). `pip install aibi-dax`.
