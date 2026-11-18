@@ -43,7 +43,8 @@
   (→ `x`); rule 40 flags a branch-nested IF whose predicate matches
   the outer one (→ collapse; rule 29's canonical signature);
   rule 41 flags `IF(TRUE(), x, y)` (→ `x`) and `IF(FALSE(), x, y)`
-  (→ `y`).
+  (→ `y`); rule 42 flags `COALESCE(..., x, ..., x)` (→ the duplicate
+  is unreachable; drop it).
 - `--table` on `rank` and `lint-model` matches table names
   case-insensitively (one shared filter): `--table sales` now finds
   `Sales` instead of silently reporting nothing — or, for

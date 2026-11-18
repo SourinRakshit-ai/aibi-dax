@@ -1168,6 +1168,41 @@ def coalesce_trailing_blank(expr: str) -> str | None:
     return None
 
 
+_DUPLICATE_COALESCE_MSG = (
+    "COALESCE(x, …, x) — a duplicate argument is unreachable (the "
+    "first non-blank wins earlier); drop it."
+)
+
+
+def duplicate_coalesce(expr: str) -> str | None:
+    """`COALESCE(x, …, x)` — a repeated later argument is unreachable.
+
+    AST-driven: a COALESCE call with two arguments that share a
+    canonical subtree signature (identifiers fold case, numbers
+    compare by value). The first occurrence wins; every later copy
+    is dead weight. Single-argument calls and unparseable text stay
+    silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "COALESCE" or len(call.args) < 2:
+            continue
+        seen: set[object] = set()
+        repeated = False
+        for arg in call.args:
+            signature = _canonical(arg)
+            if signature in seen:
+                repeated = True
+                break
+            seen.add(signature)
+        if repeated:
+            return _DUPLICATE_COALESCE_MSG
+    return None
+
+
 _CONSTANT_CONDITION_MSG = (
     "IF({cond}(), x, y) — the condition is a constant; the {branch} "
     "branch always runs; drop the dead branch and the call."
@@ -1487,4 +1522,5 @@ ALL_RULES: list[Rule] = [
     coalesce_trailing_blank,
     nested_same_predicate,
     constant_condition,
+    duplicate_coalesce,
 ]

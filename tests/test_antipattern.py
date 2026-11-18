@@ -818,3 +818,24 @@ def test_constant_condition_leaves_real_conditions_alone():
     assert flag("IF(TRUE, 1, 2)") is None  # bare identifier
     assert flag("IF(TRUE, TRUE(), FALSE())") is None  # not a call condition
     assert flag("IF(TRUE(), 1)") is None  # two arguments — parser's concern
+
+
+def test_duplicate_coalesce_flags_repeated_arguments():
+    flag = antipattern.duplicate_coalesce
+    assert flag("COALESCE([x], [x])") is not None
+    assert flag("COALESCE([x], [x], [y])") is not None  # after alternatives
+    assert flag("COALESCE([x], [X], [y])") is not None  # identifiers fold case
+    assert flag("COALESCE([x], BLANK(), BLANK())") is not None
+
+
+def test_duplicate_coalesce_message_says_unreachable():
+    msg = antipattern.duplicate_coalesce("COALESCE([x], [x], [y])")
+    assert msg is not None
+    assert "unreachable" in msg
+
+
+def test_duplicate_coalesce_leaves_distinct_arguments_alone():
+    flag = antipattern.duplicate_coalesce
+    assert flag("COALESCE([x], [y], [z])") is None
+    assert flag("COALESCE([x])") is None  # single argument, rule 39's territory
+    assert flag("COALESCE(") is None  # unparseable → silent

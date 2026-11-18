@@ -107,6 +107,14 @@ three-argument IF whose condition is a zero-argument `TRUE()` or
 `FALSE()` call flags with the live branch named; non-constant
 conditions stay silent.
 
+### `COALESCE(x, …, x)`
+`COALESCE([x], [x], [y])` — a duplicate argument in a later position
+never runs; the first non-blank wins before control reaches the copy
+(`duplicate_coalesce`). AST-driven: arguments are compared with the
+canonical subtree signature (identifiers fold case, numbers compare
+by value); any repeat flags. Single-argument calls and unparseable
+text stay silent.
+
 ### `NAME(NAME(x))` idempotents
 `UPPER`, `LOWER`, `ABS` and `INT` are exact idempotents — the nested
 call adds a function hop and nothing else. AST-driven: a single-argument
@@ -337,3 +345,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `coalesce_trailing_blank` — `COALESCE(..., BLANK())` drops the trailing default; `COALESCE(x)` is `x`
 - `nested_same_predicate` — `IF(c, IF(c, a, b), d)` is `IF(c, a, d)`; same for the else branch
 - `constant_condition` — `IF(TRUE(), x, y)` is `x`; `IF(FALSE(), x, y)` is `y`
+- `duplicate_coalesce` — `COALESCE(x, …, x)` — a repeated later argument is unreachable

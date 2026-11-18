@@ -75,6 +75,7 @@ of aibi-toolkit — so one file feeds both tools.
 39. `COALESCE(x, BLANK())` and `COALESCE(x)` (→ drop the trailing blank / the call)
 40. `IF(c, …IF(c,…)…)` in-branch (→ collapse the nesting)
 41. `IF(TRUE(), x, y)` (→ `x`) and `IF(FALSE(), x, y)` (→ `y`)
+42. `COALESCE(x, x)` — a duplicate fall-through (→ drop it)
 
 ## What the weight measures
 
