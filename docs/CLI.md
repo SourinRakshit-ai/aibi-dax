@@ -137,8 +137,8 @@ summaries, and `results[]` carrying `ruleId`, `level: "warning"` and
 `message.text`. With `--sarif` the exit code is always 0 — findings
 travel inside the document, not the exit status; usage errors remain
 exit 2. `--json` and `--sarif` are mutually exclusive.
-`lint-model --sarif` is deliberately not offered — an artifact
-location per measure is its own design. See the
+`lint-model --sarif` is the whole-model equivalent, with one
+`locations[]` entry per finding; see below. See the
 [CI integration page](ci.md) for the GitHub Actions recipe. A blank expression — nothing, or only
 whitespace, from any source — exits 2 with `got an empty expression
 from …` rather than passing silently:
@@ -172,7 +172,14 @@ EARLIER is superseded by VAR capture — flat and type-checkable.
 ## `dxa lint-model model.json`
 
 Groups findings by `table.measure`; `--table T` restricts to one table,
-matched case-insensitively.
+matched case-insensitively. `--sarif` prints a SARIF 2.1.0 document
+with one result per finding, each carrying a `locations[]` entry:
+`physicalLocation.artifactLocation.uri` is the model path as passed
+to `--model` (`-` for stdin), followed by a JSON Pointer fragment
+into the measure — `model.json#/tables/Sales/measures/Iterator Calc`,
+with names escaped as RFC 6901 requires (`~` → `~0`, `/` → `~1`).
+Exit code is always 0 — findings live in the document; usage errors
+stay 2. `--sarif` is mutually exclusive with `--json` and `--summary`.
 `--rule NAME` runs one rule (function name) and may be repeated to run
 several — findings are the union; exit 2 with the rule list
 on stderr if any name is unknown. Prints nothing and exits 0 for a clean model.

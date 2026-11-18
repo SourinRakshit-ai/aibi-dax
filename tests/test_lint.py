@@ -61,3 +61,33 @@ def test_lint_findings_respects_a_rule_filter():
     assert all(name != "too_many_ifs" for name, _ in lint.lint_findings(expr, [raw_division]))
     (name, _), = lint.lint_findings("[x] / [y]", [raw_division])
     assert name == "raw_division"
+
+
+MODEL = {
+    "tables": [
+        {
+            "name": "Sales",
+            "measures": [
+                {
+                    "name": "Iterator Calc",
+                    "expression": "SUMX('Sales', CALCULATE([Amount]))",
+                },
+                {"name": "Clean Total", "expression": "SUM('Sales'[Amount])"},
+            ],
+        },
+    ]
+}
+
+
+def test_lint_model_findings_attribution_and_keys():
+    triples = lint.lint_model_findings(MODEL)
+    assert triples
+    keys = {key for key, _, _ in triples}
+    assert keys == {"Sales.Iterator Calc"}
+    rule, message = {(rule, message) for _, rule, message in triples}.pop()
+    assert rule == "calculate_inside_iterator"
+    assert "CALCULATE" in message
+
+
+def test_lint_model_findings_respects_a_rule_filter():
+    assert lint.lint_model_findings(MODEL, []) == []

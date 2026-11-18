@@ -2,6 +2,7 @@
 
 import io
 import json
+from pathlib import Path
 
 import pytest
 
@@ -722,3 +723,62 @@ def test_lint_sarif_respects_the_rule_filter(capsys):
 def test_lint_sarif_conflicts_with_json(capsys):
     assert main(["lint", "SUM([x])", "--sarif", "--json"]) == 2
     assert "mutually exclusive" in capsys.readouterr().err
+
+
+_MODEL = (
+    '{"tables": [{"name": "Sales", "measures": ['
+    '{"name": "Iterator Calc", "expression": "SUMX(\'Sales\', CALCULATE([Amount]))"},'
+    '{"name": "Clean Total", "expression": "SUM(\'Sales\'[Amount])"}'
+    ']}]}'
+)
+
+
+def _write_model(path: Path, body: str) -> Path:
+    path.write_text(body, encoding="utf-8")
+    return path
+
+
+def test_lint_model_sarif_emits_valid_document(tmp_path, capsys):
+    path = _write_model(tmp_path / "model.json", _MODEL)
+    assert main(["lint-model", str(path), "--sarif"]) == 0
+    doc = json.loads(capsys.readouterr().out)
+    run = doc["runs"][0]
+    assert run["tool"]["driver"]["name"] == "aibi-dax"
+    assert run["tool"]["driver"]["version"] == aibi_dax.__version__
+    assert len(run["tool"]["driver"]["rules"]) == len(ALL_RULES)
+    results = run["results"]
+    rule_ids = [r["ruleId"] for r in results]
+    assert "calculate_inside_iterator" in rule_ids
+    assert rule_ids.count("calculate_inside_iterator") == 1
+    loc = results[0]["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]
+    assert loc.endswith("#/tables/Sales/measures/Iterator Calc")
+
+
+def test_lint_model_sarif_clean_model_exits_zero(tmp_path, capsys):
+    path = _write_model(
+        tmp_path / "clean.json",
+        '{"tables": [{"name": "T", "measures": [{"name": "OK", "expression": "SUM([x])"}]}]}',
+    )
+    assert main(["lint-model", str(path), "--sarif"]) == 0
+    doc = json.loads(capsys.readouterr().out)
+    assert doc["runs"][0]["results"] == []
+
+
+def test_lint_model_sarif_conflicts_with_json_and_summary(tmp_path, capsys):
+    path = _write_model(tmp_path / "model.json", _MODEL)
+    assert main(["lint-model", str(path), "--sarif", "--json"]) == 2
+    assert "mutually exclusive" in capsys.readouterr().err
+    assert main(["lint-model", str(path), "--sarif", "--summary"]) == 2
+    assert "mutually exclusive" in capsys.readouterr().err
+
+
+def test_lint_model_sarif_table_filter_and_rule_filter(tmp_path, capsys):
+    path = _write_model(tmp_path / "model.json", _MODEL)
+    assert main(["lint-model", str(path), "--sarif", "--rule", "raw_division"]) == 0
+    doc = json.loads(capsys.readouterr().out)
+    assert doc["runs"][0]["results"] == []
+    rule_ids = [r["id"] for r in doc["runs"][0]["tool"]["driver"]["rules"]]
+    assert rule_ids == ["raw_division"]
+    assert main(["lint-model", str(path), "--sarif", "--table", "CALENDAR"]) == 0
+    doc = json.loads(capsys.readouterr().out)
+    assert doc["runs"][0]["results"] == []

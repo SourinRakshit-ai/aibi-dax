@@ -25,7 +25,7 @@ dxa --version
 | `dxa rank model.json`      | heaviest measures first (`--top N`, `--table T` any case, `--min-weight W`; `-` = stdin) |
 | `dxa lint "EXPR"`          | anti-pattern findings for one expression (`--rule R`, `--list-rules [--json]`, `--file PATH`, `--sarif`) |
 | `dxa explain [RULE]`       | full documentation for one anti-pattern rule; no argument lists them all (`--json`) |
-| `dxa lint-model model.json`| findings across every measure (`--table T` any case, `--rule R`, `--summary`; `-` = stdin) |
+| `dxa lint-model model.json`| findings across every measure (`--table T` any case, `--rule R`, `--summary`, `--sarif`; `-` = stdin) |
 | `dxa parse "EXPR"`         | the recursive-descent AST, human or `--json` (`--file PATH`)    |
 | `dxa --completions shell`  | bash/zsh/fish tab-completion script, generated from the parser   |
 

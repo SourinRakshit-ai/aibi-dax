@@ -14,10 +14,16 @@ from .antipattern import ALL_RULES, Rule, rule_summary
 from .completions import SHELLS
 from .completions import script as completion_script
 from .complexity import rank_measures, report, weight
-from .lint import lint_expression, lint_findings, lint_model, lint_model_summary
+from .lint import (
+    lint_expression,
+    lint_findings,
+    lint_model,
+    lint_model_findings,
+    lint_model_summary,
+)
 from .model_io import Model, load_model
 from .parser import Node, ParseError, parse
-from .sarif import build_sarif
+from .sarif import build_model_sarif, build_sarif
 
 
 def format_tree(node: Node) -> str:
@@ -118,6 +124,9 @@ def _build_parser() -> argparse.ArgumentParser:
     p_lint_model = sub.add_parser("lint-model", help="anti-pattern findings across a model dump")
     p_lint_model.add_argument("model", help="path to model JSON (`-` for stdin)")
     p_lint_model.add_argument("--json", action="store_true", help="emit JSON")
+    p_lint_model.add_argument(
+        "--sarif", action="store_true", help="emit SARIF 2.1.0 per finding (exit 0)"
+    )
     p_lint_model.add_argument("--table", help="restrict findings to one table")
     p_lint_model.add_argument("--rule", action="append", metavar="NAME",
                               help="run only this rule (function name; repeatable)")
@@ -424,7 +433,7 @@ def main(argv: list[str] | None = None) -> int:
             if getattr(args, "json", False):
                 print("dxa: --sarif and --json are mutually exclusive — pick one format", file=sys.stderr)
                 return 2
-            print(json.dumps(build_sarif(lint_findings(expr, rules), rules or ALL_RULES)))
+            print(json.dumps(build_sarif(lint_findings(expr, rules), (rules if rules is not None else ALL_RULES))))
             return 0
         findings = lint_expression(expr, rules)
         if getattr(args, "json", False):
@@ -447,6 +456,17 @@ def main(argv: list[str] | None = None) -> int:
         only = getattr(args, "table", None)
         if only is not None:
             model = _only_table(model, only)
+        if getattr(args, "sarif", False):
+            if getattr(args, "json", False):
+                print("dxa: --sarif and --json are mutually exclusive — pick one format", file=sys.stderr)
+                return 2
+            if getattr(args, "summary", False):
+                print("dxa: --sarif and --summary are mutually exclusive — pick one format", file=sys.stderr)
+                return 2
+            print(json.dumps(build_model_sarif(
+                lint_model_findings(model, rules), (rules if rules is not None else ALL_RULES), args.model
+            )))
+            return 0
         if getattr(args, "summary", False):
             counts = lint_model_summary(model, rules)
             if getattr(args, "json", False):
