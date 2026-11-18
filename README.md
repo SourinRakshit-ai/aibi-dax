@@ -67,7 +67,7 @@ of aibi-toolkit — so one file feeds both tools.
 31. `[x] <> BLANK()` (→ `NOT(ISBLANK(x))`)
 32. `TRIM(TRIM(x))` (→ `TRIM(x)`; one call is all it takes)
 33. `FILTER(t, TRUE())` (→ `t`; the predicate keeps every row)
-34. No-op arithmetic (`x + 0`, `x * 1`, `x / 1`, …) (→ drop the operation)
+34. `x * 1`, `1 * x`, `x / 1` (→ drop the operation; `* 1` / `/ 1` hold for blanks — `+ 0` is the zero-forcing idiom and is not flagged)
 35. `UPPER(UPPER(x))`, `ABS(ABS(x))`, `INT(INT(x))` (→ one call suffices)
 36. `COUNTX(t, k)` with a constant (→ `COUNTROWS(t)`)
 37. `POWER(x, 1)` (→ `x`) and `POWER(x, 0)` (→ `1`)

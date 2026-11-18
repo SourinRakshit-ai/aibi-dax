@@ -1349,20 +1349,21 @@ def filter_true(expr: str) -> str | None:
 
 
 _IDENTITY_ARITHMETIC_MSG = (
-    "Identity arithmetic — x + 0, 0 + x, x - 0, x * 1, 1 * x, "
-    "x / 1 all return x; drop the operation."
+    "Identity arithmetic — x * 1, 1 * x, x / 1 all hold for blanks "
+    "and non-blanks alike; drop the operation."
 )
 
 
 def identity_arithmetic(expr: str) -> str | None:
-    """No-op arithmetic returns the other operand.
+    """`x * 1`, `1 * x` and `x / 1` return x — even for blanks.
 
-    AST-driven: a binary +/-/*// with a (possibly negated) numeric
-    literal on the identity side — `+ 0` either side, `- 0` on the
-    right only (`0 - x` negates), `* 1` either side, `/ 1` on the
-    right only (`1 / x` is a reciprocal). Numbers only — `x * BLANK()`
-    is 0, not x, so BLANK() plays no part here, and neither does
-    `0 * x` (absorbing, not identity). Unparseable text stays silent.
+    AST-driven: a binary `*` or `/` with the numeric literal 1 on the
+    identity side (`* 1` either side, `/ 1` on the right only). BLANKs
+    propagate in multiplication and division, so these hold for every
+    value. Additive zero is deliberately NOT flagged: BLANK converts
+    to 0 in sums and subtractions, so `x + 0` is the documented idiom
+    to display blank measures as zeros — dropping the operation would
+    remove those zeros from visuals.
     """
     try:
         tree = parse(expr)
@@ -1372,12 +1373,6 @@ def identity_arithmetic(expr: str) -> str | None:
         left = _numeric_literal(binary.left)
         right = _numeric_literal(binary.right)
         match binary.op:
-            case "+":
-                if left == 0 or right == 0:
-                    return _IDENTITY_ARITHMETIC_MSG
-            case "-":
-                if right == 0:
-                    return _IDENTITY_ARITHMETIC_MSG
             case "*":
                 if left == 1 or right == 1:
                     return _IDENTITY_ARITHMETIC_MSG

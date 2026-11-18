@@ -55,6 +55,12 @@
   driver's rule descriptions, exit 0 whether or not findings exist);
   findings now carry rule names via `lint_findings`, with
   `lint_expression` as a thin projection.
+- Fix: rule 34 (`identity_arithmetic`) no longer flags `[x] + 0` /
+  `0 + [x]` / `[x] - 0` — BLANK converts to 0 in sums and subtractions,
+  so additive zero is the documented way to display blank measures as
+  zeros, not noise. The rule now covers the multiplicative identities
+  only (`x * 1`, `1 * x`, `x / 1`), which hold for blanks (BLANKs
+  propagate in multiplication and division).
 - Docs: new CI integration page — exit-code contract and a GitHub
   Actions SARIF workflow (`--file -` + `upload-sarif`), plus the
   plain-`--json` idiom; every CLI fence on the page is replayed by a
