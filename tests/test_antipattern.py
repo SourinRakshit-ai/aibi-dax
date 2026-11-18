@@ -852,3 +852,28 @@ def test_if_isblank_coalesce_non_blank_yes_branch_keeps_coalesce_advice():
     msg = antipattern.if_isblank_coalesce("IF(ISBLANK([Amt]), 0, [Amt])")
     assert msg is not None
     assert "COALESCE(x, y)" in msg
+
+
+def test_duplicate_boolean_operand_flags_identical_operands():
+    flag = antipattern.duplicate_boolean_operand
+    assert flag("[c] && [c]") is not None
+    assert flag("[c] || [c]") is not None
+    assert flag("AND([c], [c])") is not None
+    assert flag("OR([c], [c])") is not None
+    assert flag("AND([c], [C])") is not None  # identifiers fold case
+    assert flag("AND([a] + 0, [a] + 0)") is not None
+    assert flag("IF([x] > 0 && [x] > 0, 1, 0)") is not None  # nested
+
+
+def test_duplicate_boolean_operand_message_says_keep_one():
+    msg = antipattern.duplicate_boolean_operand("[c] && [c]")
+    assert msg is not None
+    assert "keep one" in msg
+
+
+def test_duplicate_boolean_operand_leaves_distinct_operands_alone():
+    flag = antipattern.duplicate_boolean_operand
+    assert flag("[c] && [d]") is None
+    assert flag("[c] || [c] && [c]") is not None  # a dup inside counts
+    assert flag("[c] + [c]") is None  # arithmetic, not boolean
+    assert flag("] &&&") is None  # unparseable → silent

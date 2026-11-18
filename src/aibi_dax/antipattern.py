@@ -1212,6 +1212,40 @@ def duplicate_coalesce(expr: str) -> str | None:
     return None
 
 
+_DUPLICATE_BOOLEAN_MSG = (
+    "{op} with identical operands — the duplicate adds nothing; "
+    "keep one."
+)
+
+
+def duplicate_boolean_operand(expr: str) -> str | None:
+    """`c && c` is `c`; same for `||`, `AND(c, c)` and `OR(c, c)`.
+
+    AST-driven: an `AND(`/`OR(` call or `&&`/`||` binary with two
+    canonically equal operands. The signature is rule 29's (idents
+    fold case, numbers compare by value). Absorption by a constant
+    (`TRUE()`/`FALSE()`) is rule 38's territory and is not re-flagged
+    here; non-equal operands stay silent, as does unparseable text.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() not in {"AND", "OR"}:
+            continue
+        seen: set[object] = set()
+        for arg in call.args:
+            signature = _canonical(arg)
+            if signature in seen:
+                return _DUPLICATE_BOOLEAN_MSG.format(op=call.name.upper())
+            seen.add(signature)
+    for binary in _walk_binaries(tree):
+        if binary.op in {"&&", "||"} and _canonical(binary.left) == _canonical(binary.right):
+            return _DUPLICATE_BOOLEAN_MSG.format(op=binary.op)
+    return None
+
+
 _CONSTANT_CONDITION_MSG = (
     "IF({cond}(), x, y) — the condition is a constant; the {branch} "
     "branch always runs; drop the dead branch and the call."
@@ -1532,4 +1566,5 @@ ALL_RULES: list[Rule] = [
     nested_same_predicate,
     constant_condition,
     duplicate_coalesce,
+    duplicate_boolean_operand,
 ]

@@ -44,7 +44,8 @@
   the outer one (→ collapse; rule 29's canonical signature);
   rule 41 flags `IF(TRUE(), x, y)` (→ `x`) and `IF(FALSE(), x, y)`
   (→ `y`); rule 42 flags `COALESCE(..., x, ..., x)` (→ the duplicate
-  is unreachable; drop it).
+  is unreachable; drop it); rule 43 flags `c && c`, `c || c`,
+  `AND(c, c)`, `OR(c, c)` (→ keep one).
 - Fix: rule 20 (`if_isblank_coalesce`) special-cases a zero-argument
   `BLANK()` yes-branch — `IF(ISBLANK(x), BLANK(), x)` — and now says
   the IF collapses to `x` directly, instead of suggesting

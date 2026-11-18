@@ -98,6 +98,14 @@ last two arguments of a three-argument `IF` are compared with a canonical
 subtree signature (DAX identifiers case-insensitive, numbers by value,
 strings case-sensitive); any shared shape flags (`if_same_branches`).
 
+### `c && c`, `c || c`, `AND(c, c)`, `OR(c, c)`
+Two copies of the same truth value produce nothing new — the boolean
+operator is idempotent on that pair (`duplicate_boolean_operand`).
+AST-driven: an `AND(`/`OR(` call or `&&`/`||` binary whose arguments
+share a canonical subtree signature (identifiers fold case, numbers
+compare by value) flags. Absorption by `TRUE()`/`FALSE()` stays rule
+38's territory; non-equal operands stay silent.
+
 ### `IF(TRUE(), x, y)` / `IF(FALSE(), x, y)`
 `IF(TRUE(), [Revenue], [Cost])` always returns the first branch, and
 `IF(FALSE(), [Revenue], [Cost])` always returns the second — the
@@ -349,3 +357,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `nested_same_predicate` — `IF(c, IF(c, a, b), d)` is `IF(c, a, d)`; same for the else branch
 - `constant_condition` — `IF(TRUE(), x, y)` is `x`; `IF(FALSE(), x, y)` is `y`
 - `duplicate_coalesce` — `COALESCE(x, …, x)` — a repeated later argument is unreachable
+- `duplicate_boolean_operand` — `c && c` is `c`; same for `||`, `AND(c, c)` and `OR(c, c)`
