@@ -67,6 +67,10 @@
   `dxa explain` with no argument now prints the rule inventory
   (name + summary, with a hint to pass a rule) instead of dying on
   an argparse error; `--json` emits the `--list-rules` array.
+  `dxa parse` gains the `^` exponentiation operator: bindingest in the
+  ladder, right-associative, tighter than unary minus (`-2 ^ 2` is
+  `-(2 ^ 2)`, like DAX/Python); rule 37 (`power_identity`) extends to
+  `[x] ^ 1` / `[x] ^ 0`;
   `dxa metrics --top N` keeps the N heaviest expressions by weight,
   reported heaviest-first (ties keep argument order) — the
   expression-side twin of `rank --top`; below 1 exits 2.

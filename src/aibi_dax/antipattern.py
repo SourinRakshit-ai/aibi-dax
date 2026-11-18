@@ -1352,16 +1352,23 @@ _POWER_ONE_MSG = (
 _POWER_ZERO_MSG = (
     "POWER(x, 0) returns 1 — write the literal."
 )
+_CARET_ONE_MSG = (
+    "x ^ 1 returns the base — write x directly."
+)
+_CARET_ZERO_MSG = (
+    "x ^ 0 returns 1 — write the literal."
+)
 
 
 def power_identity(expr: str) -> str | None:
-    """`POWER(x, 1)` is `x`; `POWER(x, 0)` is `1`.
+    """`POWER(x, 1)` and `x ^ 1` are `x`; the zero-exponent twins are `1`.
 
     AST-driven: a POWER call whose second argument is a (possibly
-    negated) numeric literal equal to 1 or 0. The `^` operator is out
-    of scope (it does not parse in this linter); `POWER(x, 2)` is real
-    work and stays silent, as do non-literal exponents and
-    unparseable text.
+    negated) numeric literal equal to 1 or 0, or a `^` binary with a
+    numeric literal exponent equal to 1 or 0 (exponent on the right
+    side only). `^` is right-associative with tighter precedence than
+    unary minus. `POWER(x, 2)` and `x ^ 2` are real work; non-literal
+    exponents stay silent, as does unparseable text.
     """
     try:
         tree = parse(expr)
@@ -1375,6 +1382,14 @@ def power_identity(expr: str) -> str | None:
             return _POWER_ONE_MSG
         if exponent == 0:
             return _POWER_ZERO_MSG
+    for binary in _walk_binaries(tree):
+        if binary.op != "^":
+            continue
+        exponent = _numeric_literal(binary.right)
+        if exponent == 1:
+            return _CARET_ONE_MSG
+        if exponent == 0:
+            return _CARET_ZERO_MSG
     return None
 
 

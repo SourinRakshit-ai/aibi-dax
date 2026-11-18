@@ -344,3 +344,53 @@ def test_not_edge_cases_stay_sane() -> None:
     )
     with pytest.raises(ParseError):
         parse("NOT")
+
+
+def test_caret_parses_as_a_binary_operator() -> None:
+    from aibi_dax.parser import Binary, parse
+
+    tree = parse("[x] ^ 1")
+    assert isinstance(tree, Binary)
+    assert tree.op == "^"
+    assert tree.left.name == "x"
+    assert tree.right.text == "1"
+
+
+def test_caret_is_right_associative() -> None:
+    from aibi_dax.parser import Binary, parse
+
+    tree = parse("2 ^ 3 ^ 4")
+    assert tree.left.text == "2"
+    assert isinstance(tree.right, Binary)
+    assert tree.right.left.text == "3"
+    assert tree.right.right.text == "4"
+
+
+def test_caret_binds_tighter_than_multiplication() -> None:
+    from aibi_dax.parser import Binary, parse
+
+    tree = parse("[x] * [y] ^ 2")
+    assert tree.op == "*"
+    assert isinstance(tree.right, Binary)
+    assert tree.right.op == "^"
+
+
+def test_unary_minus_grabs_the_whole_power_chain() -> None:
+    from aibi_dax.parser import Binary, Unary, parse
+
+    tree = parse("-2 ^ 2")
+    assert isinstance(tree, Unary)
+    assert tree.op == "-"
+    assert isinstance(tree.operand, Binary)
+    assert tree.operand.op == "^"
+    assert tree.operand.left.text == "2"
+    assert tree.operand.right.text == "2"
+
+
+def test_unary_minus_does_not_swallow_outer_operators() -> None:
+    from aibi_dax.parser import Unary, parse
+
+    tree = parse("-[x] * [y]")
+    assert tree.op == "*"
+    assert isinstance(tree.left, Unary)
+    assert tree.left.op == "-"

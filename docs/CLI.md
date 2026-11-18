@@ -240,7 +240,8 @@ escapes, not closers (`"a""b"`, `'T''x'`, `[A]]]]]`).
 
 The grammar covers `VAR … RETURN` blocks, calls, qualified columns,
 list literals, and the operator ladder `||`, `&&`, comparison/`IN`,
-`+ -`, `&`, `* /`, unary. `IN` binds with the comparisons, and its
+`+ -`, `&`, `* /`, `^` (right-associative, binds tighter than unary —
+so `-2 ^ 2` is `-(2 ^ 2)`), unary. `IN` binds with the comparisons, and its
 right side is usually a list. Unary operators are `- + !` and the
 keyword `NOT` (either case), so `NOT ISBLANK([x])`, `NOT ([a] = 1)`
 and `[a] && NOT [b]` parse. Table qualifiers may be quoted or bare

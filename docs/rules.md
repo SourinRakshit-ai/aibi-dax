@@ -131,10 +131,12 @@ function (`idempotent_nested`); `TRIM(TRIM(x))` has its own rule.
 
 ### `POWER(x, 1)` / `POWER(x, 0)`
 `POWER([x], 1)` returns the base, `POWER([x], 0)` returns 1 — the
-exponent rules give you exactly that (`power_identity`). AST-driven:
-a `POWER(` call whose second argument is a (possibly negated) numeric
-literal equal to 1 or 0 flags; `POWER(x, 2)` and non-literal exponents
-stay silent.
+exponent rules give you exactly that, and the linter also parses the
+`^` caret operator (right-associative, binds tighter than unary), so
+`[x] ^ 1` and `[x] ^ 0` flag the same way (`power_identity`). The
+first-argument-only rule still holds: bare `POWER(` and `^` share one
+implementation; `POWER(x, 2)`, `x ^ 2` and non-literal exponents stay
+silent.
 
 ### `SUMX(t, k)` with a constant
 `SUMX('Sales', 1)` adds up the same number once per row —

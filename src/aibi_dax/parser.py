@@ -5,7 +5,9 @@ module reduces the same tokens to a tree so rules and tools can reason about
 argument positions and nesting instead of regex fragments.
 
 Precedence, loosest binding first: `||`, `&&`, comparison and `IN` (left-assoc),
-`+ -`, `&`, `* /`, unary `- +`, primary (calls, refs, list literals,
+`+ -`, `&`, `* /`, `^` (right-assoc, binds tighter than unary minus — so
+`-2 ^ 2` is `-(2 ^ 2)` as in DAX/Python), `unary - +`, primary (calls,
+refs, list literals,
 parenthesization). The parser is
 permissive: it accepts a syntactic superset of real DAX (e.g. `%` symbols) so
 lint never crashes on odd-but-parseable text; genuinely unreducible sequences
@@ -120,7 +122,9 @@ _LEVELS: tuple[tuple[str, ...], ...] = (
     ("+", "-"),
     ("&",),
     ("*", "/", "%"),
+    ("^",),
 )
+_POWER_LEVEL = len(_LEVELS) - 1  # index of the `^` level
 
 
 def _column_name(raw: str) -> str:
@@ -168,7 +172,8 @@ class _Parser:
             or (tok.kind == "word" and tok.value.upper() in _LEVELS[level])
         ):
             op = self._next().value.upper()
-            right = self._expr(level + 1)
+            # `^` is right-associative: 2 ^ 3 ^ 4 is 2 ^ (3 ^ 4)
+            right = self._expr(level) if op == "^" else self._expr(level + 1)
             left = Binary(op=op, left=left, right=right)
         return left
 
@@ -179,7 +184,13 @@ class _Parser:
             self._next()
             return Unary(op="NOT", operand=self._unary())
         if tok is not None and tok.kind == "symbol" and tok.value in ("-", "+", "!"):
-            return Unary(op=self._next().value, operand=self._unary())
+            sign = self._next().value
+            if sign == "!":
+                # `!` binds tighter than everything except calls — plain unary
+                return Unary(op=sign, operand=self._unary())
+            # unary minus/plus grabs the whole `^` chain, like DAX/Python:
+            # -2 ^ 2 is -(2 ^ 2), not (-2) ^ 2
+            return Unary(op=sign, operand=self._expr(_POWER_LEVEL))
         return self._primary()
 
     def _primary(self) -> Node:
