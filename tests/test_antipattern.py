@@ -898,3 +898,20 @@ def test_indicator_sum_leaves_other_shapes_alone():
     assert flag("""SUMX('Sales', IF([x] > 0, "1", "0"))""") is None  # strings
     assert flag("SUMX('Sales', [Qty])") is None
     assert flag("SUMX(") is None  # unparseable → silent
+
+
+def test_power_identity_flags_caret_identities():
+    flag = antipattern.power_identity
+    assert flag("[x] ^ 1") is not None
+    assert flag("[x] ^ 0") is not None
+    assert flag("[x] ^ -0") is not None  # negated zero is still 0
+    assert flag("2 ^ -[y]") is None  # non-literal (negated) exponent
+    assert flag("[x] ^ 2") is None
+    assert flag("[x] ^ -1") is None
+    assert flag("[x] ^ [y]") is None
+
+
+def test_power_identity_caret_message_mentions_caret():
+    msg = antipattern.power_identity("[x] ^ 1")
+    assert msg is not None
+    assert "^ 1" in msg
