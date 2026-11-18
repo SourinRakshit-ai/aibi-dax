@@ -98,6 +98,15 @@ last two arguments of a three-argument `IF` are compared with a canonical
 subtree signature (DAX identifiers case-insensitive, numbers by value,
 strings case-sensitive); any shared shape flags (`if_same_branches`).
 
+### `IF(TRUE(), x, y)` / `IF(FALSE(), x, y)`
+`IF(TRUE(), [Revenue], [Cost])` always returns the first branch, and
+`IF(FALSE(), [Revenue], [Cost])` always returns the second — the
+unreachable branch is dead code and the `TRUE()`/`FALSE()` condition
+is leftover generator output (`constant_condition`). AST-driven: a
+three-argument IF whose condition is a zero-argument `TRUE()` or
+`FALSE()` call flags with the live branch named; non-constant
+conditions stay silent.
+
 ### `NAME(NAME(x))` idempotents
 `UPPER`, `LOWER`, `ABS` and `INT` are exact idempotents — the nested
 call adds a function hop and nothing else. AST-driven: a single-argument
@@ -327,3 +336,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `absorbed_boolean` — `OR(TRUE(), x)` is `TRUE()`; `AND(FALSE(), x)` is `FALSE()`
 - `coalesce_trailing_blank` — `COALESCE(..., BLANK())` drops the trailing default; `COALESCE(x)` is `x`
 - `nested_same_predicate` — `IF(c, IF(c, a, b), d)` is `IF(c, a, d)`; same for the else branch
+- `constant_condition` — `IF(TRUE(), x, y)` is `x`; `IF(FALSE(), x, y)` is `y`

@@ -41,7 +41,9 @@
   `||`/`&&` forms; rule 39 flags `COALESCE(..., BLANK())` (→
   drop the trailing alternative) and single-argument `COALESCE(x)`
   (→ `x`); rule 40 flags a branch-nested IF whose predicate matches
-  the outer one (→ collapse; rule 29's canonical signature).
+  the outer one (→ collapse; rule 29's canonical signature);
+  rule 41 flags `IF(TRUE(), x, y)` (→ `x`) and `IF(FALSE(), x, y)`
+  (→ `y`).
 - `--table` on `rank` and `lint-model` matches table names
   case-insensitively (one shared filter): `--table sales` now finds
   `Sales` instead of silently reporting nothing — or, for

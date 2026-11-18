@@ -74,6 +74,7 @@ of aibi-toolkit — so one file feeds both tools.
 38. `OR(TRUE(), x)` (→ `TRUE()`), `AND(FALSE(), x)` (→ `FALSE()`)
 39. `COALESCE(x, BLANK())` and `COALESCE(x)` (→ drop the trailing blank / the call)
 40. `IF(c, …IF(c,…)…)` in-branch (→ collapse the nesting)
+41. `IF(TRUE(), x, y)` (→ `x`) and `IF(FALSE(), x, y)` (→ `y`)
 
 ## What the weight measures
 

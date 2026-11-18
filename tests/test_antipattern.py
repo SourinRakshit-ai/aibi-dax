@@ -795,3 +795,26 @@ def test_nested_same_predicate_leaves_other_nesting_alone():
     assert flag("IF([c], IF([c] * 1, 1, 2), 3)") is None  # different tree shape
     assert flag("IF([c], 1, 2)") is None
     assert flag("IF(") is None  # unparseable → silent
+
+
+def test_constant_condition_flags_true_and_false_branches():
+    flag = antipattern.constant_condition
+    assert flag("IF(TRUE(), [Revenue], [Cost])") is not None
+    assert flag("IF(FALSE(), [Revenue], [Cost])") is not None
+    assert flag("SUMX('T', IF(TRUE(), 1, 2))") is not None  # nested
+
+
+def test_constant_condition_messages_name_the_live_branch():
+    true_msg = antipattern.constant_condition("IF(TRUE(), [A], [B])")
+    false_msg = antipattern.constant_condition("IF(FALSE(), [A], [B])")
+    assert true_msg is not None and false_msg is not None
+    assert "first" in true_msg
+    assert "else" in false_msg
+
+
+def test_constant_condition_leaves_real_conditions_alone():
+    flag = antipattern.constant_condition
+    assert flag("IF([c], 1, 2)") is None
+    assert flag("IF(TRUE, 1, 2)") is None  # bare identifier
+    assert flag("IF(TRUE, TRUE(), FALSE())") is None  # not a call condition
+    assert flag("IF(TRUE(), 1)") is None  # two arguments — parser's concern

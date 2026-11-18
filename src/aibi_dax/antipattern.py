@@ -1168,6 +1168,33 @@ def coalesce_trailing_blank(expr: str) -> str | None:
     return None
 
 
+_CONSTANT_CONDITION_MSG = (
+    "IF({cond}(), x, y) — the condition is a constant; the {branch} "
+    "branch always runs; drop the dead branch and the call."
+)
+
+
+def constant_condition(expr: str) -> str | None:
+    """`IF(TRUE(), x, y)` is `x`; `IF(FALSE(), x, y)` is `y`.
+
+    AST-driven: a three-argument IF whose condition is a zero-argument
+    TRUE() or FALSE() call — the other branch is unreachable code.
+    Non-constant conditions stay silent, as does unparseable text.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "IF" or len(call.args) != 3:
+            continue
+        if _zero_arg_call(call.args[0], "TRUE"):
+            return _CONSTANT_CONDITION_MSG.format(cond="TRUE", branch="first")
+        if _zero_arg_call(call.args[0], "FALSE"):
+            return _CONSTANT_CONDITION_MSG.format(cond="FALSE", branch="else")
+    return None
+
+
 _ABSORBED_OR_MSG = (
     "OR(TRUE(), x) is TRUE() — TRUE absorbs every other operand; "
     "drop the rest."
@@ -1459,4 +1486,5 @@ ALL_RULES: list[Rule] = [
     absorbed_boolean,
     coalesce_trailing_blank,
     nested_same_predicate,
+    constant_condition,
 ]
