@@ -877,3 +877,24 @@ def test_duplicate_boolean_operand_leaves_distinct_operands_alone():
     assert flag("[c] || [c] && [c]") is not None  # a dup inside counts
     assert flag("[c] + [c]") is None  # arithmetic, not boolean
     assert flag("] &&&") is None  # unparseable → silent
+
+
+def test_indicator_sum_flags_indicator_if():
+    flag = antipattern.indicator_sum
+    assert flag("SUMX('Sales', IF([Qty] > 0, 1, 0))") is not None
+    assert flag("CALCULATE(SUMX('T', IF([x] > 0, 1, 0)))") is not None  # nested
+
+
+def test_indicator_sum_message_suggests_filter():
+    msg = antipattern.indicator_sum("SUMX('T', IF([x] > 0, 1, 0))")
+    assert msg is not None
+    assert "FILTER" in msg
+
+
+def test_indicator_sum_leaves_other_shapes_alone():
+    flag = antipattern.indicator_sum
+    assert flag("SUMX('Sales', IF([x] > 0, 0, 1))") is None  # inverted
+    assert flag("SUMX('Sales', IF([x] > 0, 1, 1))") is None  # rule 29's shape
+    assert flag("""SUMX('Sales', IF([x] > 0, "1", "0"))""") is None  # strings
+    assert flag("SUMX('Sales', [Qty])") is None
+    assert flag("SUMX(") is None  # unparseable → silent

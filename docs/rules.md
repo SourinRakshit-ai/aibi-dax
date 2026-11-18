@@ -156,6 +156,15 @@ cannot (`trim_nested`). AST-driven: a `TRIM(` call whose only argument
 is another `TRIM(` call flags; mixed wrappers like
 `TRIM(LOWER(TRIM(x)))` stay silent.
 
+### `SUMX(t, IF(c, 1, 0))`
+`SUMX('Sales', IF([Qty] > 0, 1, 0))` walks the table and adds a 1
+per passing row — `COUNTROWS(FILTER('Sales', [Qty] > 0))` is the
+same value with no loop (`indicator_sum`). AST-driven: a `SUMX(`
+call whose second argument is a three-argument `IF` whose last two
+arguments are exactly the numeric literals 1 and 0 (strings `"1"`/`"0"`
+don't count); the inverted `IF(c, 0, 1)` reads as "failing rows" and
+stays silent.
+
 ### `OR(TRUE(), x)` / `AND(FALSE(), x)`
 A constant absorbs every other operand: `OR(TRUE(), [x])` is `TRUE()`,
 `AND(FALSE(), [x])` is `FALSE()` — the rest of the expression is dead
@@ -358,3 +367,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `constant_condition` — `IF(TRUE(), x, y)` is `x`; `IF(FALSE(), x, y)` is `y`
 - `duplicate_coalesce` — `COALESCE(x, …, x)` — a repeated later argument is unreachable
 - `duplicate_boolean_operand` — `c && c` is `c`; same for `||`, `AND(c, c)` and `OR(c, c)`
+- `indicator_sum` — `SUMX(t, IF(c, 1, 0))` is `COUNTROWS(FILTER(t, c))`

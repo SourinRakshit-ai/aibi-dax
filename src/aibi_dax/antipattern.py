@@ -1246,6 +1246,37 @@ def duplicate_boolean_operand(expr: str) -> str | None:
     return None
 
 
+_INDICATOR_SUM_MSG = (
+    "SUMX over IF(cond, 1, 0) counts passing rows — "
+    "COUNTROWS(FILTER(t, cond)) says the same thing without the loop."
+)
+
+
+def indicator_sum(expr: str) -> str | None:
+    """`SUMX(t, IF(c, 1, 0))` is `COUNTROWS(FILTER(t, c))`.
+
+    AST-driven: a SUMX call whose second argument is a three-argument
+    IF whose last two arguments are the numeric literals 1 and 0 (in
+    that order; the inverted `IF(c, 0, 1)` reads as "failing rows"
+    and stays silent). Expressions, non-numeric branches and
+    unparseable text stay silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "SUMX" or len(call.args) != 2:
+            continue
+        inner = call.args[1]
+        if not isinstance(inner, Call) or inner.name.upper() != "IF" or len(inner.args) != 3:
+            continue
+        yes, no = inner.args[1], inner.args[2]
+        if _numeric_literal(yes) == 1 and _numeric_literal(no) == 0:
+            return _INDICATOR_SUM_MSG
+    return None
+
+
 _CONSTANT_CONDITION_MSG = (
     "IF({cond}(), x, y) — the condition is a constant; the {branch} "
     "branch always runs; drop the dead branch and the call."
@@ -1567,4 +1598,5 @@ ALL_RULES: list[Rule] = [
     constant_condition,
     duplicate_coalesce,
     duplicate_boolean_operand,
+    indicator_sum,
 ]

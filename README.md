@@ -77,6 +77,7 @@ of aibi-toolkit — so one file feeds both tools.
 41. `IF(TRUE(), x, y)` (→ `x`) and `IF(FALSE(), x, y)` (→ `y`)
 42. `COALESCE(x, x)` — a duplicate fall-through (→ drop it)
 43. `c && c`, `c || c`, `AND(c, c)`, `OR(c, c)` (→ keep one)
+44. `SUMX(t, IF(c, 1, 0))` (→ `COUNTROWS(FILTER(t, c))`)
 
 ## What the weight measures
 

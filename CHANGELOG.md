@@ -45,7 +45,8 @@
   rule 41 flags `IF(TRUE(), x, y)` (→ `x`) and `IF(FALSE(), x, y)`
   (→ `y`); rule 42 flags `COALESCE(..., x, ..., x)` (→ the duplicate
   is unreachable; drop it); rule 43 flags `c && c`, `c || c`,
-  `AND(c, c)`, `OR(c, c)` (→ keep one).
+  `AND(c, c)`, `OR(c, c)` (→ keep one); rule 44 flags
+  `SUMX(t, IF(c, 1, 0))` (→ `COUNTROWS(FILTER(t, c))`).
 - Fix: rule 20 (`if_isblank_coalesce`) special-cases a zero-argument
   `BLANK()` yes-branch — `IF(ISBLANK(x), BLANK(), x)` — and now says
   the IF collapses to `x` directly, instead of suggesting
