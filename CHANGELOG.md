@@ -73,6 +73,10 @@
   `dxa lint --sarif` prints a SARIF 2.1.0 document for CI code
   scanning (rule attribution, `--list-rules` summaries for the
   driver's rule descriptions, exit 0 whether or not findings exist);
+  `dxa lint-model --sarif` is the whole-model equivalent — one result
+  per finding, each with a `locations[]` JSON Pointer into the measure
+  (RFC 6901 escaped), mutually exclusive with `--json`/`--summary`,
+  exit 0;
   findings now carry rule names via `lint_findings`, with
   `lint_expression` as a thin projection.
 - Fix: rule 34 (`identity_arithmetic`) no longer flags `[x] + 0` /

@@ -218,3 +218,16 @@ def test_rules_md_rule_index_lists_all_rules() -> None:
     index = text.split("## Rule index", 1)[1]
     names = [ln[3:].lstrip("`").split("`", 1)[0] for ln in index.splitlines() if ln.startswith("- `")]
     assert sorted(names) == sorted(rule.__name__ for rule in ALL_RULES)
+
+
+def test_lint_model_section_documents_sarif() -> None:
+    text = DOC.read_text(encoding="utf-8")
+    section = text.split("## `dxa lint-model model.json`", 1)[1].split("\n## ", 1)[0]
+    assert "--sarif" in section
+    assert "JSON Pointer" in section
+    assert "RFC 6901" in section
+
+
+def test_ci_page_mentions_lint_model_sarif() -> None:
+    text = Path("docs/ci.md").read_text(encoding="utf-8")
+    assert "lint-model model.json --sarif" in text

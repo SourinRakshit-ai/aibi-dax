@@ -27,7 +27,11 @@ A failing run prints one `-` line per finding on stdout and exits 1, so
 `upload-sarif` action files each finding in the Security tab like a
 CodeQL alert, with the rule id and message you see locally. The
 workflow installs a release, lints a measure file, and uploads the
-result:
+result. For a whole model, `dxa lint-model model.json --sarif` does
+the same with one `result` per finding, each carrying a `locations[]`
+JSON Pointer into the measure —
+`model.json#/tables/Sales/measures/Iterator Calc` — so the Security
+tab groups findings back to the measure they came from:
 
 ```yaml
 name: dax-lint
