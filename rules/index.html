@@ -1,0 +1,2528 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="DAX expression analysis — complexity metrics, anti-pattern detection, per-model ranking">
+      
+      
+      
+      
+        <link rel="prev" href="../recipes/">
+      
+      
+        <link rel="next" href="../performance/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
+    
+    
+      
+        <title>Anti-pattern rules - aibi-dax</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dax-anti-patterns-the-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="aibi-dax" class="md-header__button md-logo" aria-label="aibi-dax" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            aibi-dax
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Anti-pattern rules
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/SourinRakshit-ai/aibi-dax" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    SourinRakshit-ai/aibi-dax
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="aibi-dax" class="md-nav__button md-logo" aria-label="aibi-dax" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    aibi-dax
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/SourinRakshit-ai/aibi-dax" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    SourinRakshit-ai/aibi-dax
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CLI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cookbook
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Anti-pattern rules
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Anti-pattern rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#context-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Context rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calculate-inside-an-iterator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CALCULATE inside an iterator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#earlier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EARLIER(...)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#all-filterall-as-an-aggregates-first-argument" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ALL / FILTER(ALL(...)) as an aggregate's first argument
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter-inside-an-aggregate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FILTER inside an aggregate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nested-calculate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested CALCULATE
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#refactoring-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refactoring rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Refactoring rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#three-or-more-if-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Three or more IF calls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iferror-overreach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IFERROR overreach
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hasonevalue-values-pairs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HASONEVALUE + VALUES pairs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switch-without-a-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SWITCH without a default
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#single-column-row-iterator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single-column row iterator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#distinctcountvaluescol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DISTINCTCOUNT(VALUES(col))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#countrowsvalues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        COUNTROWS(VALUES(...))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#abs-against-an-impossible-bound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ABS against an impossible bound
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-with-truefalse-branches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF with TRUE()/FALSE() branches
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ifcond-x-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(cond, x, x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-c-c-c-andc-c-orc-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        c &amp;&amp; c, c || c, AND(c, c), OR(c, c)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iftrue-x-y-iffalse-x-y" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(TRUE(), x, y) / IF(FALSE(), x, y)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#coalescex-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        COALESCE(x, …, x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#namenamex-idempotents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NAME(NAME(x)) idempotents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#powerx-1-powerx-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POWER(x, 1) / POWER(x, 0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sumxt-k-with-a-constant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SUMX(t, k) with a constant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#countxt-k-with-a-constant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        COUNTX(t, k) with a constant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trimtrimx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TRIM(TRIM(x))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sumxt-ifc-1-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SUMX(t, IF(c, 1, 0))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dividex-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DIVIDE(x, 0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#x-x-x-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [x] = [x] / [x] &lt;&gt; [x]
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#x-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        x - x
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#var-a-value-return-a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VAR a = value RETURN a
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minx-x-maxx-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MIN(x, x) / MAX(x, x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nottrue-notfalse-notblank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NOT(TRUE()) / NOT(FALSE()) / NOT(BLANK())
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#selectedvaluetc-blank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SELECTEDVALUE(t[c], BLANK())
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ifx-k1-a-ifx-k2-b-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(x = k1, a, IF(x = k2, b, c))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ifc-ifnotc-a-b-d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(c, IF(NOT(c), a, b), d)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dividex-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DIVIDE(x, 1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundroundx-n-n" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ROUND(ROUND(x, n), n)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#concatenatea-b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CONCATENATE(a, b)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#x-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        x IN {}
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if1-1-x-y" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(1 = 1, x, y)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#coalesceblank-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        COALESCE(BLANK(), x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switchtrue-true-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SWITCH(TRUE(), TRUE(), x, ...)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#countrowsfiltert-false" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        COUNTROWS(FILTER(t, FALSE()))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#x-notx-x-notx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        x || NOT(x) / x &amp;&amp; NOT(x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ortrue-x-andfalse-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OR(TRUE(), x) / AND(FALSE(), x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-var-never-referenced-before-return" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A VAR never referenced before RETURN
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#identity-arithmetic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Identity arithmetic
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-shape-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data-shape rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data-shape rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#raw-division" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw division
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#x-blank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [x] &lt;&gt; BLANK()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blank-equality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        = BLANK() equality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ifisblankx-y-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(ISBLANK(x), y, x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ifc-ifc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(c, … IF(c, …) …)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#coalesce-blank-coalescex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        COALESCE(..., BLANK()) / COALESCE(x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarize-with-a-computed-argument" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SUMMARIZE with a computed argument
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ifiserrorx-y-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(ISERROR(x), y, x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#countrowst-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        COUNTROWS(t) = 0
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notnotx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NOT(NOT(x))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flag-true" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [flag] = TRUE()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filter-safety-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter-safety rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Filter-safety rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#and-as-a-calculate-filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AND(...) as a CALCULATE filter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filtert-true" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FILTER(t, TRUE())
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bare-alltable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bare ALL(table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inside-concatenatex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &amp; inside CONCATENATEX
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Style">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lowercase-function-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lowercase function calls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nested-row-iterators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested row iterators
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rule-index" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rule index
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#context-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Context rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calculate-inside-an-iterator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CALCULATE inside an iterator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#earlier" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EARLIER(...)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#all-filterall-as-an-aggregates-first-argument" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ALL / FILTER(ALL(...)) as an aggregate's first argument
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filter-inside-an-aggregate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FILTER inside an aggregate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nested-calculate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested CALCULATE
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#refactoring-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refactoring rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Refactoring rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#three-or-more-if-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Three or more IF calls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iferror-overreach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IFERROR overreach
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hasonevalue-values-pairs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HASONEVALUE + VALUES pairs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switch-without-a-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SWITCH without a default
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#single-column-row-iterator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single-column row iterator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#distinctcountvaluescol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DISTINCTCOUNT(VALUES(col))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#countrowsvalues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        COUNTROWS(VALUES(...))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#abs-against-an-impossible-bound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ABS against an impossible bound
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if-with-truefalse-branches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF with TRUE()/FALSE() branches
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ifcond-x-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(cond, x, x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-c-c-c-andc-c-orc-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        c &amp;&amp; c, c || c, AND(c, c), OR(c, c)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iftrue-x-y-iffalse-x-y" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(TRUE(), x, y) / IF(FALSE(), x, y)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#coalescex-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        COALESCE(x, …, x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#namenamex-idempotents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NAME(NAME(x)) idempotents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#powerx-1-powerx-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POWER(x, 1) / POWER(x, 0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sumxt-k-with-a-constant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SUMX(t, k) with a constant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#countxt-k-with-a-constant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        COUNTX(t, k) with a constant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trimtrimx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TRIM(TRIM(x))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sumxt-ifc-1-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SUMX(t, IF(c, 1, 0))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dividex-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DIVIDE(x, 0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#x-x-x-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [x] = [x] / [x] &lt;&gt; [x]
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#x-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        x - x
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#var-a-value-return-a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VAR a = value RETURN a
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#minx-x-maxx-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MIN(x, x) / MAX(x, x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nottrue-notfalse-notblank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NOT(TRUE()) / NOT(FALSE()) / NOT(BLANK())
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#selectedvaluetc-blank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SELECTEDVALUE(t[c], BLANK())
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ifx-k1-a-ifx-k2-b-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(x = k1, a, IF(x = k2, b, c))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ifc-ifnotc-a-b-d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(c, IF(NOT(c), a, b), d)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dividex-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DIVIDE(x, 1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roundroundx-n-n" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ROUND(ROUND(x, n), n)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#concatenatea-b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CONCATENATE(a, b)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#x-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        x IN {}
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#if1-1-x-y" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(1 = 1, x, y)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#coalesceblank-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        COALESCE(BLANK(), x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switchtrue-true-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SWITCH(TRUE(), TRUE(), x, ...)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#countrowsfiltert-false" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        COUNTROWS(FILTER(t, FALSE()))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#x-notx-x-notx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        x || NOT(x) / x &amp;&amp; NOT(x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ortrue-x-andfalse-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OR(TRUE(), x) / AND(FALSE(), x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-var-never-referenced-before-return" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A VAR never referenced before RETURN
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#identity-arithmetic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Identity arithmetic
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-shape-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data-shape rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data-shape rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#raw-division" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw division
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#x-blank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [x] &lt;&gt; BLANK()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blank-equality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        = BLANK() equality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ifisblankx-y-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(ISBLANK(x), y, x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ifc-ifc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(c, … IF(c, …) …)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#coalesce-blank-coalescex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        COALESCE(..., BLANK()) / COALESCE(x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarize-with-a-computed-argument" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SUMMARIZE with a computed argument
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ifiserrorx-y-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IF(ISERROR(x), y, x)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#countrowst-0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        COUNTROWS(t) = 0
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notnotx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NOT(NOT(x))
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flag-true" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [flag] = TRUE()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filter-safety-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter-safety rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Filter-safety rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#and-as-a-calculate-filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AND(...) as a CALCULATE filter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filtert-true" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FILTER(t, TRUE())
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bare-alltable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bare ALL(table)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inside-concatenatex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        &amp; inside CONCATENATEX
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Style
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Style">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lowercase-function-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lowercase function calls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nested-row-iterators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested row iterators
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rule-index" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rule index
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="dax-anti-patterns-the-reference">DAX anti-patterns — the reference</h1>
+<p>Each rule shipped by <code>dxa lint</code> with its reasoning and a fix. Community
+DAX guidance (SQLBI, DAX Guide) is the common source of truth; the engine
+here flags the pattern and the message names the preferred form.</p>
+<h2 id="context-rules">Context rules</h2>
+<h3 id="calculate-inside-an-iterator">CALCULATE inside an iterator</h3>
+<p><code>SUMX('Sales', CALCULATE([Amount]))</code> — the iterator's row context shadows
+the filter context CALCULATE would use, so the result rarely matches
+intent. Hoist CALCULATE outside or pass explicit filters.</p>
+<h3 id="earlier">EARLIER(...)</h3>
+<p>Deprecated since <code>VAR</code> became the idiomatic way to capture an outer row.
+Capture once, reference by name — it type-checks and stays readable.</p>
+<h3 id="all-filterall-as-an-aggregates-first-argument">ALL / FILTER(ALL(...)) as an aggregate's first argument</h3>
+<p><code>SUMX(ALL('Sales'), ...)</code> walks every row through the filter machinery.
+A boolean filter (<code>'Sales'[Col] = value</code>) inside <code>CALCULATE</code> prunes the
+table during scan instead of after.</p>
+<h3 id="filter-inside-an-aggregate">FILTER inside an aggregate</h3>
+<p><code>COUNTROWS(FILTER('Sales', cond))</code> and <code>SUMX(FILTER('Sales', cond), …)</code>
+build a filtered table in memory before aggregating. The same condition
+as a <code>CALCULATE</code> filter is pushed into the scan:
+<code>CALCULATE(COUNTROWS('Sales'), cond)</code>. Only the aggregate's <strong>first</strong>
+argument is checked, so <code>FILTER</code> used elsewhere — a <code>CALCULATE</code> filter
+argument, a nested step — stays silent.</p>
+<h3 id="nested-calculate">Nested <code>CALCULATE</code></h3>
+<p><code>CALCULATE(CALCULATE(x, f1), f2)</code> — the inner context transition is a
+no-op, because the outer call has already transitioned before it
+evaluates its first argument. Merge the filter lists instead:
+<code>CALCULATE(x, f1, f2)</code>. Only direct nesting flags: a <code>CALCULATE</code> deeper
+in the expression either sits behind a row iterator (rule 1's real
+context work) or is an ordinary conditional.</p>
+<h2 id="refactoring-rules">Refactoring rules</h2>
+<h3 id="three-or-more-if-calls">Three or more IF calls</h3>
+<p><code>SWITCH(TRUE(), cond, value, ...)</code> states a decision table rather than a
+staircase, and evaluates each branch once.</p>
+<h3 id="iferror-overreach">IFERROR overreach</h3>
+<p><code>IFERROR(expr, blank)</code> turns <em>any</em> failure into silence — including bugs.
+Prefer <code>DIVIDE</code>'s third argument, or fix what raises.</p>
+<h3 id="hasonevalue-values-pairs">HASONEVALUE + VALUES pairs</h3>
+<p><code>IF(HASONEVALUE(k), VALUES(k), other)</code> is exactly <code>SELECTEDVALUE(k, other)</code>.</p>
+<h3 id="switch-without-a-default">SWITCH without a default</h3>
+<p><code>SWITCH(expr, v1, r1, v2, r2)</code> returns BLANK when nothing matches — silently.
+The optional final argument states the miss case explicitly, even if it is
+<code>0</code> or an error message. The rule counts arguments on the AST: an even
+number after the first means no default is present.</p>
+<h3 id="single-column-row-iterator">Single-column row iterator</h3>
+<p><code>SUMX('Sales', 'Sales'[Amount])</code> walks the table to read one column; the
+plain aggregate <code>SUM('Sales'[Amount])</code> is faster and identical. The rule
+matches the iterator's first argument against the column's table
+qualification on the AST, so mismatched tables stay flagged as real
+iteration.</p>
+<h3 id="distinctcountvaluescol"><code>DISTINCTCOUNT(VALUES(col))</code></h3>
+<p><code>DISTINCTCOUNT(VALUES('Sales'[Region]))</code> runs a distinct pass and then
+counts the distinct set — <code>DISTINCTCOUNT('Sales'[Region])</code> returns the
+same number in one call. AST-driven: a single-argument <code>DISTINCTCOUNT</code>
+whose argument is a single-column <code>VALUES</code>/<code>DISTINCT</code> call flags;
+table-valued arguments and everything else stays silent.</p>
+<h3 id="countrowsvalues"><code>COUNTROWS(VALUES(...))</code></h3>
+<p><code>COUNTROWS(VALUES('Sales'[Region]))</code> builds the distinct table only to
+count its rows; <code>DISTINCTCOUNT('Sales'[Region])</code> says the intent outright
+with no intermediate materialization. Same for <code>COUNTROWS(DISTINCT(col))</code>.
+Only a single-column <code>VALUES</code>/<code>DISTINCT</code> flags — <code>COUNTROWS(VALUES('Sales'))</code>
+counts rows of the whole table and has no <code>DISTINCTCOUNT</code> one-liner.</p>
+<h3 id="abs-against-an-impossible-bound">ABS against an impossible bound</h3>
+<p><code>ABS(x)</code> is never negative, so <code>ABS(x) &lt; 0</code> (and <code>&lt;= n</code> for negative n,
+mirrored as <code>0 &gt; ABS(x)</code> / <code>-1 &gt;= ABS(x)</code>) can never hold — almost always
+a sign slip. AST-driven: one side is a one-argument ABS call, the other a
+numeric literal; the always-true mirrors (<code>ABS(x) &gt;= 0</code>) are legitimate
+defensive style and stay silent.</p>
+<h3 id="if-with-truefalse-branches">IF with TRUE()/FALSE() branches</h3>
+<p><code>IF(cond, TRUE(), FALSE())</code> computes the value the condition already is —
+one branch and a boolean coercion for nothing. Write <code>cond</code>; for the
+inverted <code>IF(cond, FALSE(), TRUE())</code> write <code>NOT cond</code>. AST-driven: only a
+three-argument IF whose last two arguments are zero-argument <code>TRUE()</code> /
+<code>FALSE()</code> calls flags, so bare <code>TRUE</code> identifiers and two-argument IFs
+stay silent.</p>
+<h3 id="ifcond-x-x"><code>IF(cond, x, x)</code></h3>
+<p><code>IF([cond], [x] * 2, [x] * 2)</code> returns the same value whichever way the
+condition resolves — the condition computes for nothing. AST-driven: the
+last two arguments of a three-argument <code>IF</code> are compared with a canonical
+subtree signature (DAX identifiers case-insensitive, numbers by value,
+strings case-sensitive); any shared shape flags (<code>if_same_branches</code>).</p>
+<h3 id="c-c-c-c-andc-c-orc-c"><code>c &amp;&amp; c</code>, <code>c || c</code>, <code>AND(c, c)</code>, <code>OR(c, c)</code></h3>
+<p>Two copies of the same truth value produce nothing new — the boolean
+operator is idempotent on that pair (<code>duplicate_boolean_operand</code>).
+AST-driven: an <code>AND(</code>/<code>OR(</code> call or <code>&amp;&amp;</code>/<code>||</code> binary whose arguments
+share a canonical subtree signature (identifiers fold case, numbers
+compare by value) flags. Absorption by <code>TRUE()</code>/<code>FALSE()</code> stays rule
+38's territory; non-equal operands stay silent.</p>
+<h3 id="iftrue-x-y-iffalse-x-y"><code>IF(TRUE(), x, y)</code> / <code>IF(FALSE(), x, y)</code></h3>
+<p><code>IF(TRUE(), [Revenue], [Cost])</code> always returns the first branch, and
+<code>IF(FALSE(), [Revenue], [Cost])</code> always returns the second — the
+unreachable branch is dead code and the <code>TRUE()</code>/<code>FALSE()</code> condition
+is leftover generator output (<code>constant_condition</code>). AST-driven: a
+three-argument IF whose condition is a zero-argument <code>TRUE()</code> or
+<code>FALSE()</code> call flags with the live branch named; non-constant
+conditions stay silent.</p>
+<h3 id="coalescex-x"><code>COALESCE(x, …, x)</code></h3>
+<p><code>COALESCE([x], [x], [y])</code> — a duplicate argument in a later position
+never runs; the first non-blank wins before control reaches the copy
+(<code>duplicate_coalesce</code>). AST-driven: arguments are compared with the
+canonical subtree signature (identifiers fold case, numbers compare
+by value); any repeat flags. Single-argument calls and unparseable
+text stay silent.</p>
+<h3 id="namenamex-idempotents"><code>NAME(NAME(x))</code> idempotents</h3>
+<p><code>UPPER</code>, <code>LOWER</code>, <code>ABS</code> and <code>INT</code> are exact idempotents — the nested
+call adds a function hop and nothing else. AST-driven: a single-argument
+call whose argument is the same function flags, and the message names the
+function (<code>idempotent_nested</code>); <code>TRIM(TRIM(x))</code> has its own rule.</p>
+<h3 id="powerx-1-powerx-0"><code>POWER(x, 1)</code> / <code>POWER(x, 0)</code></h3>
+<p><code>POWER([x], 1)</code> returns the base, <code>POWER([x], 0)</code> returns 1 — the
+exponent rules give you exactly that, and the linter also parses the
+<code>^</code> caret operator (right-associative, binds tighter than unary), so
+<code>[x] ^ 1</code> and <code>[x] ^ 0</code> flag the same way (<code>power_identity</code>). The
+first-argument-only rule still holds: bare <code>POWER(</code> and <code>^</code> share one
+implementation; <code>POWER(x, 2)</code>, <code>x ^ 2</code> and non-literal exponents stay
+silent.</p>
+<h3 id="sumxt-k-with-a-constant"><code>SUMX(t, k)</code> with a constant</h3>
+<p><code>SUMX('Sales', 1)</code> adds up the same number once per row —
+<code>COUNTROWS('Sales')</code> (or <code>COUNTROWS(t) * k</code>) is the value with no row
+loop (<code>sumx_constant</code>). Only SUMX-level: on an empty table <code>SUMX</code>
+returns 0, which equals <code>COUNTROWS * k</code>, while <code>AVERAGEX</code>/<code>MAXX</code>
+return BLANK — suggesting one call for those would be wrong advice.</p>
+<h3 id="countxt-k-with-a-constant"><code>COUNTX(t, k)</code> with a constant</h3>
+<p><code>COUNTX('Sales', 1)</code> walks every row to tally the same constant —
+<code>COUNTROWS('Sales')</code> is the value without the loop (same for
+<code>COUNTAX</code>; <code>countx_constant</code>). AST-driven: a numeric literal (possibly
+negated) on the second argument flags; a constant is never blank, so
+every row counts exactly — the count sibling of the <code>SUMX(t, k)</code> rule.</p>
+<h3 id="trimtrimx"><code>TRIM(TRIM(x))</code></h3>
+<p><code>TRIM</code> is idempotent — the nested pair changes nothing the outer call
+cannot (<code>trim_nested</code>). AST-driven: a <code>TRIM(</code> call whose only argument
+is another <code>TRIM(</code> call flags; mixed wrappers like
+<code>TRIM(LOWER(TRIM(x)))</code> stay silent.</p>
+<h3 id="sumxt-ifc-1-0"><code>SUMX(t, IF(c, 1, 0))</code></h3>
+<p><code>SUMX('Sales', IF([Qty] &gt; 0, 1, 0))</code> walks the table and adds a 1
+per passing row — <code>COUNTROWS(FILTER('Sales', [Qty] &gt; 0))</code> is the
+same value with no loop (<code>indicator_sum</code>). AST-driven: a <code>SUMX(</code>
+call whose second argument is a three-argument <code>IF</code> whose last two
+arguments are exactly the numeric literals 1 and 0 (strings <code>"1"</code>/<code>"0"</code>
+don't count); the inverted <code>IF(c, 0, 1)</code> reads as "failing rows" and
+stays silent.</p>
+<h3 id="dividex-0"><code>DIVIDE(x, 0)</code></h3>
+<p>Dividing by a literal zero never varies the result: the call returns BLANK
+(or its alternate argument) whatever the numerator is (<code>zero_divisor</code>).
+AST-driven: a two-or-more-argument <code>DIVIDE(</code> whose second argument is a
+numeric literal zero. A column denominator and other numeric literals
+stay silent.</p>
+<h3 id="x-x-x-x"><code>[x] = [x]</code> / <code>[x] &lt;&gt; [x]</code></h3>
+<p>Comparing a bare column or identifier with itself gives a constant: TRUE
+or FALSE respectively (<code>self_comparison</code>). BLANK compares equal to itself
+in DAX, so the collapse holds for every value. Only bare references are
+considered; call expressions are left alone.</p>
+<h3 id="x-x"><code>x - x</code></h3>
+<p>Subtracting a value from itself is 0; BLANK converts to 0 in subtraction,
+so the result is the same for blank inputs (<code>self_subtraction</code>). Only
+bare references are flagged; call expressions are not claimed constant.</p>
+<h3 id="var-a-value-return-a"><code>VAR a = value RETURN a</code></h3>
+<p>A variable whose only use is the RETURN statement adds a name and nothing
+else (<code>trivial_var</code>): writing the value directly is exact because both
+forms evaluate it in the same row context. Case-insensitive matching a
+different identifier (<code>RETURN total</code> for <code>VAR Total</code>) also flags. A
+variable read by a later VAR or used inside a larger expression stays
+silent.</p>
+<h3 id="minx-x-maxx-x"><code>MIN(x, x)</code> / <code>MAX(x, x)</code></h3>
+<p>Two copies of the same argument produce that argument, blank included
+(<code>duplicate_minmax</code>). AST-driven: a two-argument MIN or MAX call with a
+canonical-signature match between the arguments; differing arguments
+and other arities stay silent.</p>
+<h3 id="nottrue-notfalse-notblank"><code>NOT(TRUE())</code> / <code>NOT(FALSE())</code> / <code>NOT(BLANK())</code></h3>
+<p>NOT over a constant is itself a constant (<code>not_constant</code>): FALSE for
+TRUE(), TRUE for FALSE() and BLANK(). A BLANK operand behaves as FALSE
+in a boolean context, so the fold is exact. NOT over a column or any
+other expression stays silent.</p>
+<h3 id="selectedvaluetc-blank"><code>SELECTEDVALUE(t[c], BLANK())</code></h3>
+<p>BLANK() is the value SELECTEDVALUE returns on its own when there is no
+single visible value, so the explicit alternate changes nothing
+(<code>selectedvalue_blank_default</code>). Only a two-argument call with a
+zero-argument BLANK() fallback flags; a real fallback such as 0 stays
+silent.</p>
+<h3 id="ifx-k1-a-ifx-k2-b-c"><code>IF(x = k1, a, IF(x = k2, b, c))</code></h3>
+<p>Two nested IFs comparing the same bare column against different literals
+are a lookup, and <code>SWITCH(x, k1, a, k2, b, c)</code> expresses it once
+(<code>if_switch</code>). Deeper chains report once. Different tested columns,
+comparison operators other than <code>=</code>, and duplicate case literals stay
+silent.</p>
+<h3 id="ifc-ifnotc-a-b-d"><code>IF(c, IF(NOT(c), a, b), d)</code></h3>
+<p>The inner condition is decided by the outer branch: when <code>c</code> is true the
+negation is false, so the inner IF returns <code>b</code> (<code>nested_negated_predicate</code>).
+The mirrored shape with the nested IF in the else branch reduces to
+<code>IF(c, d, a)</code>. BLANK takes the false branch in both cases.</p>
+<h3 id="dividex-1"><code>DIVIDE(x, 1)</code></h3>
+<p>A denominator of 1 returns the numerator unchanged, and BLANK divided by
+1 is BLANK (<code>divide_by_one</code>). The alternate-result form is likewise
+equivalent because the alternate is unreachable. Numeric literals other
+than 1 and column denominators stay silent.</p>
+<h3 id="roundroundx-n-n"><code>ROUND(ROUND(x, n), n)</code></h3>
+<p>Rounding twice to the same precision is the same as rounding once
+(<code>repeated_round</code>). AST-driven: a two-argument ROUND whose inner ROUND
+uses the same digits argument under the canonical signature. Different
+precisions and ROUNDUP/ROUNDDOWN stay silent.</p>
+<h3 id="concatenatea-b"><code>CONCATENATE(a, b)</code></h3>
+<p>With exactly two arguments, CONCATENATE is the <code>&amp;</code> operator written out
+(<code>concatenate_two_args</code>): both coerce their operands to text the same way,
+including BLANK. Calls with a different arity stay silent.</p>
+<h3 id="x-in"><code>x IN {}</code></h3>
+<p>Membership in an empty list never succeeds, so the expression is FALSE
+for every value, BLANK included (<code>empty_in</code>). AST-driven: an IN binary
+with an empty List on the right. Non-empty lists and other right-hand
+shapes stay silent.</p>
+<h3 id="if1-1-x-y"><code>IF(1 = 1, x, y)</code></h3>
+<p>Comparing two numeric literals gives a compile-time constant, so the IF
+always returns the same branch (<code>literal_condition</code>). The six comparison
+operators are covered; conditions involving a column, a call or a
+non-comparison operator stay silent.</p>
+<h3 id="coalesceblank-x"><code>COALESCE(BLANK(), x)</code></h3>
+<p>COALESCE returns its first non-BLANK argument, so a leading BLANK() is
+always skipped (<code>coalesce_leading_blank</code>). The rule flags the leading
+position only; trailing BLANK() and one-argument forms belong to rule 39.</p>
+<h3 id="switchtrue-true-x"><code>SWITCH(TRUE(), TRUE(), x, ...)</code></h3>
+<p>When the value expression and the first case are both TRUE(), that case
+always matches and later cases are unreachable
+(<code>switch_constant_first_case</code>). Only the first case position flags; a
+TRUE() in a later case is legitimate.</p>
+<h3 id="countrowsfiltert-false"><code>COUNTROWS(FILTER(t, FALSE()))</code></h3>
+<p>A FALSE() predicate leaves no rows, so the count is the literal 0
+(<code>countrows_false_filter</code>). AST-driven: COUNTROWS of a FILTER whose
+condition is a zero-argument FALSE() call. TRUE() filters and real
+conditions stay silent.</p>
+<h3 id="x-notx-x-notx"><code>x || NOT(x)</code> / <code>x &amp;&amp; NOT(x)</code></h3>
+<p>Complementary operands make the outcome independent of <code>x</code>
+(<code>complementary_logic</code>): OR with a negation is always TRUE, AND is
+always FALSE. BLANK follows the same boolean coercion, so the collapse
+holds for every value. AST-driven: one operand is a NOT/! unary over
+the other under the canonical signature; <code>OR(a, NOT(b))</code> stays silent.</p>
+<h3 id="ortrue-x-andfalse-x"><code>OR(TRUE(), x)</code> / <code>AND(FALSE(), x)</code></h3>
+<p>A constant absorbs every other operand: <code>OR(TRUE(), [x])</code> is <code>TRUE()</code>,
+<code>AND(FALSE(), [x])</code> is <code>FALSE()</code> — the rest of the expression is dead
+weight (<code>absorbed_boolean</code>). AST-driven: a zero-argument <code>TRUE()</code>
+anywhere in an <code>OR(</code> call or a <code>||</code> binary, or a zero-argument
+<code>FALSE()</code> anywhere in an <code>AND(</code> call or a <code>&amp;&amp;</code> binary, flags. The
+identity pair — <code>OR(FALSE(), x)</code> and <code>AND(TRUE(), x)</code> — is not flagged.</p>
+<h3 id="a-var-never-referenced-before-return">A <code>VAR</code> never referenced before <code>RETURN</code></h3>
+<p><code>VAR a = 1 RETURN 2</code> defines a binding the measure never reads — dead
+variables hide a measure's real inputs and suggest a half-finished
+refactor. AST-driven: walk the <code>VAR</code> left spine and search every later
+value plus the <code>RETURN</code> body for a matching bare identifier
+(case-insensitive). A variable read by a later <code>VAR</code> counts as used
+(<code>VAR a = 1 VAR b = a + 1 RETURN b</code> is clean); the first dead binding
+reports, naming the variable.</p>
+<h3 id="identity-arithmetic">Identity arithmetic</h3>
+<p><code>[x] * 1</code>, <code>1 * [x]</code> and <code>[x] / 1</code> return exactly the other operand —
+BLANKs propagate in multiplication and division, so these hold for
+every value (<code>identity_arithmetic</code>). AST-driven: a binary <code>*</code> or <code>/</code>
+with the numeric literal 1 on the identity side flags; <code>1 / x</code> is a
+reciprocal, <code>0 * x</code> is absorbing, and <code>[x] + 0</code> is NOT an identity —
+BLANK converts to 0 in sums and subtractions, so additive zero is the
+documented idiom to display blank measures as zeros and stays silent.</p>
+<h2 id="data-shape-rules">Data-shape rules</h2>
+<h3 id="raw-division">Raw division</h3>
+<p><code>/</code> raises #NUM! on zero denominators; <code>DIVIDE(num, den[, alt])</code> absorbs.
+AST-driven: only non-constant denominators flag — <code>[x] / 2</code> is
+safe, <code>[x] / [Scale]</code> is the trap, and slashes inside string
+literals never count.</p>
+<h3 id="x-blank"><code>[x] &lt;&gt; BLANK()</code></h3>
+<p>The not-equal twin of the <code>= BLANK()</code> habit — <code>NOT(ISBLANK([x]))</code> states
+the test outright. AST-driven: a <code>&lt;&gt;</code> binary with a zero-argument
+<code>BLANK()</code> call on either side flags; <code>= BLANK()</code> stays the other rule's
+territory, as do other operators and unparseable text.</p>
+<h3 id="blank-equality"><code>= BLANK()</code> equality</h3>
+<p>Equality against BLANK is unreliable for non-numeric types; <code>ISBLANK(x)</code>
+is the intended test.</p>
+<h3 id="ifisblankx-y-x"><code>IF(ISBLANK(x), y, x)</code></h3>
+<p><code>IF(ISBLANK([Amount]), 0, [Amount])</code> restates the tested expression in
+its own else-branch — <code>COALESCE([Amount], 0)</code> says it once and reads as
+"first non-blank wins". The special case <code>IF(ISBLANK([Amount]), BLANK(),
+[Amount])</code> goes straight to <code>COALESCE(t, BLANK())</code>, which is <code>t</code> — the
+message says write the expression directly (no COALESCE detour). The
+negated twin <code>IF(NOT(ISBLANK(t)), t, BLANK())</code> is the same collapse
+written upside-down — it also collapses to <code>t</code> and flags with the same
+"write the tested expression" message. AST-driven: only a
+three-argument IF whose condition is a one-argument <code>ISBLANK</code> (or a
+<code>NOT</code>/<code>!</code>-wrapped one) <strong>and</strong> whose matching branch equals the
+tested expression flags; <code>IF(ISBLANK([A]), 0, [B])</code> is a genuine
+conditional and stays silent.</p>
+<h3 id="ifc-ifc"><code>IF(c, … IF(c, …) …)</code></h3>
+<p>When the outer branch is reached, the condition is already decided —
+<code>IF([c], IF([c], 1, 2), 3)</code> reduces to <code>IF([c], 1, 3)</code>, and the else
+branch symmetric: <code>IF([c], 3, IF([c], 1, 2))</code> reduces to <code>IF([c], 3, 2)</code>.
+AST-driven: a three-argument IF whose second or third argument is
+another three-argument IF with a canonically equal predicate (idents
+fold case, numbers compare by value) flags; deeper nesting and
+unparseable text stay silent.</p>
+<h3 id="coalesce-blank-coalescex"><code>COALESCE(..., BLANK())</code> / <code>COALESCE(x)</code></h3>
+<p><code>COALESCE([x], BLANK())</code> says the same thing as <code>COALESCE([x])</code> — the
+trailing alternative is the default anyway. And a single-argument
+<code>COALESCE([x])</code> is exactly <code>[x]</code>. AST-driven: a zero-argument
+<code>BLANK()</code> in the LAST argument flags (a middle <code>BLANK()</code> short-
+circuits to blank and hides later arguments from evaluation — it
+changes what runs, not just what's returned, so it stays silent), as
+does a one-argument call; unparseable text stays silent.</p>
+<h3 id="summarize-with-a-computed-argument"><code>SUMMARIZE</code> with a computed argument</h3>
+<p><code>SUMMARIZE('Sales', [Region], [Qty] + 1)</code> puts a computed expression in
+the grouping list, where it is silently ignored — <code>SUMMARIZE</code> only
+groups by plain columns. Group first (<code>SUMMARIZE('Sales', [Region])</code>),
+then compute over the result with <code>ADDCOLUMNS</code>. AST-driven: only a
+plain <code>[Col]</code> or <code>'T'[Col]</code> argument after the table passes;
+<code>ADDCOLUMNS(SUMMARIZE(...), …)</code> — the correct pattern — never flags.</p>
+<h3 id="ifiserrorx-y-x"><code>IF(ISERROR(x), y, x)</code></h3>
+<p><code>IF(ISERROR([Amount]), BLANK(), [Amount])</code> is a hand-spelled
+<code>IFERROR([Amount], BLANK())</code> — the long form only hides the intent.
+AST-driven: only a three-argument IF whose condition is a
+one-argument <code>ISERROR</code> <strong>and</strong> whose else-branch equals the tested
+expression flags; <code>IF(ISERROR([A]), 0, [B])</code> is a genuine
+conditional and stays silent. Distinct from the <code>IFERROR</code> overreach
+rule, which flags <em>using</em> IFERROR too liberally.</p>
+<h3 id="countrowst-0"><code>COUNTROWS(t) = 0</code></h3>
+<p><code>IF(COUNTROWS('Sales') = 0, …)</code> states "this table has no rows" in
+the long form; <code>ISEMPTY('Sales')</code> says it in one call. AST-driven: a
+<code>COUNTROWS(</code> call compared against the numeric literal 0 with <code>=</code>,
+<code>&lt;&gt;</code>, or <code>&gt;</code> flags (<code>&lt;&gt; 0</code> and <code>&gt; 0</code> become <code>NOT(ISEMPTY(t))</code>;
+either operand order for <code>=</code>). Comparisons against other values, and
+impossible tests like <code>COUNTROWS(t) &lt; 0</code>, stay silent.</p>
+<h3 id="notnotx"><code>NOT(NOT(x))</code></h3>
+<p>Double negation cancels — <code>NOT(NOT(cond))</code> is <code>cond</code>. The wrapped
+form reads as if some transformation happened when none did, and
+usually means a refactor left a redundant wrapper behind. AST-driven:
+<code>NOT</code> parses as a prefix operator, so a <code>NOT</code>/<code>!</code> whose operand is
+another <code>NOT</code>/<code>!</code> flags (mixed spellings like <code>NOT(!x)</code> cancel too);
+<code>NOT(NOT(NOT(x)))</code> reports once. Arithmetic <code>-(-x)</code> and single
+negations stay silent.</p>
+<h3 id="flag-true"><code>[flag] = TRUE()</code></h3>
+<p><code>FILTER('Sales', [Active] = TRUE())</code> compares a boolean against
+<code>TRUE()</code> when the column already <em>is</em> the boolean — the comparison
+adds a coercion and a word that carries no information. Write
+<code>[Active]</code>; <code>[Active] = FALSE()</code> becomes <code>NOT [Active]</code>. AST-driven:
+an <code>=</code>/<code>&lt;&gt;</code> binary with a zero-argument <code>TRUE()</code>/<code>FALSE()</code> call on
+either side flags; <code>TRUE()</code> in an IF branch (the <code>IF(cond, TRUE(),
+FALSE())</code> rule's territory) and bare <code>TRUE</code> identifiers stay silent.</p>
+<h2 id="filter-safety-rules">Filter-safety rules</h2>
+<h3 id="and-as-a-calculate-filter"><code>AND(...)</code> as a <code>CALCULATE</code> filter</h3>
+<p><code>CALCULATE([m], AND([A] &gt; 0, [B] &lt; 10))</code> passes one boolean over the
+current filter context instead of two independent filters — pass each
+conjunct as its own argument (<code>CALCULATE([m], [A] &gt; 0, [B] &lt; 10)</code>);
+<code>CALCULATE</code> already ANDs its filter arguments together. AST-driven:
+an <code>AND(</code> call or a <code>&amp;&amp;</code> binary among the filter arguments of
+<code>CALCULATE</code>/<code>CALCULATETABLE</code> flags. <code>OR(</code> and <code>||</code> stay silent —
+splitting them would change semantics.</p>
+<h3 id="filtert-true"><code>FILTER(t, TRUE())</code></h3>
+<p><code>FILTER('Sales', TRUE())</code> passes every row, so it returns every row —
+write the table instead of the iterator (<code>filter_true</code>). AST-driven:
+a <code>FILTER(</code> call whose second argument is a zero-argument <code>TRUE()</code>
+flags; <code>FALSE()</code> (no empty-table literal) and bare <code>TRUE</code> identifiers
+stay silent.</p>
+<h3 id="bare-alltable">Bare ALL(table)</h3>
+<p>As a filter eraser <code>REMOVEFILTERS(table)</code> says exactly that; keep ALL
+where you need its modifying semantics.</p>
+<h3 id="inside-concatenatex"><code>&amp;</code> inside CONCATENATEX</h3>
+<p>Concatenate via the iterator's arguments; mixing <code>&amp;</code> inside is ordering
+hazard with hidden separators. AST-driven: <code>&amp;</code> inside a string
+literal is data and never flags.</p>
+<h2 id="style">Style</h2>
+<h3 id="lowercase-function-calls">Lowercase function calls</h3>
+<p>DAX function names are uppercase by convention — <code>sum(</code> is a typo until
+proven otherwise. Literal strings and bracketed columns are exempt.</p>
+<h3 id="nested-row-iterators">Nested row iterators</h3>
+<p><code>SUMX('Sales', AVERAGEX('Sales', [x]))</code> pays a context transition per row
+for every iterator on the path. Capture the outer step in a <code>VAR</code> and
+aggregate over it. This rule runs over the parser AST — the tree is why it
+knows how deep the iterators stack.</p>
+<h2 id="rule-index">Rule index</h2>
+<p>Machine-checked by the test suite: every rule in the linter appears here.</p>
+<ul>
+<li><code>calculate_inside_iterator</code> — CALCULATE inside a row-iterator: filter context is overridden per-row by the iterator, so the result is usually wrong or misleading</li>
+<li><code>too_many_ifs</code> — Three or more IF( call sites: SWITCH(TRUE(), ...) is flatter</li>
+<li><code>raw_division</code> — / without DIVIDE( raises #NUM! on zero denominators</li>
+<li><code>blank_comparison</code> — <code>= BLANK()</code> misses semantics; ISBLANK expresses intent</li>
+<li><code>bare_all_table</code> — Single-argument ALL(table) used as a filter eraser — REMOVEFILTERS is unambiguous</li>
+<li><code>concat_ampersand</code> — String concatenation '&amp;' inside CONCATENATEX is redundant</li>
+<li><code>earlier_var</code> — EARLIER is superseded by VAR capture — flat and type-checkable.</li>
+<li><code>all_first_argument</code> — An iterator or CALCULATE aggregating directly over ALL / FILTER(ALL(...)) walks every row through the filter machinery; a boolean filter in CALCULATE prunes earlier and reads better.</li>
+<li><code>iferror_overuse</code> — IFERROR masks model bugs behind silent blanks — an explicit error contract (or DIVIDE's third argument) says what you mean</li>
+<li><code>values_with_hasonevalue</code> — HASONEVALUE + VALUES is the long-form SELECTEDVALUE.</li>
+<li><code>lowercase_function</code> — DAX has no lowercase callable identifiers, so a bare lowercase word before ( is almost always a mistyped function name</li>
+<li><code>nested_iterators</code> — An iterator inside another iterator pays a context transition per row — usually a VAR capture of the outer step computes the same result for a fraction of the effort</li>
+<li><code>switch_missing_default</code> — A SWITCH whose argument list holds only value/result pairs falls through to BLANK when nothing matches; the optional final argument makes the miss explicit</li>
+<li><code>single_column_iterator</code> — <code>SUMX('Sales', 'Sales'[Amount])</code> is a plain aggregate in disguise</li>
+<li><code>abs_negative_comparison</code> — <code>ABS(x) &lt; 0</code> and friends can never hold: ABS returns a non-negative</li>
+<li><code>if_true_false_branches</code> — <code>IF(cond, TRUE(), FALSE())</code> is <code>cond</code>; the branch is pure waste</li>
+<li><code>filter_inside_aggregate</code> — <code>COUNTROWS(FILTER(…))</code> / <code>SUMX(FILTER(…), …)</code> materialize a table</li>
+<li><code>nested_calculate</code> — <code>CALCULATE(CALCULATE(...))</code>: the inner transition is redundant</li>
+<li><code>countrows_values</code> — <code>COUNTROWS(VALUES('T'[Col]))</code> collapses to <code>DISTINCTCOUNT('T'[Col])</code></li>
+<li><code>if_isblank_coalesce</code> — <code>IF(ISBLANK(x), y, x)</code> collapses to <code>COALESCE(x, y)</code></li>
+<li><code>summarize_extra_column</code> — <code>SUMMARIZE('T', [A], [B] + 1)</code> drops the computed argument</li>
+<li><code>if_iserror_iferror</code> — <code>IF(ISERROR(x), y, x)</code> collapses to <code>IFERROR(x, y)</code></li>
+<li><code>and_in_calculate</code> — <code>CALCULATE(m, AND(a, b))</code> should be <code>CALCULATE(m, a, b)</code></li>
+<li><code>unused_variable</code> — A <code>VAR</code> never referenced before <code>RETURN</code> is a dead binding</li>
+<li><code>countrows_zero</code> — <code>COUNTROWS(t) = 0</code> is <code>ISEMPTY(t)</code></li>
+<li><code>double_negation</code> — <code>NOT(NOT(x))</code> collapses to <code>x</code></li>
+<li><code>true_comparison</code> — <code>[flag] = TRUE()</code> is <code>[flag]</code>; <code>[flag] = FALSE()</code> is <code>NOT [flag]</code></li>
+<li><code>distinctcount_values</code> — <code>DISTINCTCOUNT(VALUES('T'[Col]))</code> collapses to <code>DISTINCTCOUNT('T'[Col])</code></li>
+<li><code>if_same_branches</code> — <code>IF(cond, x, x)</code> is <code>x</code> — the predicate computes for nothing</li>
+<li><code>sumx_constant</code> — <code>SUMX(t, k)</code> with a numeric literal k is <code>COUNTROWS(t) * k</code></li>
+<li><code>blank_not_equal</code> — <code>[x] &lt;&gt; BLANK()</code> is <code>NOT(ISBLANK([x]))</code></li>
+<li><code>trim_nested</code> — <code>TRIM(TRIM(x))</code> collapses to <code>TRIM(x)</code></li>
+<li><code>filter_true</code> — <code>FILTER(t, TRUE())</code> is <code>t</code></li>
+<li><code>identity_arithmetic</code> — <code>x * 1</code>, <code>1 * x</code> and <code>x / 1</code> return x — even for blanks</li>
+<li><code>idempotent_nested</code> — <code>UPPER(UPPER(x))</code> is <code>UPPER(x)</code> — same for LOWER, ABS, INT</li>
+<li><code>countx_constant</code> — <code>COUNTX(t, k)</code> (or <code>COUNTAX(t, k)</code>) with numeric literal k is <code>COUNTROWS(t)</code></li>
+<li><code>power_identity</code> — <code>POWER(x, 1)</code> and <code>x ^ 1</code> are <code>x</code>; the zero-exponent twins are <code>1</code></li>
+<li><code>absorbed_boolean</code> — <code>OR(TRUE(), x)</code> is <code>TRUE()</code>; <code>AND(FALSE(), x)</code> is <code>FALSE()</code></li>
+<li><code>coalesce_trailing_blank</code> — <code>COALESCE(..., BLANK())</code> drops the trailing default; <code>COALESCE(x)</code> is <code>x</code></li>
+<li><code>nested_same_predicate</code> — <code>IF(c, IF(c, a, b), d)</code> is <code>IF(c, a, d)</code>; same for the else branch</li>
+<li><code>constant_condition</code> — <code>IF(TRUE(), x, y)</code> is <code>x</code>; <code>IF(FALSE(), x, y)</code> is <code>y</code></li>
+<li><code>duplicate_coalesce</code> — <code>COALESCE(x, …, x)</code> — a repeated later argument is unreachable</li>
+<li><code>duplicate_boolean_operand</code> — <code>c &amp;&amp; c</code> is <code>c</code>; same for <code>||</code>, <code>AND(c, c)</code> and <code>OR(c, c)</code></li>
+<li><code>indicator_sum</code> — <code>SUMX(t, IF(c, 1, 0))</code> is <code>COUNTROWS(FILTER(t, c))</code></li>
+<li><code>complementary_logic</code> — <code>x || NOT(x)</code> is TRUE; <code>x &amp;&amp; NOT(x)</code> is FALSE</li>
+<li><code>zero_divisor</code> — <code>DIVIDE(x, 0)</code> has no real division to perform</li>
+<li><code>self_comparison</code> — <code>[x] = [x]</code> is TRUE; <code>[x] &lt;&gt; [x]</code> is FALSE</li>
+<li><code>self_subtraction</code> — <code>[x] - [x]</code> is 0, including for blanks (BLANK converts to 0)</li>
+<li><code>trivial_var</code> — <code>VAR a = value RETURN a</code> is <code>value</code></li>
+<li><code>duplicate_minmax</code> — <code>MIN(x, x)</code> and <code>MAX(x, x)</code> are <code>x</code>, including for blanks</li>
+<li><code>not_constant</code> — NOT over a zero-argument logical constant folds to a constant</li>
+<li><code>selectedvalue_blank_default</code> — A BLANK() fallback to SELECTEDVALUE is its existing default</li>
+<li><code>if_switch</code> — Nested equality IFs on the same column form a SWITCH lookup</li>
+<li><code>countrows_false_filter</code> — Counting a FALSE-filtered table always yields the literal 0</li>
+<li><code>nested_negated_predicate</code> — A branch-nested IF whose predicate is NOT of the outer one collapses</li>
+<li><code>divide_by_one</code> — <code>DIVIDE(x, 1)</code> is <code>x</code>, BLANK included</li>
+<li><code>repeated_round</code> — ROUND(ROUND(x, n), n) is ROUND(x, n)</li>
+<li><code>concatenate_two_args</code> — Two-argument CONCATENATE is <code>&amp;</code> with the same operands</li>
+<li><code>empty_in</code> — <code>[x] IN {}</code> is FALSE for every value, BLANK included</li>
+<li><code>literal_condition</code> — An IF whose condition compares two numeric literals is constant</li>
+<li><code>coalesce_leading_blank</code> — A leading BLANK() in COALESCE is always skipped</li>
+<li><code>switch_constant_first_case</code> — SWITCH with TRUE() as both value and first case never reaches later cases</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>
