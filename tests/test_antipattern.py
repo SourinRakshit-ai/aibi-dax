@@ -1056,3 +1056,18 @@ def test_selectedvalue_blank_default_leaves_real_fallbacks_alone():
     assert flag("SELECTEDVALUE([c], 0)") is None
     assert flag("SELECTEDVALUE([c], BLANK(), 1)") is None
     assert flag("SELECTEDVALUE(") is None
+
+
+def test_if_switch_flags_nested_equality_lookups():
+    flag = antipattern.if_switch
+    assert flag("IF([x] = 1, 2, IF([x] = 2, 3, 4))") is not None
+    assert flag("SUMX('T', IF([c] = 1, 2, IF([c] = 3, 4, 5)))") is not None
+
+
+def test_if_switch_leaves_other_ifs_alone():
+    flag = antipattern.if_switch
+    assert flag("IF([x] = 1, 2, 3)") is None
+    assert flag("IF([x] = 1, 2, IF([y] = 2, 3, 4))") is None
+    assert flag("IF([x] > 1, 2, IF([x] = 2, 3, 4))") is None
+    assert flag("IF([x] = 1, 2, IF([x] = 1, 3, 4))") is None
+    assert flag("IF(") is None

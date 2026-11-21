@@ -212,6 +212,13 @@ single visible value, so the explicit alternate changes nothing
 zero-argument BLANK() fallback flags; a real fallback such as 0 stays
 silent.
 
+### `IF(x = k1, a, IF(x = k2, b, c))`
+Two nested IFs comparing the same bare column against different literals
+are a lookup, and `SWITCH(x, k1, a, k2, b, c)` expresses it once
+(`if_switch`). Deeper chains report once. Different tested columns,
+comparison operators other than `=`, and duplicate case literals stay
+silent.
+
 ### `x || NOT(x)` / `x && NOT(x)`
 Complementary operands make the outcome independent of `x`
 (`complementary_logic`): OR with a negation is always TRUE, AND is
@@ -433,3 +440,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `duplicate_minmax` — `MIN(x, x)` and `MAX(x, x)` are `x`, including for blanks
 - `not_constant` — NOT over a zero-argument logical constant folds to a constant
 - `selectedvalue_blank_default` — A BLANK() fallback to SELECTEDVALUE is its existing default
+- `if_switch` — Nested equality IFs on the same column form a SWITCH lookup

@@ -1833,6 +1833,46 @@ def selectedvalue_blank_default(expr: str) -> str | None:
     return None
 
 
+_IF_SWITCH_MSG = (
+    "IF(x = k1, a, IF(x = k2, b, c)) is SWITCH(x, k1, a, k2, b, c) — "
+    "one lookup instead of repeated comparisons."
+)
+
+
+def if_switch(expr: str) -> str | None:
+    """Nested equality IFs on the same column form a SWITCH lookup.
+
+    AST-driven: a three-argument IF whose condition is `=` between a
+    bare column/identifier and a literal, and whose else-branch is an
+    IF with the same tested expression and a different literal. Only
+    one nesting level is required to flag; deeper chains report once.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    bare = (ColumnRef, Ident, QualifiedColumn)
+    for outer in _walk_calls(tree):
+        if outer.name.upper() != "IF" or len(outer.args) != 3:
+            continue
+        cond, _, otherwise = outer.args
+        if not isinstance(cond, Binary) or cond.op != "=":
+            continue
+        if not isinstance(cond.left, bare) or not isinstance(cond.right, Literal):
+            continue
+        if not isinstance(otherwise, Call) or otherwise.name.upper() != "IF" or len(otherwise.args) != 3:
+            continue
+        inner = otherwise.args[0]
+        if not isinstance(inner, Binary) or inner.op != "=":
+            continue
+        if _canonical(inner.left) != _canonical(cond.left):
+            continue
+        if not isinstance(inner.right, Literal) or _canonical(inner.right) == _canonical(cond.right):
+            continue
+        return _IF_SWITCH_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1886,4 +1926,5 @@ ALL_RULES: list[Rule] = [
     duplicate_minmax,
     not_constant,
     selectedvalue_blank_default,
+    if_switch,
 ]
