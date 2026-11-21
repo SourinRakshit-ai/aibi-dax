@@ -1585,6 +1585,42 @@ def idempotent_nested(expr: str) -> str | None:
     return None
 
 
+_COMPLEMENTARY_LOGIC_MSG = (
+    "x OR NOT(x) is TRUE() and x AND NOT(x) is FALSE() — the "
+    "complementary operands always win."
+)
+
+
+def complementary_logic(expr: str) -> str | None:
+    """`x || NOT(x)` is TRUE; `x && NOT(x)` is FALSE.
+
+    AST-driven: a `||`/`&&` binary or an `OR(`/`AND(` call whose two
+    operands are complements under the canonical signature — one is a
+    NOT/! unary over the other. BLANK coerces to FALSE in boolean
+    context, so the collapse holds for every boolean value.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+
+    def complements(a: Node, b: Node) -> bool:
+        if isinstance(a, Unary) and a.op.upper() in {"NOT", "!"}:
+            return _canonical(a.operand) == _canonical(b)
+        if isinstance(b, Unary) and b.op.upper() in {"NOT", "!"}:
+            return _canonical(b.operand) == _canonical(a)
+        return False
+
+    for binary in _walk_binaries(tree):
+        if binary.op in {"||", "&&"} and complements(binary.left, binary.right):
+            return _COMPLEMENTARY_LOGIC_MSG
+    for call in _walk_calls(tree):
+        name = call.name.upper()
+        if name in {"OR", "AND"} and len(call.args) == 2 and complements(call.args[0], call.args[1]):
+            return _COMPLEMENTARY_LOGIC_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1630,4 +1666,5 @@ ALL_RULES: list[Rule] = [
     duplicate_coalesce,
     duplicate_boolean_operand,
     indicator_sum,
+    complementary_logic,
 ]

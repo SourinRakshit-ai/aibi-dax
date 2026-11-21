@@ -189,6 +189,7 @@ schema of aibi-toolkit), so one file feeds both tools.
 42. `COALESCE(x, x)` (→ drop the duplicate fall-through)
 43. `c && c`, `c || c`, `AND(c, c)`, `OR(c, c)` (→ keep one)
 44. `SUMX(t, IF(c, 1, 0))` (→ `COUNTROWS(FILTER(t, c))`)
+45. `x || NOT(x)` / `x && NOT(x)` (→ `TRUE()` / `FALSE()`)
 
 </details>
 

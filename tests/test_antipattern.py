@@ -932,3 +932,20 @@ def test_if_isblank_coalesce_not_isblank_requires_matching_branches():
     assert flag("IF(NOT(ISBLANK([x])), [x], [y])") is None  # else not BLANK()
     assert flag("IF(NOT(ISBLANK([x])), [y], BLANK())") is None  # yes not the tested expr
     assert flag("IF([cond], [x], BLANK())") is None  # condition not ISBLANK
+
+
+def test_complementary_logic_flags_tautologies():
+    flag = antipattern.complementary_logic
+    assert flag("[x] || NOT([x])") is not None
+    assert flag("NOT([x]) || [x]") is not None
+    assert flag("[x] && NOT([x])") is not None
+    assert flag("OR([x], NOT([x]))") is not None
+    assert flag("AND([x], ![x])") is not None
+
+
+def test_complementary_logic_leaves_other_logic_alone():
+    flag = antipattern.complementary_logic
+    assert flag("[x] || [y]") is None
+    assert flag("[x] || NOT([y])") is None
+    assert flag("NOT([x])") is None
+    assert flag("||") is None

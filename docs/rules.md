@@ -167,6 +167,13 @@ arguments are exactly the numeric literals 1 and 0 (strings `"1"`/`"0"`
 don't count); the inverted `IF(c, 0, 1)` reads as "failing rows" and
 stays silent.
 
+### `x || NOT(x)` / `x && NOT(x)`
+Complementary operands make the outcome independent of `x`
+(`complementary_logic`): OR with a negation is always TRUE, AND is
+always FALSE. BLANK follows the same boolean coercion, so the collapse
+holds for every value. AST-driven: one operand is a NOT/! unary over
+the other under the canonical signature; `OR(a, NOT(b))` stays silent.
+
 ### `OR(TRUE(), x)` / `AND(FALSE(), x)`
 A constant absorbs every other operand: `OR(TRUE(), [x])` is `TRUE()`,
 `AND(FALSE(), [x])` is `FALSE()` — the rest of the expression is dead
@@ -365,7 +372,7 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `identity_arithmetic` — `x * 1`, `1 * x` and `x / 1` return x — even for blanks
 - `idempotent_nested` — `UPPER(UPPER(x))` is `UPPER(x)` — same for LOWER, ABS, INT
 - `countx_constant` — `COUNTX(t, k)` (or `COUNTAX(t, k)`) with numeric literal k is `COUNTROWS(t)`
-- `power_identity` — `POWER(x, 1)` is `x`; `POWER(x, 0)` is `1`
+- `power_identity` — `POWER(x, 1)` and `x ^ 1` are `x`; the zero-exponent twins are `1`
 - `absorbed_boolean` — `OR(TRUE(), x)` is `TRUE()`; `AND(FALSE(), x)` is `FALSE()`
 - `coalesce_trailing_blank` — `COALESCE(..., BLANK())` drops the trailing default; `COALESCE(x)` is `x`
 - `nested_same_predicate` — `IF(c, IF(c, a, b), d)` is `IF(c, a, d)`; same for the else branch
@@ -373,3 +380,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `duplicate_coalesce` — `COALESCE(x, …, x)` — a repeated later argument is unreachable
 - `duplicate_boolean_operand` — `c && c` is `c`; same for `||`, `AND(c, c)` and `OR(c, c)`
 - `indicator_sum` — `SUMX(t, IF(c, 1, 0))` is `COUNTROWS(FILTER(t, c))`
+- `complementary_logic` — `x || NOT(x)` is TRUE; `x && NOT(x)` is FALSE
