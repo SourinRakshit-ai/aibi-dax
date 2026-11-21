@@ -1071,3 +1071,17 @@ def test_if_switch_leaves_other_ifs_alone():
     assert flag("IF([x] > 1, 2, IF([x] = 2, 3, 4))") is None
     assert flag("IF([x] = 1, 2, IF([x] = 1, 3, 4))") is None
     assert flag("IF(") is None
+
+
+def test_countrows_false_filter_flags_empty_filter():
+    flag = antipattern.countrows_false_filter
+    assert flag("COUNTROWS(FILTER('T', FALSE()))") is not None
+    assert flag("CALCULATE(COUNTROWS(FILTER('T', FALSE())))") is not None
+
+
+def test_countrows_false_filter_leaves_other_filters_alone():
+    flag = antipattern.countrows_false_filter
+    assert flag("COUNTROWS(FILTER('T', TRUE()))") is None
+    assert flag("COUNTROWS(FILTER('T', [x] > 0))") is None
+    assert flag("COUNTROWS('T')") is None
+    assert flag("COUNTROWS(") is None

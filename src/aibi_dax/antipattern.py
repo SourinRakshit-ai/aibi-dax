@@ -1873,6 +1873,36 @@ def if_switch(expr: str) -> str | None:
     return None
 
 
+_COUNTROWS_FALSE_FILTER_MSG = (
+    "COUNTROWS(FILTER(t, FALSE())) is 0 — the filter returns no rows."
+)
+
+
+def countrows_false_filter(expr: str) -> str | None:
+    """Counting a FALSE-filtered table always yields the literal 0.
+
+    AST-driven: COUNTROWS whose single argument is a FILTER call with
+    a zero-argument FALSE() call as its condition. TRUE() filters are
+    the separate `FILTER(t, TRUE())` rule's territory.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "COUNTROWS" or len(call.args) != 1:
+            continue
+        inner = call.args[0]
+        if (
+            isinstance(inner, Call)
+            and inner.name.upper() == "FILTER"
+            and len(inner.args) == 2
+            and _zero_arg_call(inner.args[1], "FALSE")
+        ):
+            return _COUNTROWS_FALSE_FILTER_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1927,4 +1957,5 @@ ALL_RULES: list[Rule] = [
     not_constant,
     selectedvalue_blank_default,
     if_switch,
+    countrows_false_filter,
 ]

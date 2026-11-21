@@ -219,6 +219,12 @@ are a lookup, and `SWITCH(x, k1, a, k2, b, c)` expresses it once
 comparison operators other than `=`, and duplicate case literals stay
 silent.
 
+### `COUNTROWS(FILTER(t, FALSE()))`
+A FALSE() predicate leaves no rows, so the count is the literal 0
+(`countrows_false_filter`). AST-driven: COUNTROWS of a FILTER whose
+condition is a zero-argument FALSE() call. TRUE() filters and real
+conditions stay silent.
+
 ### `x || NOT(x)` / `x && NOT(x)`
 Complementary operands make the outcome independent of `x`
 (`complementary_logic`): OR with a negation is always TRUE, AND is
@@ -441,3 +447,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `not_constant` — NOT over a zero-argument logical constant folds to a constant
 - `selectedvalue_blank_default` — A BLANK() fallback to SELECTEDVALUE is its existing default
 - `if_switch` — Nested equality IFs on the same column form a SWITCH lookup
+- `countrows_false_filter` — Counting a FALSE-filtered table always yields the literal 0
