@@ -1115,3 +1115,18 @@ def test_divide_by_one_leaves_real_division_alone():
     assert flag("DIVIDE([x], [y])") is None
     assert flag("DIVIDE([x], 2)") is None
     assert flag("DIVIDE([x], 0)") is None  # rule 46's shape
+
+
+def test_repeated_round_flags_same_precision():
+    flag = antipattern.repeated_round
+    assert flag("ROUND(ROUND([x], 2), 2)") is not None
+    assert flag("ROUND(ROUND([x], [n]), [N])") is not None
+    assert flag("SUMX('T', ROUND(ROUND([a], 0), 0))") is not None
+
+
+def test_repeated_round_leaves_different_precision_alone():
+    flag = antipattern.repeated_round
+    assert flag("ROUND(ROUND([x], 2), 4)") is None
+    assert flag("ROUND([x], 2)") is None
+    assert flag("ROUNDUP(ROUNDUP([x], 2), 2)") is None
+    assert flag("ROUND(") is None

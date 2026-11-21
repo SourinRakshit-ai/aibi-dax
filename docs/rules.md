@@ -231,6 +231,12 @@ A denominator of 1 returns the numerator unchanged, and BLANK divided by
 equivalent because the alternate is unreachable. Numeric literals other
 than 1 and column denominators stay silent.
 
+### `ROUND(ROUND(x, n), n)`
+Rounding twice to the same precision is the same as rounding once
+(`repeated_round`). AST-driven: a two-argument ROUND whose inner ROUND
+uses the same digits argument under the canonical signature. Different
+precisions and ROUNDUP/ROUNDDOWN stay silent.
+
 ### `COUNTROWS(FILTER(t, FALSE()))`
 A FALSE() predicate leaves no rows, so the count is the literal 0
 (`countrows_false_filter`). AST-driven: COUNTROWS of a FILTER whose
@@ -462,3 +468,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `countrows_false_filter` — Counting a FALSE-filtered table always yields the literal 0
 - `nested_negated_predicate` — A branch-nested IF whose predicate is NOT of the outer one collapses
 - `divide_by_one` — `DIVIDE(x, 1)` is `x`, BLANK included
+- `repeated_round` — ROUND(ROUND(x, n), n) is ROUND(x, n)

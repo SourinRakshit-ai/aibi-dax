@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- Rule 57: `ROUND(ROUND(x, n), n)` (→ `ROUND(x, n)`)
 - Rule 56: `DIVIDE(x, 1)` (→ `x`)
 - Rule 54: `COUNTROWS(FILTER(t, FALSE()))` (→ `0`)
 - Rule 53: `IF(x=k1, a, IF(x=k2, b, c))` (→ `SWITCH(x, …)`)

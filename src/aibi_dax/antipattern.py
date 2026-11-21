@@ -1962,6 +1962,34 @@ def divide_by_one(expr: str) -> str | None:
     return None
 
 
+_REPEATED_ROUND_MSG = (
+    "{name}({name}(x, n), n) is {name}(x, n) — rounding twice to the "
+    "same precision does nothing the first call didn't."
+)
+
+
+def repeated_round(expr: str) -> str | None:
+    """ROUND(ROUND(x, n), n) is ROUND(x, n).
+
+    AST-driven: a two-argument ROUND call whose first argument is
+    another ROUND call with the same digits argument under the canonical
+    signature. Different precisions stay silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "ROUND" or len(call.args) != 2:
+            continue
+        inner = call.args[0]
+        if not isinstance(inner, Call) or inner.name.upper() != "ROUND" or len(inner.args) != 2:
+            continue
+        if _canonical(inner.args[1]) == _canonical(call.args[1]):
+            return _REPEATED_ROUND_MSG.format(name=call.name.upper())
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2019,4 +2047,5 @@ ALL_RULES: list[Rule] = [
     countrows_false_filter,
     nested_negated_predicate,
     divide_by_one,
+    repeated_round,
 ]
