@@ -185,6 +185,14 @@ Subtracting a value from itself is 0; BLANK converts to 0 in subtraction,
 so the result is the same for blank inputs (`self_subtraction`). Only
 bare references are flagged; call expressions are not claimed constant.
 
+### `VAR a = value RETURN a`
+A variable whose only use is the RETURN statement adds a name and nothing
+else (`trivial_var`): writing the value directly is exact because both
+forms evaluate it in the same row context. Case-insensitive matching a
+different identifier (`RETURN total` for `VAR Total`) also flags. A
+variable read by a later VAR or used inside a larger expression stays
+silent.
+
 ### `x || NOT(x)` / `x && NOT(x)`
 Complementary operands make the outcome independent of `x`
 (`complementary_logic`): OR with a negation is always TRUE, AND is
@@ -402,3 +410,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `zero_divisor` — `DIVIDE(x, 0)` has no real division to perform
 - `self_comparison` — `[x] = [x]` is TRUE; `[x] <> [x]` is FALSE
 - `self_subtraction` — `[x] - [x]` is 0, including for blanks (BLANK converts to 0)
+- `trivial_var` — `VAR a = value RETURN a` is `value`

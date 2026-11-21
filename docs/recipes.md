@@ -58,10 +58,11 @@ $ dxa lint "VAR Margin = [Sales] - [Cost] RETURN [Sales]"
 - VAR Margin is never referenced before RETURN — drop it, or use it; a dead binding hides the measure's real inputs.
 ```
 
-Either use it or delete it. Using it makes the intent explicit:
+Either use it or delete it. Using it in the result makes the intent
+explicit (a bare `RETURN Margin` would just restate the value):
 
 ```
-$ dxa lint "VAR Margin = [Sales] - [Cost] RETURN Margin"
+$ dxa lint "VAR Margin = [Sales] - [Cost] RETURN Margin * 2"
 no findings
 ```
 

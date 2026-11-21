@@ -995,3 +995,20 @@ def test_self_subtraction_leaves_other_shapes_alone():
     assert flag("[a] + [a]") is None
     assert flag("SUM([a]) - SUM([a])") is None
     assert flag("[a] -") is None
+
+
+def test_trivial_var_flags_immediate_return():
+    flag = antipattern.trivial_var
+    assert flag("VAR a = [x] RETURN a") is not None
+    assert flag("VAR Total = [x] + 1 RETURN total") is not None
+    assert flag("SUMX('T', VAR v = [q] RETURN v)") is not None
+
+
+def test_trivial_var_leaves_live_bindings_alone():
+    flag = antipattern.trivial_var
+    assert flag("VAR a = [x] RETURN a + 1") is None
+    # the inner `VAR b = a + 1 RETURN b` is itself trivial and flags
+    assert flag("VAR a = [x] VAR b = a + 1 RETURN b") is not None
+    assert flag("VAR a = [x] VAR b = a + 1 RETURN b + 1") is None
+    assert flag("VAR a = [x] RETURN [y]") is None
+    assert flag("VAR a =") is None

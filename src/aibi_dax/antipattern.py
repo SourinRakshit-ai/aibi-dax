@@ -1708,6 +1708,52 @@ def self_subtraction(expr: str) -> str | None:
     return None
 
 
+_TRIVIAL_VAR_MSG = (
+    "VAR {name} = value RETURN {name} is just value — the binding "
+    "adds nothing."
+)
+
+
+def _walk_vars(node: Node) -> Iterator[Var]:
+    """Every Var node in the tree, including ones inside other nodes."""
+    if isinstance(node, Var):
+        yield node
+        yield from _walk_vars(node.value)
+        yield from _walk_vars(node.body)
+    elif isinstance(node, Call):
+        for arg in node.args:
+            yield from _walk_vars(arg)
+    elif isinstance(node, Binary):
+        yield from _walk_vars(node.left)
+        yield from _walk_vars(node.right)
+    elif isinstance(node, Unary):
+        yield from _walk_vars(node.operand)
+    elif isinstance(node, List):
+        for item in node.items:
+            yield from _walk_vars(item)
+
+
+def trivial_var(expr: str) -> str | None:
+    """`VAR a = value RETURN a` is `value`.
+
+    AST-driven: a Var node whose body is a bare identifier matching the
+    binding name (case-insensitive) and not another Var binding. The
+    value is evaluated at the same row context either way, so the
+    rewrite is exact.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for var in _walk_vars(tree):
+        if (
+            isinstance(var.body, Ident)
+            and var.body.name.upper() == var.name.upper()
+        ):
+            return _TRIVIAL_VAR_MSG.format(name=var.name)
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1757,4 +1803,5 @@ ALL_RULES: list[Rule] = [
     zero_divisor,
     self_comparison,
     self_subtraction,
+    trivial_var,
 ]
