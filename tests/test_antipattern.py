@@ -1174,3 +1174,19 @@ def test_literal_condition_leaves_live_conditions_alone():
     assert flag("IF(1 IN {1}, 2, 3)") is None
     assert flag("IF(1 && 2, 2, 3)") is None
     assert flag("IF(") is None
+
+
+def test_coalesce_leading_blank_flags_leading_zero_arg_blank():
+    flag = antipattern.coalesce_leading_blank
+    assert flag("COALESCE(BLANK(), [x])") is not None
+    assert flag("COALESCE(BLANK(), [x], [y])") is not None
+    assert flag("SUMX('T', COALESCE(blank(), [a]))") is not None
+
+
+def test_coalesce_leading_blank_leaves_others_alone():
+    flag = antipattern.coalesce_leading_blank
+    assert flag("COALESCE([x], BLANK())") is None  # rule 39's shape
+    # both leading and trailing blanks present: this rule legitimately fires
+    assert flag("COALESCE(BLANK(), [x], BLANK())") is not None
+    assert flag("COALESCE(BLANK(1), [x])") is None
+    assert flag("COALESCE(") is None

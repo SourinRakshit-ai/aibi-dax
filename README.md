@@ -197,6 +197,7 @@ schema of aibi-toolkit), so one file feeds both tools.
 58. `CONCATENATE(a, b)` (→ `a & b`)
 59. `[x] IN {}` (→ `FALSE()`)
 60. `IF(1 = 1, x, y)` (→ the constant branch)
+61. `COALESCE(BLANK(), x)` (→ drop the leading blank)
 53. `IF(x=k1, a, IF(x=k2, b, c))` (→ `SWITCH(x, …)`)
 52. `SELECTEDVALUE(col, BLANK())` (→ drop the fallback)
 51. `NOT(TRUE())` / `NOT(FALSE())` / `NOT(BLANK())` (→ constant)

@@ -254,6 +254,11 @@ always returns the same branch (`literal_condition`). The six comparison
 operators are covered; conditions involving a column, a call or a
 non-comparison operator stay silent.
 
+### `COALESCE(BLANK(), x)`
+COALESCE returns its first non-BLANK argument, so a leading BLANK() is
+always skipped (`coalesce_leading_blank`). The rule flags the leading
+position only; trailing BLANK() and one-argument forms belong to rule 39.
+
 ### `COUNTROWS(FILTER(t, FALSE()))`
 A FALSE() predicate leaves no rows, so the count is the literal 0
 (`countrows_false_filter`). AST-driven: COUNTROWS of a FILTER whose
@@ -489,3 +494,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `concatenate_two_args` — Two-argument CONCATENATE is `&` with the same operands
 - `empty_in` — `[x] IN {}` is FALSE for every value, BLANK included
 - `literal_condition` — An IF whose condition compares two numeric literals is constant
+- `coalesce_leading_blank` — A leading BLANK() in COALESCE is always skipped

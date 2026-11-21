@@ -2066,6 +2066,30 @@ def literal_condition(expr: str) -> str | None:
     return None
 
 
+_COALESCE_LEADING_BLANK_MSG = (
+    "COALESCE ignores leading BLANK() arguments — drop them."
+)
+
+
+def coalesce_leading_blank(expr: str) -> str | None:
+    """A leading BLANK() in COALESCE is always skipped.
+
+    AST-driven: a COALESCE call whose first argument is a zero-argument
+    BLANK() call. The trailing and single-argument forms belong to the
+    existing `coalesce_trailing_blank` rule.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "COALESCE" or not call.args:
+            continue
+        if _zero_arg_call(call.args[0], "BLANK"):
+            return _COALESCE_LEADING_BLANK_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2127,4 +2151,5 @@ ALL_RULES: list[Rule] = [
     concatenate_two_args,
     empty_in,
     literal_condition,
+    coalesce_leading_blank,
 ]
