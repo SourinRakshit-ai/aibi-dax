@@ -1647,6 +1647,37 @@ def zero_divisor(expr: str) -> str | None:
     return None
 
 
+_SELF_COMPARISON_MSG = (
+    "x = x is TRUE() and x <> x is FALSE() — comparing an expression "
+    "to itself gives a constant."
+)
+
+
+def self_comparison(expr: str) -> str | None:
+    """`[x] = [x]` is TRUE; `[x] <> [x]` is FALSE.
+
+    AST-driven: an `=` or `<>` binary whose operands are both bare
+    column references or identifiers and share a canonical signature.
+    Limited to bare refs so expressions with side effects or volatile
+    functions are never claimed constant.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    bare = (ColumnRef, Ident, QualifiedColumn)
+    for binary in _walk_binaries(tree):
+        if binary.op not in {"=", "<>"}:
+            continue
+        if (
+            isinstance(binary.left, bare)
+            and isinstance(binary.right, bare)
+            and _canonical(binary.left) == _canonical(binary.right)
+        ):
+            return _SELF_COMPARISON_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1694,4 +1725,5 @@ ALL_RULES: list[Rule] = [
     indicator_sum,
     complementary_logic,
     zero_divisor,
+    self_comparison,
 ]

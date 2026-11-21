@@ -174,6 +174,12 @@ AST-driven: a two-or-more-argument `DIVIDE(` whose second argument is a
 numeric literal zero. A column denominator and other numeric literals
 stay silent.
 
+### `[x] = [x]` / `[x] <> [x]`
+Comparing a bare column or identifier with itself gives a constant: TRUE
+or FALSE respectively (`self_comparison`). BLANK compares equal to itself
+in DAX, so the collapse holds for every value. Only bare references are
+considered; call expressions are left alone.
+
 ### `x || NOT(x)` / `x && NOT(x)`
 Complementary operands make the outcome independent of `x`
 (`complementary_logic`): OR with a negation is always TRUE, AND is
@@ -389,3 +395,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `indicator_sum` — `SUMX(t, IF(c, 1, 0))` is `COUNTROWS(FILTER(t, c))`
 - `complementary_logic` — `x || NOT(x)` is TRUE; `x && NOT(x)` is FALSE
 - `zero_divisor` — `DIVIDE(x, 0)` has no real division to perform
+- `self_comparison` — `[x] = [x]` is TRUE; `[x] <> [x]` is FALSE

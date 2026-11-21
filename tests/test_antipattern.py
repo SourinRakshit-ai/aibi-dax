@@ -964,3 +964,19 @@ def test_zero_divisor_leaves_real_division_alone():
     assert flag("DIVIDE([x], 2)") is None
     assert flag("DIVIDE([x], 1)") is None
     assert flag("DIVIDE(") is None
+
+
+def test_self_comparison_flags_equal_operands():
+    flag = antipattern.self_comparison
+    assert flag("[x] = [x]") is not None
+    assert flag("[x] <> [x]") is not None
+    assert flag("[X] = [x]") is not None
+    assert flag("IF([a] <> [a], 1, 0)") is not None
+
+
+def test_self_comparison_leaves_other_shapes_alone():
+    flag = antipattern.self_comparison
+    assert flag("[x] = [y]") is None
+    assert flag("[x] = 1") is None
+    assert flag("SUM([x]) = SUM([x])") is None
+    assert flag("[x] ==") is None
