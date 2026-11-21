@@ -1012,3 +1012,18 @@ def test_trivial_var_leaves_live_bindings_alone():
     assert flag("VAR a = [x] VAR b = a + 1 RETURN b + 1") is None
     assert flag("VAR a = [x] RETURN [y]") is None
     assert flag("VAR a =") is None
+
+
+def test_duplicate_minmax_flags_identical_arguments():
+    flag = antipattern.duplicate_minmax
+    assert flag("MAX([x], [x])") is not None
+    assert flag("MIN([X], [x])") is not None
+    assert flag("CALCULATE(MAX([a], [a]))") is not None
+
+
+def test_duplicate_minmax_leaves_other_calls_alone():
+    flag = antipattern.duplicate_minmax
+    assert flag("MIN([x], [y])") is None
+    assert flag("MAX([x], 0)") is None
+    assert flag("MIN([x])") is None
+    assert flag("MIN(") is None

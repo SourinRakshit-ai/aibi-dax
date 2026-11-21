@@ -193,6 +193,12 @@ different identifier (`RETURN total` for `VAR Total`) also flags. A
 variable read by a later VAR or used inside a larger expression stays
 silent.
 
+### `MIN(x, x)` / `MAX(x, x)`
+Two copies of the same argument produce that argument, blank included
+(`duplicate_minmax`). AST-driven: a two-argument MIN or MAX call with a
+canonical-signature match between the arguments; differing arguments
+and other arities stay silent.
+
 ### `x || NOT(x)` / `x && NOT(x)`
 Complementary operands make the outcome independent of `x`
 (`complementary_logic`): OR with a negation is always TRUE, AND is
@@ -411,3 +417,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `self_comparison` — `[x] = [x]` is TRUE; `[x] <> [x]` is FALSE
 - `self_subtraction` — `[x] - [x]` is 0, including for blanks (BLANK converts to 0)
 - `trivial_var` — `VAR a = value RETURN a` is `value`
+- `duplicate_minmax` — `MIN(x, x)` and `MAX(x, x)` are `x`, including for blanks

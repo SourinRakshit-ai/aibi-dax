@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- Rule 50: `MIN(x, x)` / `MAX(x, x)` (→ `x`)
 - Rule 49: `VAR a = e RETURN a` (→ `e`)
 - Rule 48: `[x] - [x]` (→ `0`)
 - Rule 47: `[x] = [x]` / `[x] <> [x]` (→ `TRUE()` / `FALSE()`)

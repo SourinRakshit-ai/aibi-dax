@@ -1754,6 +1754,31 @@ def trivial_var(expr: str) -> str | None:
     return None
 
 
+_DUPLICATE_MINMAX_MSG = (
+    "{name}(x, x) returns x — the second argument is a duplicate."
+)
+
+
+def duplicate_minmax(expr: str) -> str | None:
+    """`MIN(x, x)` and `MAX(x, x)` are `x`, including for blanks.
+
+    AST-driven: a two-argument MIN or MAX call whose arguments share a
+    canonical subtree signature. Calls with different arguments, and
+    more than two arguments, stay silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        name = call.name.upper()
+        if name not in {"MIN", "MAX"} or len(call.args) != 2:
+            continue
+        if _canonical(call.args[0]) == _canonical(call.args[1]):
+            return _DUPLICATE_MINMAX_MSG.format(name=name)
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1804,4 +1829,5 @@ ALL_RULES: list[Rule] = [
     self_comparison,
     self_subtraction,
     trivial_var,
+    duplicate_minmax,
 ]
