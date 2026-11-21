@@ -1190,3 +1190,18 @@ def test_coalesce_leading_blank_leaves_others_alone():
     assert flag("COALESCE(BLANK(), [x], BLANK())") is not None
     assert flag("COALESCE(BLANK(1), [x])") is None
     assert flag("COALESCE(") is None
+
+
+def test_switch_constant_first_case_flags():
+    flag = antipattern.switch_constant_first_case
+    assert flag("SWITCH(TRUE(), TRUE(), 1, 2)") is not None
+    assert flag("SWITCH(TRUE(), true(), [a], [b], [c])") is not None
+
+
+def test_switch_constant_first_case_leaves_others_alone():
+    flag = antipattern.switch_constant_first_case
+    assert flag("SWITCH(TRUE(), FALSE(), 1, 2)") is None
+    assert flag("SWITCH(TRUE(), [c], 1, TRUE(), 2)") is None
+    assert flag("SWITCH([x], TRUE(), 1, 2)") is None
+    assert flag("SWITCH(TRUE(), TRUE(), 1)") is None
+    assert flag("SWITCH(") is None

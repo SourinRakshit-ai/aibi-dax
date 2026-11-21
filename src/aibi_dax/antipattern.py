@@ -2090,6 +2090,32 @@ def coalesce_leading_blank(expr: str) -> str | None:
     return None
 
 
+_SWITCH_CONSTANT_FIRST_CASE_MSG = (
+    "SWITCH(TRUE(), TRUE(), x, ...) always takes the first case — "
+    "write x directly."
+)
+
+
+def switch_constant_first_case(expr: str) -> str | None:
+    """SWITCH with TRUE() as both value and first case never reaches later cases.
+
+    AST-driven: a SWITCH call with at least four arguments whose value
+    expression and first case are both zero-argument TRUE() calls. The
+    value following the first case is the result. A TRUE() in a later
+    case position stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "SWITCH" or len(call.args) < 4:
+            continue
+        if _zero_arg_call(call.args[0], "TRUE") and _zero_arg_call(call.args[1], "TRUE"):
+            return _SWITCH_CONSTANT_FIRST_CASE_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2152,4 +2178,5 @@ ALL_RULES: list[Rule] = [
     empty_in,
     literal_condition,
     coalesce_leading_blank,
+    switch_constant_first_case,
 ]

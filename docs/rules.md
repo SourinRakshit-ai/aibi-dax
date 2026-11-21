@@ -259,6 +259,12 @@ COALESCE returns its first non-BLANK argument, so a leading BLANK() is
 always skipped (`coalesce_leading_blank`). The rule flags the leading
 position only; trailing BLANK() and one-argument forms belong to rule 39.
 
+### `SWITCH(TRUE(), TRUE(), x, ...)`
+When the value expression and the first case are both TRUE(), that case
+always matches and later cases are unreachable
+(`switch_constant_first_case`). Only the first case position flags; a
+TRUE() in a later case is legitimate.
+
 ### `COUNTROWS(FILTER(t, FALSE()))`
 A FALSE() predicate leaves no rows, so the count is the literal 0
 (`countrows_false_filter`). AST-driven: COUNTROWS of a FILTER whose
@@ -495,3 +501,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `empty_in` — `[x] IN {}` is FALSE for every value, BLANK included
 - `literal_condition` — An IF whose condition compares two numeric literals is constant
 - `coalesce_leading_blank` — A leading BLANK() in COALESCE is always skipped
+- `switch_constant_first_case` — SWITCH with TRUE() as both value and first case never reaches later cases
