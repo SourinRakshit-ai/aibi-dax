@@ -1990,6 +1990,28 @@ def repeated_round(expr: str) -> str | None:
     return None
 
 
+_CONCATENATE_TWO_ARGS_MSG = (
+    "CONCATENATE(a, b) is a & b — the operator says the same thing."
+)
+
+
+def concatenate_two_args(expr: str) -> str | None:
+    """Two-argument CONCATENATE is `&` with the same operands.
+
+    AST-driven: a CONCATENATE call with exactly two arguments. Both
+    forms coerce their operands to text, including BLANK. Nested
+    CONCATENATE calls with more than two arguments are out of scope.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() == "CONCATENATE" and len(call.args) == 2:
+            return _CONCATENATE_TWO_ARGS_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2048,4 +2070,5 @@ ALL_RULES: list[Rule] = [
     nested_negated_predicate,
     divide_by_one,
     repeated_round,
+    concatenate_two_args,
 ]

@@ -1130,3 +1130,17 @@ def test_repeated_round_leaves_different_precision_alone():
     assert flag("ROUND([x], 2)") is None
     assert flag("ROUNDUP(ROUNDUP([x], 2), 2)") is None
     assert flag("ROUND(") is None
+
+
+def test_concatenate_two_args_flags_exactly_two():
+    flag = antipattern.concatenate_two_args
+    assert flag("CONCATENATE([a], [b])") is not None
+    assert flag("SUMX('T', CONCATENATE([a], \"x\"))") is not None
+
+
+def test_concatenate_two_args_leaves_other_shapes_alone():
+    flag = antipattern.concatenate_two_args
+    assert flag("[a] & [b]") is None
+    assert flag("CONCATENATE([a])") is None
+    assert flag("CONCATENATE([a], [b], [c])") is None
+    assert flag("CONCATENATE(") is None
