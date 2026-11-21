@@ -1937,6 +1937,31 @@ def nested_negated_predicate(expr: str) -> str | None:
     return None
 
 
+_DIVIDE_BY_ONE_MSG = (
+    "DIVIDE(x, 1) returns x — one as a denominator changes nothing."
+)
+
+
+def divide_by_one(expr: str) -> str | None:
+    """`DIVIDE(x, 1)` is `x`, BLANK included.
+
+    AST-driven: a DIVIDE call whose second argument is a numeric literal
+    1. The three-argument alternate form is also equivalent because a
+    denominator of 1 never triggers the alternate. Other denominators
+    stay silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "DIVIDE" or len(call.args) < 2:
+            continue
+        if _numeric_literal(call.args[1]) == 1:
+            return _DIVIDE_BY_ONE_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1993,4 +2018,5 @@ ALL_RULES: list[Rule] = [
     if_switch,
     countrows_false_filter,
     nested_negated_predicate,
+    divide_by_one,
 ]

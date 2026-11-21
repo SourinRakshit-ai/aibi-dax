@@ -225,6 +225,12 @@ negation is false, so the inner IF returns `b` (`nested_negated_predicate`).
 The mirrored shape with the nested IF in the else branch reduces to
 `IF(c, d, a)`. BLANK takes the false branch in both cases.
 
+### `DIVIDE(x, 1)`
+A denominator of 1 returns the numerator unchanged, and BLANK divided by
+1 is BLANK (`divide_by_one`). The alternate-result form is likewise
+equivalent because the alternate is unreachable. Numeric literals other
+than 1 and column denominators stay silent.
+
 ### `COUNTROWS(FILTER(t, FALSE()))`
 A FALSE() predicate leaves no rows, so the count is the literal 0
 (`countrows_false_filter`). AST-driven: COUNTROWS of a FILTER whose
@@ -455,3 +461,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `if_switch` — Nested equality IFs on the same column form a SWITCH lookup
 - `countrows_false_filter` — Counting a FALSE-filtered table always yields the literal 0
 - `nested_negated_predicate` — A branch-nested IF whose predicate is NOT of the outer one collapses
+- `divide_by_one` — `DIVIDE(x, 1)` is `x`, BLANK included

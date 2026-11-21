@@ -1100,3 +1100,18 @@ def test_nested_negated_predicate_leaves_other_shapes_alone():
     assert flag("IF([c], IF(NOT([d]), 1, 2), 3)") is None
     assert flag("IF([c], IF(NOT([c]), 1, 2), 3) + 1") is not None
     assert flag("IF([c], 1, 2)") is None
+
+
+def test_divide_by_one_flags_literal_one():
+    flag = antipattern.divide_by_one
+    assert flag("DIVIDE([x], 1)") is not None
+    assert flag("DIVIDE([x], -1)") is None
+    assert flag("DIVIDE([x], 1, 0)") is not None
+    assert flag("CALCULATE(DIVIDE([a], 1))") is not None
+
+
+def test_divide_by_one_leaves_real_division_alone():
+    flag = antipattern.divide_by_one
+    assert flag("DIVIDE([x], [y])") is None
+    assert flag("DIVIDE([x], 2)") is None
+    assert flag("DIVIDE([x], 0)") is None  # rule 46's shape
