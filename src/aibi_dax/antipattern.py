@@ -1808,6 +1808,31 @@ def not_constant(expr: str) -> str | None:
     return None
 
 
+_SELECTEDVALUE_BLANK_DEFAULT_MSG = (
+    "SELECTEDVALUE(t, BLANK()) already defaults to BLANK — drop the "
+    "second argument."
+)
+
+
+def selectedvalue_blank_default(expr: str) -> str | None:
+    """A BLANK() fallback to SELECTEDVALUE is its existing default.
+
+    AST-driven: a SELECTEDVALUE call with exactly two arguments whose
+    second is a zero-argument BLANK() call. Other fallbacks are
+    meaningful and stay silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "SELECTEDVALUE" or len(call.args) != 2:
+            continue
+        if _zero_arg_call(call.args[1], "BLANK"):
+            return _SELECTEDVALUE_BLANK_DEFAULT_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1860,4 +1885,5 @@ ALL_RULES: list[Rule] = [
     trivial_var,
     duplicate_minmax,
     not_constant,
+    selectedvalue_blank_default,
 ]

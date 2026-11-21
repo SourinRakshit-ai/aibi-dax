@@ -205,6 +205,13 @@ TRUE(), TRUE for FALSE() and BLANK(). A BLANK operand behaves as FALSE
 in a boolean context, so the fold is exact. NOT over a column or any
 other expression stays silent.
 
+### `SELECTEDVALUE(t[c], BLANK())`
+BLANK() is the value SELECTEDVALUE returns on its own when there is no
+single visible value, so the explicit alternate changes nothing
+(`selectedvalue_blank_default`). Only a two-argument call with a
+zero-argument BLANK() fallback flags; a real fallback such as 0 stays
+silent.
+
 ### `x || NOT(x)` / `x && NOT(x)`
 Complementary operands make the outcome independent of `x`
 (`complementary_logic`): OR with a negation is always TRUE, AND is
@@ -425,3 +432,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `trivial_var` — `VAR a = value RETURN a` is `value`
 - `duplicate_minmax` — `MIN(x, x)` and `MAX(x, x)` are `x`, including for blanks
 - `not_constant` — NOT over a zero-argument logical constant folds to a constant
+- `selectedvalue_blank_default` — A BLANK() fallback to SELECTEDVALUE is its existing default

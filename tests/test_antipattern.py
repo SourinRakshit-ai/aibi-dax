@@ -1042,3 +1042,17 @@ def test_not_constant_leaves_expressions_alone():
     assert flag("NOT([x])") is None
     assert flag("NOT TRUE") is None
     assert flag("NOT(") is None
+
+
+def test_selectedvalue_blank_default_flags_zero_arg_blank():
+    flag = antipattern.selectedvalue_blank_default
+    assert flag("SELECTEDVALUE('T'[c], BLANK())") is not None
+    assert flag("SELECTEDVALUE([c], blank())") is not None
+
+
+def test_selectedvalue_blank_default_leaves_real_fallbacks_alone():
+    flag = antipattern.selectedvalue_blank_default
+    assert flag("SELECTEDVALUE([c])") is None
+    assert flag("SELECTEDVALUE([c], 0)") is None
+    assert flag("SELECTEDVALUE([c], BLANK(), 1)") is None
+    assert flag("SELECTEDVALUE(") is None
