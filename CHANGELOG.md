@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- Rule 48: `[x] - [x]` (→ `0`)
 - Rule 47: `[x] = [x]` / `[x] <> [x]` (→ `TRUE()` / `FALSE()`)
 - Rule 46: `DIVIDE(x, 0)` (→ BLANK, or the alternate directly)
 - Rule 45: complementary boolean operands (`x || NOT(x)`, `x && NOT(x)`) collapse to TRUE/FALSE.

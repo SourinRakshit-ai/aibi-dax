@@ -180,6 +180,11 @@ or FALSE respectively (`self_comparison`). BLANK compares equal to itself
 in DAX, so the collapse holds for every value. Only bare references are
 considered; call expressions are left alone.
 
+### `x - x`
+Subtracting a value from itself is 0; BLANK converts to 0 in subtraction,
+so the result is the same for blank inputs (`self_subtraction`). Only
+bare references are flagged; call expressions are not claimed constant.
+
 ### `x || NOT(x)` / `x && NOT(x)`
 Complementary operands make the outcome independent of `x`
 (`complementary_logic`): OR with a negation is always TRUE, AND is
@@ -396,3 +401,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `complementary_logic` — `x || NOT(x)` is TRUE; `x && NOT(x)` is FALSE
 - `zero_divisor` — `DIVIDE(x, 0)` has no real division to perform
 - `self_comparison` — `[x] = [x]` is TRUE; `[x] <> [x]` is FALSE
+- `self_subtraction` — `[x] - [x]` is 0, including for blanks (BLANK converts to 0)

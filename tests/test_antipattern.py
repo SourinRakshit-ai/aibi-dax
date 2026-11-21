@@ -980,3 +980,18 @@ def test_self_comparison_leaves_other_shapes_alone():
     assert flag("[x] = 1") is None
     assert flag("SUM([x]) = SUM([x])") is None
     assert flag("[x] ==") is None
+
+
+def test_self_subtraction_flags_same_operand():
+    flag = antipattern.self_subtraction
+    assert flag("[a] - [a]") is not None
+    assert flag("[A] - [a]") is not None
+    assert flag("SUMX('T', [qty] - [qty])") is not None
+
+
+def test_self_subtraction_leaves_other_shapes_alone():
+    flag = antipattern.self_subtraction
+    assert flag("[a] - [b]") is None
+    assert flag("[a] + [a]") is None
+    assert flag("SUM([a]) - SUM([a])") is None
+    assert flag("[a] -") is None

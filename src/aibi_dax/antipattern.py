@@ -1678,6 +1678,36 @@ def self_comparison(expr: str) -> str | None:
     return None
 
 
+_SELF_SUBTRACTION_MSG = (
+    "x - x is 0 — subtracting a value from itself has no result worth "
+    "computing."
+)
+
+
+def self_subtraction(expr: str) -> str | None:
+    """`[x] - [x]` is 0, including for blanks (BLANK converts to 0).
+
+    AST-driven: a `-` binary whose operands are both bare column
+    references or identifiers and share a canonical signature. Calls
+    and arithmetic expressions are not claimed constant.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    bare = (ColumnRef, Ident, QualifiedColumn)
+    for binary in _walk_binaries(tree):
+        if binary.op != "-":
+            continue
+        if (
+            isinstance(binary.left, bare)
+            and isinstance(binary.right, bare)
+            and _canonical(binary.left) == _canonical(binary.right)
+        ):
+            return _SELF_SUBTRACTION_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1726,4 +1756,5 @@ ALL_RULES: list[Rule] = [
     complementary_logic,
     zero_divisor,
     self_comparison,
+    self_subtraction,
 ]
