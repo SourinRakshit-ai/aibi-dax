@@ -1144,3 +1144,17 @@ def test_concatenate_two_args_leaves_other_shapes_alone():
     assert flag("CONCATENATE([a])") is None
     assert flag("CONCATENATE([a], [b], [c])") is None
     assert flag("CONCATENATE(") is None
+
+
+def test_empty_in_flags_empty_list():
+    flag = antipattern.empty_in
+    assert flag("[x] IN {}") is not None
+    assert flag("IF([x] IN {}, 1, 2)") is not None
+
+
+def test_empty_in_leaves_real_lists_alone():
+    flag = antipattern.empty_in
+    assert flag("[x] IN {1, 2}") is None
+    assert flag("[x] = 1") is None
+    assert flag("[x] IN [y]") is None
+    assert flag("[x] IN") is None

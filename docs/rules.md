@@ -242,6 +242,12 @@ With exactly two arguments, CONCATENATE is the `&` operator written out
 (`concatenate_two_args`): both coerce their operands to text the same way,
 including BLANK. Calls with a different arity stay silent.
 
+### `x IN {}`
+Membership in an empty list never succeeds, so the expression is FALSE
+for every value, BLANK included (`empty_in`). AST-driven: an IN binary
+with an empty List on the right. Non-empty lists and other right-hand
+shapes stay silent.
+
 ### `COUNTROWS(FILTER(t, FALSE()))`
 A FALSE() predicate leaves no rows, so the count is the literal 0
 (`countrows_false_filter`). AST-driven: COUNTROWS of a FILTER whose
@@ -475,3 +481,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `divide_by_one` — `DIVIDE(x, 1)` is `x`, BLANK included
 - `repeated_round` — ROUND(ROUND(x, n), n) is ROUND(x, n)
 - `concatenate_two_args` — Two-argument CONCATENATE is `&` with the same operands
+- `empty_in` — `[x] IN {}` is FALSE for every value, BLANK included

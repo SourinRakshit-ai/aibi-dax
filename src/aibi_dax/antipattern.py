@@ -2012,6 +2012,28 @@ def concatenate_two_args(expr: str) -> str | None:
     return None
 
 
+_EMPTY_IN_MSG = (
+    "x IN {} is always FALSE — an empty list has no members to match."
+)
+
+
+def empty_in(expr: str) -> str | None:
+    """`[x] IN {}` is FALSE for every value, BLANK included.
+
+    AST-driven: an IN binary whose right operand is a List node with no
+    items. A non-empty list, or a right operand that is not a list at
+    all, stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for binary in _walk_binaries(tree):
+        if binary.op == "IN" and isinstance(binary.right, List) and not binary.right.items:
+            return _EMPTY_IN_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2071,4 +2093,5 @@ ALL_RULES: list[Rule] = [
     divide_by_one,
     repeated_round,
     concatenate_two_args,
+    empty_in,
 ]

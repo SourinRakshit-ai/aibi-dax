@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- Rule 59: `[x] IN {}` (→ `FALSE()`)
 - Rule 58: `CONCATENATE(a, b)` (→ `a & b`)
 - Rule 57: `ROUND(ROUND(x, n), n)` (→ `ROUND(x, n)`)
 - Rule 56: `DIVIDE(x, 1)` (→ `x`)

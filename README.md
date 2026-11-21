@@ -195,6 +195,7 @@ schema of aibi-toolkit), so one file feeds both tools.
 56. `DIVIDE(x, 1)` (→ `x`)
 57. `ROUND(ROUND(x, n), n)` (→ `ROUND(x, n)`)
 58. `CONCATENATE(a, b)` (→ `a & b`)
+59. `[x] IN {}` (→ `FALSE()`)
 53. `IF(x=k1, a, IF(x=k2, b, c))` (→ `SWITCH(x, …)`)
 52. `SELECTEDVALUE(col, BLANK())` (→ drop the fallback)
 51. `NOT(TRUE())` / `NOT(FALSE())` / `NOT(BLANK())` (→ constant)
