@@ -248,6 +248,12 @@ for every value, BLANK included (`empty_in`). AST-driven: an IN binary
 with an empty List on the right. Non-empty lists and other right-hand
 shapes stay silent.
 
+### `IF(1 = 1, x, y)`
+Comparing two numeric literals gives a compile-time constant, so the IF
+always returns the same branch (`literal_condition`). The six comparison
+operators are covered; conditions involving a column, a call or a
+non-comparison operator stay silent.
+
 ### `COUNTROWS(FILTER(t, FALSE()))`
 A FALSE() predicate leaves no rows, so the count is the literal 0
 (`countrows_false_filter`). AST-driven: COUNTROWS of a FILTER whose
@@ -482,3 +488,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `repeated_round` — ROUND(ROUND(x, n), n) is ROUND(x, n)
 - `concatenate_two_args` — Two-argument CONCATENATE is `&` with the same operands
 - `empty_in` — `[x] IN {}` is FALSE for every value, BLANK included
+- `literal_condition` — An IF whose condition compares two numeric literals is constant

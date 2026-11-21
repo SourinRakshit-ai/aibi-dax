@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- Rule 60: `IF(1 = 1, x, y)` (→ the constant branch)
 - Rule 59: `[x] IN {}` (→ `FALSE()`)
 - Rule 58: `CONCATENATE(a, b)` (→ `a & b`)
 - Rule 57: `ROUND(ROUND(x, n), n)` (→ `ROUND(x, n)`)

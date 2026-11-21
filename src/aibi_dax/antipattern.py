@@ -2034,6 +2034,38 @@ def empty_in(expr: str) -> str | None:
     return None
 
 
+_LITERAL_CONDITION_MSG = (
+    "IF({lhs} {op} {rhs}, x, y) — the condition is a comparison of "
+    "literal numbers, so it always returns the same branch."
+)
+
+
+def literal_condition(expr: str) -> str | None:
+    """An IF whose condition compares two numeric literals is constant.
+
+    AST-driven: a three-argument IF whose condition is a comparison
+    binary (`=`, `<>`, `<`, `>`, `<=`, `>=`) with numeric literals on
+    both sides. Conditions involving columns, calls or any other
+    operators stay silent, as does unparseable text.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    ops = {"=", "<>", "<", ">", "<=", ">="}
+    for call in _walk_calls(tree):
+        if call.name.upper() != "IF" or len(call.args) != 3:
+            continue
+        cond = call.args[0]
+        if not isinstance(cond, Binary) or cond.op not in ops:
+            continue
+        lhs, rhs = _numeric_literal(cond.left), _numeric_literal(cond.right)
+        if lhs is None or rhs is None:
+            continue
+        return _LITERAL_CONDITION_MSG.format(lhs=lhs, op=cond.op, rhs=rhs)
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2094,4 +2126,5 @@ ALL_RULES: list[Rule] = [
     repeated_round,
     concatenate_two_args,
     empty_in,
+    literal_condition,
 ]

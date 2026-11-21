@@ -1158,3 +1158,19 @@ def test_empty_in_leaves_real_lists_alone():
     assert flag("[x] = 1") is None
     assert flag("[x] IN [y]") is None
     assert flag("[x] IN") is None
+
+
+def test_literal_condition_flags_numeric_comparisons():
+    flag = antipattern.literal_condition
+    assert flag("IF(1 = 1, 2, 3)") is not None
+    assert flag("IF(1 <> 2, 2, 3)") is not None
+    assert flag("IF(3 > 2, 2, 3)") is not None
+    assert flag("SUMX('T', IF(1 < 2, [a], 0))") is not None
+
+
+def test_literal_condition_leaves_live_conditions_alone():
+    flag = antipattern.literal_condition
+    assert flag("IF([x] = 1, 2, 3)") is None
+    assert flag("IF(1 IN {1}, 2, 3)") is None
+    assert flag("IF(1 && 2, 2, 3)") is None
+    assert flag("IF(") is None
