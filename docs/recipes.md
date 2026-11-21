@@ -104,6 +104,47 @@ no findings
 
 For the non-empty case (`<> 0` or `> 0`) wrap it: `NOT(ISEMPTY(...))`.
 
+## Boolean constants that swallow whole conditions
+
+A constant absorbs the other operand in a boolean operator, so the
+other side never changes the result:
+
+```
+$ dxa lint "OR(TRUE(), [Active])"
+- OR(TRUE(), x) is TRUE() — TRUE absorbs every other operand; drop the rest.
+```
+
+Write the constant itself when the absorbed form appears in a measure.
+Conversely, a complemented pair (`x || NOT(x)`) is also a constant:
+
+```
+$ dxa lint "[x] || NOT([x])"
+- x OR NOT(x) is TRUE() and x AND NOT(x) is FALSE() — the complementary operands always win.
+```
+
+Both rewrites shorten the expression without changing any result.
+
+## Conditions that cannot vary
+
+Literal comparisons and constant IF conditions make a branch
+unreachable even when the measure runs over thousands of rows:
+
+```
+$ dxa lint "IF(1 = 1, 2, 3)"
+- IF(1.0 = 1.0, x, y) — the condition is a comparison of literal numbers, so it always returns the same branch.
+```
+
+When the condition is TRUE() or FALSE() directly, the surviving
+branch is the whole expression:
+
+```
+$ dxa lint "IF(TRUE(), [Sales], [Cost])"
+- IF(TRUE(), x, y) — the condition is a constant; the first branch always runs; drop the dead branch and the call.
+```
+
+Write the surviving branch. The remaining branches are dead weight and
+distract from the calculation the measure actually performs.
+
 ## Where to go next
 
 - [Anti-pattern rules](rules.md) — every rule, why it fires, and its
