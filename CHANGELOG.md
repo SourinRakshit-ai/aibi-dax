@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- Rule 46: `DIVIDE(x, 0)` (→ BLANK, or the alternate directly)
 - Rule 45: complementary boolean operands (`x || NOT(x)`, `x && NOT(x)`) collapse to TRUE/FALSE.
 - Published to PyPI via trusted publishing (OIDC). `pip install aibi-dax`.
 - Rules 1 and 14: `calculate_inside_iterator` rewritten over the AST

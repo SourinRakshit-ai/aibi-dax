@@ -949,3 +949,18 @@ def test_complementary_logic_leaves_other_logic_alone():
     assert flag("[x] || NOT([y])") is None
     assert flag("NOT([x])") is None
     assert flag("||") is None
+
+
+def test_zero_divisor_flags_literal_zero():
+    flag = antipattern.zero_divisor
+    assert flag("DIVIDE([x], 0)") is not None
+    assert flag("DIVIDE([x], -0)") is not None
+    assert flag("DIVIDE([x], 0, 5)") is not None
+
+
+def test_zero_divisor_leaves_real_division_alone():
+    flag = antipattern.zero_divisor
+    assert flag("DIVIDE([x], [y])") is None
+    assert flag("DIVIDE([x], 2)") is None
+    assert flag("DIVIDE([x], 1)") is None
+    assert flag("DIVIDE(") is None

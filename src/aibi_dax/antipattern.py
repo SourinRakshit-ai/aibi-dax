@@ -1621,6 +1621,32 @@ def complementary_logic(expr: str) -> str | None:
     return None
 
 
+_ZERO_DIVISOR_MSG = (
+    "DIVIDE(x, 0) always returns BLANK — drop the call, or use its "
+    "alternate result directly."
+)
+
+
+def zero_divisor(expr: str) -> str | None:
+    """`DIVIDE(x, 0)` has no real division to perform.
+
+    AST-driven: a DIVIDE call whose second argument is a (possibly
+    negated) numeric literal 0. A constant non-zero denominator and a
+    column denominator both vary the result or are legitimate, and
+    stay silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "DIVIDE" or len(call.args) < 2:
+            continue
+        if _numeric_literal(call.args[1]) == 0:
+            return _ZERO_DIVISOR_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1667,4 +1693,5 @@ ALL_RULES: list[Rule] = [
     duplicate_boolean_operand,
     indicator_sum,
     complementary_logic,
+    zero_divisor,
 ]

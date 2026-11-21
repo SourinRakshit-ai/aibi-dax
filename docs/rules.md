@@ -167,6 +167,13 @@ arguments are exactly the numeric literals 1 and 0 (strings `"1"`/`"0"`
 don't count); the inverted `IF(c, 0, 1)` reads as "failing rows" and
 stays silent.
 
+### `DIVIDE(x, 0)`
+Dividing by a literal zero never varies the result: the call returns BLANK
+(or its alternate argument) whatever the numerator is (`zero_divisor`).
+AST-driven: a two-or-more-argument `DIVIDE(` whose second argument is a
+numeric literal zero. A column denominator and other numeric literals
+stay silent.
+
 ### `x || NOT(x)` / `x && NOT(x)`
 Complementary operands make the outcome independent of `x`
 (`complementary_logic`): OR with a negation is always TRUE, AND is
@@ -381,3 +388,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `duplicate_boolean_operand` — `c && c` is `c`; same for `||`, `AND(c, c)` and `OR(c, c)`
 - `indicator_sum` — `SUMX(t, IF(c, 1, 0))` is `COUNTROWS(FILTER(t, c))`
 - `complementary_logic` — `x || NOT(x)` is TRUE; `x && NOT(x)` is FALSE
+- `zero_divisor` — `DIVIDE(x, 0)` has no real division to perform

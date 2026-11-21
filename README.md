@@ -190,6 +190,7 @@ schema of aibi-toolkit), so one file feeds both tools.
 43. `c && c`, `c || c`, `AND(c, c)`, `OR(c, c)` (→ keep one)
 44. `SUMX(t, IF(c, 1, 0))` (→ `COUNTROWS(FILTER(t, c))`)
 45. `x || NOT(x)` / `x && NOT(x)` (→ `TRUE()` / `FALSE()`)
+46. `DIVIDE(x, 0)` (→ BLANK, or the alternate directly)
 
 </details>
 
