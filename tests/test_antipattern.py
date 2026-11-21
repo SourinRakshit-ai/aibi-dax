@@ -1085,3 +1085,18 @@ def test_countrows_false_filter_leaves_other_filters_alone():
     assert flag("COUNTROWS(FILTER('T', [x] > 0))") is None
     assert flag("COUNTROWS('T')") is None
     assert flag("COUNTROWS(") is None
+
+
+def test_nested_negated_predicate_flags_both_branches():
+    flag = antipattern.nested_negated_predicate
+    assert flag("IF([c], IF(NOT([c]), 1, 2), 3)") is not None
+    assert flag("IF([c], 3, IF(NOT([C]), 1, 2))") is not None
+    assert flag("SUMX('T', IF([x], IF(![x], 1, 2), 3))") is not None
+
+
+def test_nested_negated_predicate_leaves_other_shapes_alone():
+    flag = antipattern.nested_negated_predicate
+    assert flag("IF([c], IF([c], 1, 2), 3)") is None  # rule 40's shape
+    assert flag("IF([c], IF(NOT([d]), 1, 2), 3)") is None
+    assert flag("IF([c], IF(NOT([c]), 1, 2), 3) + 1") is not None
+    assert flag("IF([c], 1, 2)") is None

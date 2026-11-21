@@ -191,6 +191,7 @@ schema of aibi-toolkit), so one file feeds both tools.
 44. `SUMX(t, IF(c, 1, 0))` (→ `COUNTROWS(FILTER(t, c))`)
 45. `x || NOT(x)` / `x && NOT(x)` (→ `TRUE()` / `FALSE()`)
 54. `COUNTROWS(FILTER(t, FALSE()))` (→ `0`)
+55. `IF(c, IF(NOT(c), a, b), d)` (→ `IF(c, b, d)`)
 53. `IF(x=k1, a, IF(x=k2, b, c))` (→ `SWITCH(x, …)`)
 52. `SELECTEDVALUE(col, BLANK())` (→ drop the fallback)
 51. `NOT(TRUE())` / `NOT(FALSE())` / `NOT(BLANK())` (→ constant)

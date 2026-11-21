@@ -219,6 +219,12 @@ are a lookup, and `SWITCH(x, k1, a, k2, b, c)` expresses it once
 comparison operators other than `=`, and duplicate case literals stay
 silent.
 
+### `IF(c, IF(NOT(c), a, b), d)`
+The inner condition is decided by the outer branch: when `c` is true the
+negation is false, so the inner IF returns `b` (`nested_negated_predicate`).
+The mirrored shape with the nested IF in the else branch reduces to
+`IF(c, d, a)`. BLANK takes the false branch in both cases.
+
 ### `COUNTROWS(FILTER(t, FALSE()))`
 A FALSE() predicate leaves no rows, so the count is the literal 0
 (`countrows_false_filter`). AST-driven: COUNTROWS of a FILTER whose
@@ -448,3 +454,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `selectedvalue_blank_default` — A BLANK() fallback to SELECTEDVALUE is its existing default
 - `if_switch` — Nested equality IFs on the same column form a SWITCH lookup
 - `countrows_false_filter` — Counting a FALSE-filtered table always yields the literal 0
+- `nested_negated_predicate` — A branch-nested IF whose predicate is NOT of the outer one collapses

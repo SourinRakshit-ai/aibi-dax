@@ -1903,6 +1903,40 @@ def countrows_false_filter(expr: str) -> str | None:
     return None
 
 
+_NESTED_NEGATED_PREDICATE_MSG = (
+    "IF(c, IF(NOT(c), a, b), d) is IF(c, b, d) — the inner condition "
+    "is decided by the outer branch."
+)
+
+
+def nested_negated_predicate(expr: str) -> str | None:
+    """A branch-nested IF whose predicate is NOT of the outer one collapses.
+
+    AST-driven: an outer three-argument IF whose condition canonically
+    matches the operand of a NOT/! unary used as the condition of an IF
+    in either direct branch. BLANK takes the false branch, so the
+    reduction holds there too.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for outer in _walk_calls(tree):
+        if outer.name.upper() != "IF" or len(outer.args) != 3:
+            continue
+        condition = _canonical(outer.args[0])
+        for index in (1, 2):
+            inner = outer.args[index]
+            if not isinstance(inner, Call) or inner.name.upper() != "IF" or len(inner.args) != 3:
+                continue
+            pred = inner.args[0]
+            if not isinstance(pred, Unary) or pred.op.upper() not in {"NOT", "!"}:
+                continue
+            if _canonical(pred.operand) == condition:
+                return _NESTED_NEGATED_PREDICATE_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1958,4 +1992,5 @@ ALL_RULES: list[Rule] = [
     selectedvalue_blank_default,
     if_switch,
     countrows_false_filter,
+    nested_negated_predicate,
 ]
