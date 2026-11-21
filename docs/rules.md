@@ -199,6 +199,12 @@ Two copies of the same argument produce that argument, blank included
 canonical-signature match between the arguments; differing arguments
 and other arities stay silent.
 
+### `NOT(TRUE())` / `NOT(FALSE())` / `NOT(BLANK())`
+NOT over a constant is itself a constant (`not_constant`): FALSE for
+TRUE(), TRUE for FALSE() and BLANK(). A BLANK operand behaves as FALSE
+in a boolean context, so the fold is exact. NOT over a column or any
+other expression stays silent.
+
 ### `x || NOT(x)` / `x && NOT(x)`
 Complementary operands make the outcome independent of `x`
 (`complementary_logic`): OR with a negation is always TRUE, AND is
@@ -418,3 +424,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `self_subtraction` — `[x] - [x]` is 0, including for blanks (BLANK converts to 0)
 - `trivial_var` — `VAR a = value RETURN a` is `value`
 - `duplicate_minmax` — `MIN(x, x)` and `MAX(x, x)` are `x`, including for blanks
+- `not_constant` — NOT over a zero-argument logical constant folds to a constant

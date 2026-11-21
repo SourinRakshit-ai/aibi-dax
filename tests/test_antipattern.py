@@ -1027,3 +1027,18 @@ def test_duplicate_minmax_leaves_other_calls_alone():
     assert flag("MAX([x], 0)") is None
     assert flag("MIN([x])") is None
     assert flag("MIN(") is None
+
+
+def test_not_constant_flags_boolean_literals():
+    flag = antipattern.not_constant
+    assert flag("NOT(TRUE())") is not None
+    assert flag("NOT(FALSE())") is not None
+    assert flag("NOT(BLANK())") is not None
+    assert flag("!TRUE()") is not None
+
+
+def test_not_constant_leaves_expressions_alone():
+    flag = antipattern.not_constant
+    assert flag("NOT([x])") is None
+    assert flag("NOT TRUE") is None
+    assert flag("NOT(") is None

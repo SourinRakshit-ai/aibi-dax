@@ -1779,6 +1779,35 @@ def duplicate_minmax(expr: str) -> str | None:
     return None
 
 
+_NOT_CONSTANT_MSG = (
+    "NOT({name}) is {value} — the operand is a constant."
+)
+
+
+def not_constant(expr: str) -> str | None:
+    """NOT over a zero-argument logical constant folds to a constant.
+
+    AST-driven: a NOT/! unary whose operand is a zero-argument TRUE(),
+    FALSE() or BLANK() call. NOT(BLANK()) is TRUE because BLANK behaves
+    as FALSE in a boolean context. NOT over a column or expression
+    stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    constants = {"TRUE": "FALSE", "FALSE": "TRUE", "BLANK": "TRUE"}
+    for unary in _walk_unaries(tree):
+        if unary.op.upper() not in {"NOT", "!"}:
+            continue
+        if not isinstance(unary.operand, Call) or unary.operand.args:
+            continue
+        name = unary.operand.name.upper()
+        if name in constants:
+            return _NOT_CONSTANT_MSG.format(name=name, value=constants[name])
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -1830,4 +1859,5 @@ ALL_RULES: list[Rule] = [
     self_subtraction,
     trivial_var,
     duplicate_minmax,
+    not_constant,
 ]
