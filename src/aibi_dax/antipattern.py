@@ -2142,6 +2142,38 @@ def coalesce_unreachable_after_blank(expr: str) -> str | None:
     return None
 
 
+_REDUNDANT_DISTINCT_MSG = (
+    "{outer}({inner}(x)) repeats a distinct pass — write "
+    "{inner}(x)."
+)
+
+
+def redundant_distinct(expr: str) -> str | None:
+    """DISTINCT(VALUES(col)) and VALUES(DISTINCT(col)) repeat a pass.
+
+    AST-driven: a one-argument DISTINCT whose argument is a one-argument
+    VALUES call, or the reverse. A single column is assumed, as in
+    rule 19's related collapse.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        name = call.name.upper()
+        if name not in {"VALUES", "DISTINCT"} or len(call.args) != 1:
+            continue
+        inner = call.args[0]
+        if (
+            isinstance(inner, Call)
+            and inner.name.upper() in {"VALUES", "DISTINCT"}
+            and inner.name.upper() != name
+            and len(inner.args) == 1
+        ):
+            return _REDUNDANT_DISTINCT_MSG.format(outer=name, inner=inner.name.upper())
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2206,4 +2238,5 @@ ALL_RULES: list[Rule] = [
     coalesce_leading_blank,
     switch_constant_first_case,
     coalesce_unreachable_after_blank,
+    redundant_distinct,
 ]

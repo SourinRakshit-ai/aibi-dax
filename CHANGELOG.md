@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- Rule 64: `DISTINCT(VALUES(c))` / `VALUES(DISTINCT(c))` (→ one call)
 - Rule 63: `COALESCE(x, BLANK(), y)` (→ drop the unreachable tail)
 - Rule 62: `SWITCH(TRUE(), TRUE(), x, …)` (→ `x`)
 - Rule 61: `COALESCE(BLANK(), x)` (→ drop the leading blank)

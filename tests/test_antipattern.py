@@ -1218,3 +1218,18 @@ def test_coalesce_unreachable_leaves_end_positions_alone():
     assert flag("COALESCE([x], [y], BLANK())") is None  # rule 39
     assert flag("COALESCE(BLANK(), [x])") is None  # rule 61
     assert flag("COALESCE([x], [y])") is None
+
+
+def test_redundant_distinct_flags_both_orders():
+    flag = antipattern.redundant_distinct
+    assert flag("DISTINCT(VALUES('T'[c]))") is not None
+    assert flag("VALUES(DISTINCT('T'[c]))") is not None
+    assert flag("CALCULATE(DISTINCT(VALUES([c])))") is not None
+
+
+def test_redundant_distinct_leaves_real_calls_alone():
+    flag = antipattern.redundant_distinct
+    assert flag("VALUES('T'[c])") is None
+    assert flag("DISTINCT('T'[c])") is None
+    assert flag("DISTINCT(DISTINCT([c]))") is None
+    assert flag("DISTINCT(") is None

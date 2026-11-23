@@ -265,6 +265,12 @@ the earlier arguments are blank, so every later argument is unreachable
 (`coalesce_unreachable_after_blank`). Leading and trailing BLANK()
 arguments are covered by rules 61 and 39.
 
+### `DISTINCT(VALUES(col))` / `VALUES(DISTINCT(col))`
+Both functions return the distinct values of a column, so nesting one in
+the other repeats a pass (`redundant_distinct`). Only one-argument forms
+with the two names alternating are flagged; a single call and
+same-name nesting stay silent.
+
 ### `SWITCH(TRUE(), TRUE(), x, ...)`
 When the value expression and the first case are both TRUE(), that case
 always matches and later cases are unreachable
@@ -509,3 +515,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `coalesce_leading_blank` — A leading BLANK() in COALESCE is always skipped
 - `switch_constant_first_case` — SWITCH with TRUE() as both value and first case never reaches later cases
 - `coalesce_unreachable_after_blank` — A BLANK() before the last COALESCE argument makes later args dead
+- `redundant_distinct` — DISTINCT(VALUES(col)) and VALUES(DISTINCT(col)) repeat a pass
