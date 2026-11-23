@@ -1293,3 +1293,12 @@ def test_single_column_iterator_bare_leaves_qualified_form_alone():
     assert flag("SUMX('T', 'T'[Amount])") is None  # rule 14's shape
     assert flag("SUM('T'[Amount])") is None
     assert flag("SUMX(") is None
+
+
+def test_constant_condition_walks_nested_calls():
+    """Rule 41 must apply inside iterators and larger expressions, not only at the root."""
+    flag = antipattern.constant_condition
+    assert flag("SUMX('T', IF(TRUE(), 1, 2))") is not None
+    assert flag("CALCULATE([m], IF(FALSE(), [a], [b]))") is not None
+    assert flag("IF(TRUE(), 1, 2) + 3") is not None
+    assert flag("IF([c], 1, 2)") is None
