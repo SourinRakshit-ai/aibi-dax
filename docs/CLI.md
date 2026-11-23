@@ -182,7 +182,14 @@ Exit code is always 0 — findings live in the document; usage errors
 stay 2. `--sarif` is mutually exclusive with `--json` and `--summary`.
 `--rule NAME` runs one rule (function name) and may be repeated to run
 several — findings are the union; exit 2 with the rule list
-on stderr if any name is unknown. Prints nothing and exits 0 for a clean model.
+on stderr if any name is unknown. Both compose: a CI allow-list can
+upload only the rules it enforces, and the SARIF driver's rule
+inventory narrows to the same set:
+
+```
+$ dxa lint-model model.json --rule raw_division --sarif
+{"$schema": ..., "runs": [{"tool": {"driver": {"rules": [{"id": "raw_division", ...}]}}, "results": [...]}]}
+``` Prints nothing and exits 0 for a clean model.
 Findings exit 1 with `- ` lines per finding; `--json` prints the findings
 map. Both model commands (`lint-model` and `rank`) share one loader, so
 a missing file, broken JSON or a non-object payload exits 2 with a
