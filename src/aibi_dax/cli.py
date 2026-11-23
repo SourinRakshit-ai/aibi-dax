@@ -341,7 +341,7 @@ def main(argv: list[str] | None = None) -> int:
                 return 0
             for rule in ALL_RULES:
                 summary = rule_summary(rule)
-                print(f"{rule.__name__:30}{summary}")
+                print(f"{rule.__name__:36}{summary}")
             print("\nrun `dxa explain RULE` for the full documentation of one rule")
             return 0
         wanted = args.rule.strip().lower()
@@ -421,7 +421,7 @@ def main(argv: list[str] | None = None) -> int:
                 return 0
             for rule in ALL_RULES:
                 summary = rule_summary(rule)
-                print(f"{rule.__name__:30}{summary}")
+                print(f"{rule.__name__:36}{summary}")
             return 0
         expr, code = _expression(args)
         if expr is None:

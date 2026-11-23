@@ -259,6 +259,12 @@ COALESCE returns its first non-BLANK argument, so a leading BLANK() is
 always skipped (`coalesce_leading_blank`). The rule flags the leading
 position only; trailing BLANK() and one-argument forms belong to rule 39.
 
+### `COALESCE(x, BLANK(), y)`
+A zero-argument BLANK() in a non-final position is returned as soon as
+the earlier arguments are blank, so every later argument is unreachable
+(`coalesce_unreachable_after_blank`). Leading and trailing BLANK()
+arguments are covered by rules 61 and 39.
+
 ### `SWITCH(TRUE(), TRUE(), x, ...)`
 When the value expression and the first case are both TRUE(), that case
 always matches and later cases are unreachable
@@ -502,3 +508,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `literal_condition` — An IF whose condition compares two numeric literals is constant
 - `coalesce_leading_blank` — A leading BLANK() in COALESCE is always skipped
 - `switch_constant_first_case` — SWITCH with TRUE() as both value and first case never reaches later cases
+- `coalesce_unreachable_after_blank` — A BLANK() before the last COALESCE argument makes later args dead

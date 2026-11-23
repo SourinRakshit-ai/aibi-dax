@@ -2116,6 +2116,32 @@ def switch_constant_first_case(expr: str) -> str | None:
     return None
 
 
+_COALESCE_UNREACHABLE_MSG = (
+    "COALESCE(x, BLANK(), y) never reaches y — the BLANK argument "
+    "returns first when x is blank."
+)
+
+
+def coalesce_unreachable_after_blank(expr: str) -> str | None:
+    """A BLANK() before the last COALESCE argument makes later args dead.
+
+    AST-driven: a COALESCE call with a zero-argument BLANK() in a
+    non-final position and at least one argument after it. Leading and
+    trailing BLANK() forms belong to rules 61 and 39.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "COALESCE" or len(call.args) < 3:
+            continue
+        for index in range(1, len(call.args) - 1):
+            if _zero_arg_call(call.args[index], "BLANK"):
+                return _COALESCE_UNREACHABLE_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2179,4 +2205,5 @@ ALL_RULES: list[Rule] = [
     literal_condition,
     coalesce_leading_blank,
     switch_constant_first_case,
+    coalesce_unreachable_after_blank,
 ]

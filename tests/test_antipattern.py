@@ -1205,3 +1205,16 @@ def test_switch_constant_first_case_leaves_others_alone():
     assert flag("SWITCH([x], TRUE(), 1, 2)") is None
     assert flag("SWITCH(TRUE(), TRUE(), 1)") is None
     assert flag("SWITCH(") is None
+
+
+def test_coalesce_unreachable_flags_middle_blank():
+    flag = antipattern.coalesce_unreachable_after_blank
+    assert flag("COALESCE([x], BLANK(), [y])") is not None
+    assert flag("COALESCE([a], [b], blank(), [c])") is not None
+
+
+def test_coalesce_unreachable_leaves_end_positions_alone():
+    flag = antipattern.coalesce_unreachable_after_blank
+    assert flag("COALESCE([x], [y], BLANK())") is None  # rule 39
+    assert flag("COALESCE(BLANK(), [x])") is None  # rule 61
+    assert flag("COALESCE([x], [y])") is None
