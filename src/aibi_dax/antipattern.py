@@ -2201,6 +2201,34 @@ def isblank_constant(expr: str) -> str | None:
     return None
 
 
+_DUPLICATE_SWITCH_CASE_MSG = (
+    "SWITCH has a repeated case value — the later branch is unreachable."
+)
+
+
+def duplicate_switch_case(expr: str) -> str | None:
+    """A repeated case expression in SWITCH makes later branches dead.
+
+    AST-driven: SWITCH arguments at odd indexes after the value
+    expression (the case slots) are compared canonically. The default
+    argument is exempt; the value expression itself is not a case.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "SWITCH" or len(call.args) < 4:
+            continue
+        seen: set[object] = set()
+        for index in range(1, len(call.args) - 1, 2):
+            signature = _canonical(call.args[index])
+            if signature in seen:
+                return _DUPLICATE_SWITCH_CASE_MSG
+            seen.add(signature)
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2267,4 +2295,5 @@ ALL_RULES: list[Rule] = [
     coalesce_unreachable_after_blank,
     redundant_distinct,
     isblank_constant,
+    duplicate_switch_case,
 ]

@@ -1248,3 +1248,18 @@ def test_isblank_constant_leaves_live_tests_alone():
     assert flag("ISBLANK(SUM([x]))") is None
     assert flag("ISBLANK(TRUE())") is None
     assert flag("ISBLANK(") is None
+
+
+def test_duplicate_switch_case_flags_repeat():
+    flag = antipattern.duplicate_switch_case
+    assert flag("SWITCH([x], 1, 2, 1, 3, 4)") is not None
+    assert flag('SWITCH([x], "a", 1, "a", 2, 0)') is not None
+    assert flag("CALCULATE(SWITCH([x], 1, 2, 1, 3, 4))") is not None
+
+
+def test_duplicate_switch_case_leaves_distinct_cases_alone():
+    flag = antipattern.duplicate_switch_case
+    assert flag("SWITCH([x], 1, 2, 2, 3, 4)") is None
+    assert flag("SWITCH([x], 1, 2, 1, 3)") is not None  # duplicate case, 3 is default
+    assert flag("SWITCH([x], 1, 2, 3)") is None  # 3 is the default, not a case
+    assert flag("SWITCH([x], 1, 2)") is None

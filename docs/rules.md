@@ -277,6 +277,11 @@ constants (`isblank_constant`). A literal argument suggests FALSE; a
 zero-argument BLANK() suggests TRUE. Tests over columns or other calls
 stay silent.
 
+### `SWITCH(x, k, a, k, b, c)`
+A repeated case expression can never be reached: SWITCH takes the first
+matching case (`duplicate_switch_case`). Case slots are compared with
+the canonical signature; the trailing default argument is exempt.
+
 ### `SWITCH(TRUE(), TRUE(), x, ...)`
 When the value expression and the first case are both TRUE(), that case
 always matches and later cases are unreachable
@@ -523,3 +528,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `coalesce_unreachable_after_blank` — A BLANK() before the last COALESCE argument makes later args dead
 - `redundant_distinct` — DISTINCT(VALUES(col)) and VALUES(DISTINCT(col)) repeat a pass
 - `isblank_constant` — ISBLANK over a literal or BLANK() yields a compile-time constant
+- `duplicate_switch_case` — A repeated case expression in SWITCH makes later branches dead
