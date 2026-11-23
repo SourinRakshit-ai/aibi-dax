@@ -1302,3 +1302,10 @@ def test_constant_condition_walks_nested_calls():
     assert flag("CALCULATE([m], IF(FALSE(), [a], [b]))") is not None
     assert flag("IF(TRUE(), 1, 2) + 3") is not None
     assert flag("IF([c], 1, 2)") is None
+
+
+def test_divide_alternate_messages_name_the_third_argument():
+    assert "returns alt" in antipattern.zero_divisor("DIVIDE([x], 0, 5)")
+    assert "always returns BLANK" in antipattern.zero_divisor("DIVIDE([x], 0)")
+    assert "returns x" in antipattern.divide_by_one("DIVIDE([x], 1, 0)")
+    assert "alternate" in antipattern.divide_by_one("DIVIDE([x], 1, 0)")

@@ -1625,6 +1625,10 @@ _ZERO_DIVISOR_MSG = (
     "DIVIDE(x, 0) always returns BLANK — drop the call, or use its "
     "alternate result directly."
 )
+_ZERO_DIVISOR_ALT_MSG = (
+    "DIVIDE(x, 0, alt) always returns alt — one as a denominator is "
+    "impossible here; write the alternate directly."
+)
 
 
 def zero_divisor(expr: str) -> str | None:
@@ -1643,6 +1647,8 @@ def zero_divisor(expr: str) -> str | None:
         if call.name.upper() != "DIVIDE" or len(call.args) < 2:
             continue
         if _numeric_literal(call.args[1]) == 0:
+            if len(call.args) >= 3:
+                return _ZERO_DIVISOR_ALT_MSG
             return _ZERO_DIVISOR_MSG
     return None
 
@@ -1940,6 +1946,10 @@ def nested_negated_predicate(expr: str) -> str | None:
 _DIVIDE_BY_ONE_MSG = (
     "DIVIDE(x, 1) returns x — one as a denominator changes nothing."
 )
+_DIVIDE_BY_ONE_ALT_MSG = (
+    "DIVIDE(x, 1, alt) returns x — a denominator of 1 never triggers "
+    "the alternate; drop both extra arguments."
+)
 
 
 def divide_by_one(expr: str) -> str | None:
@@ -1958,6 +1968,8 @@ def divide_by_one(expr: str) -> str | None:
         if call.name.upper() != "DIVIDE" or len(call.args) < 2:
             continue
         if _numeric_literal(call.args[1]) == 1:
+            if len(call.args) >= 3:
+                return _DIVIDE_BY_ONE_ALT_MSG
             return _DIVIDE_BY_ONE_MSG
     return None
 
