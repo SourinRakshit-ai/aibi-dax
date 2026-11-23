@@ -1277,3 +1277,19 @@ def test_countrows_at_least_one_leaves_other_bounds_alone():
     assert flag("COUNTROWS('T') > 1") is None
     assert flag("COUNTROWS('T') = 1") is None
     assert flag("COUNTROWS(") is None
+
+
+def test_single_column_iterator_bare_flags_each_family():
+    flag = antipattern.single_column_iterator_bare
+    assert flag("SUMX('T', [Amount])") is not None
+    assert flag("AVERAGEX('T', [Amount])") is not None
+    assert flag("MINX('T', [Amount])") is not None
+    assert flag("MAXX('T', [Amount])") is not None
+    assert flag("SUMX('T', [Amount] * [Qty])") is None
+
+
+def test_single_column_iterator_bare_leaves_qualified_form_alone():
+    flag = antipattern.single_column_iterator_bare
+    assert flag("SUMX('T', 'T'[Amount])") is None  # rule 14's shape
+    assert flag("SUM('T'[Amount])") is None
+    assert flag("SUMX(") is None

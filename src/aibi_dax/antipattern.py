@@ -2257,6 +2257,44 @@ def countrows_at_least_one(expr: str) -> str | None:
     return None
 
 
+_SINGLE_COLUMN_ITERATOR_BARE_MSG = (
+    "{name}(t, [col]) reads one column per row — plain "
+    "{plain}(t[col]) does the same work."
+)
+
+_PLAIN_AGGREGATE = {
+    "SUMX": "SUM",
+    "AVERAGEX": "AVERAGE",
+    "MINX": "MIN",
+    "MAXX": "MAX",
+    "COUNTX": "COUNT",
+    "COUNTAX": "COUNTA",
+}
+
+
+def single_column_iterator_bare(expr: str) -> str | None:
+    """A row iterator over a bare column reference is a plain aggregate.
+
+    AST-driven: a two-argument iterator call whose expression argument
+    is a bare ColumnRef. The qualified-call form
+    `SUMX('T', 'T'[col])` is rule 14's shape; an expression more
+    complex than a bare column stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        name = call.name.upper()
+        if name not in _PLAIN_AGGREGATE or len(call.args) != 2:
+            continue
+        if isinstance(call.args[1], ColumnRef):
+            return _SINGLE_COLUMN_ITERATOR_BARE_MSG.format(
+                name=name, plain=_PLAIN_AGGREGATE[name]
+            )
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2325,4 +2363,5 @@ ALL_RULES: list[Rule] = [
     isblank_constant,
     duplicate_switch_case,
     countrows_at_least_one,
+    single_column_iterator_bare,
 ]
