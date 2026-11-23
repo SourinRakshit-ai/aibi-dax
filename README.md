@@ -201,6 +201,7 @@ schema of aibi-toolkit), so one file feeds both tools.
 62. `SWITCH(TRUE(), TRUE(), x, …)` (→ `x`)
 63. `COALESCE(x, BLANK(), y)` (→ drop the unreachable tail)
 64. `DISTINCT(VALUES(c))` / `VALUES(DISTINCT(c))` (→ one call)
+65. `ISBLANK(1)` / `ISBLANK(BLANK())` (→ `FALSE()` / `TRUE()`)
 53. `IF(x=k1, a, IF(x=k2, b, c))` (→ `SWITCH(x, …)`)
 52. `SELECTEDVALUE(col, BLANK())` (→ drop the fallback)
 51. `NOT(TRUE())` / `NOT(FALSE())` / `NOT(BLANK())` (→ constant)

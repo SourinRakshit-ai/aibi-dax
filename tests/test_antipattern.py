@@ -1233,3 +1233,18 @@ def test_redundant_distinct_leaves_real_calls_alone():
     assert flag("DISTINCT('T'[c])") is None
     assert flag("DISTINCT(DISTINCT([c]))") is None
     assert flag("DISTINCT(") is None
+
+
+def test_isblank_constant_flags_literals_and_blank():
+    flag = antipattern.isblank_constant
+    assert flag("ISBLANK(1)") is not None
+    assert flag('ISBLANK("x")') is not None
+    assert flag("ISBLANK(BLANK())") is not None
+
+
+def test_isblank_constant_leaves_live_tests_alone():
+    flag = antipattern.isblank_constant
+    assert flag("ISBLANK([x])") is None
+    assert flag("ISBLANK(SUM([x]))") is None
+    assert flag("ISBLANK(TRUE())") is None
+    assert flag("ISBLANK(") is None

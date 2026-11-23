@@ -271,6 +271,12 @@ the other repeats a pass (`redundant_distinct`). Only one-argument forms
 with the two names alternating are flagged; a single call and
 same-name nesting stay silent.
 
+### `ISBLANK(1)` / `ISBLANK(BLANK())`
+A literal is never blank, and BLANK() always is, so these calls are
+constants (`isblank_constant`). A literal argument suggests FALSE; a
+zero-argument BLANK() suggests TRUE. Tests over columns or other calls
+stay silent.
+
 ### `SWITCH(TRUE(), TRUE(), x, ...)`
 When the value expression and the first case are both TRUE(), that case
 always matches and later cases are unreachable
@@ -516,3 +522,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `switch_constant_first_case` — SWITCH with TRUE() as both value and first case never reaches later cases
 - `coalesce_unreachable_after_blank` — A BLANK() before the last COALESCE argument makes later args dead
 - `redundant_distinct` — DISTINCT(VALUES(col)) and VALUES(DISTINCT(col)) repeat a pass
+- `isblank_constant` — ISBLANK over a literal or BLANK() yields a compile-time constant

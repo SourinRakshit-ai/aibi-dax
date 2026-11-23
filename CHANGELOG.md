@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- Rule 65: `ISBLANK(1)` / `ISBLANK(BLANK())` (→ `FALSE()` / `TRUE()`)
 - Rule 64: `DISTINCT(VALUES(c))` / `VALUES(DISTINCT(c))` (→ one call)
 - Rule 63: `COALESCE(x, BLANK(), y)` (→ drop the unreachable tail)
 - Rule 62: `SWITCH(TRUE(), TRUE(), x, …)` (→ `x`)

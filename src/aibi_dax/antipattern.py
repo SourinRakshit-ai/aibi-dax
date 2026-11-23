@@ -2174,6 +2174,33 @@ def redundant_distinct(expr: str) -> str | None:
     return None
 
 
+_ISBLANK_CONSTANT_MSG = (
+    "ISBLANK({arg}) is always {value} — the argument is a literal."
+)
+
+
+def isblank_constant(expr: str) -> str | None:
+    """ISBLANK over a literal or BLANK() yields a compile-time constant.
+
+    AST-driven: a one-argument ISBLANK call whose argument is a Literal
+    node or a zero-argument BLANK() call. Columns and call expressions
+    other than BLANK() stay silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "ISBLANK" or len(call.args) != 1:
+            continue
+        arg = call.args[0]
+        if isinstance(arg, Literal):
+            return _ISBLANK_CONSTANT_MSG.format(arg=arg.text, value="FALSE")
+        if _zero_arg_call(arg, "BLANK"):
+            return _ISBLANK_CONSTANT_MSG.format(arg="BLANK()", value="TRUE")
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2239,4 +2266,5 @@ ALL_RULES: list[Rule] = [
     switch_constant_first_case,
     coalesce_unreachable_after_blank,
     redundant_distinct,
+    isblank_constant,
 ]
