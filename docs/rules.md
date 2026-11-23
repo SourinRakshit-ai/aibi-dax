@@ -282,6 +282,11 @@ A repeated case expression can never be reached: SWITCH takes the first
 matching case (`duplicate_switch_case`). Case slots are compared with
 the canonical signature; the trailing default argument is exempt.
 
+### `COUNTROWS(t) >= 1`
+COUNTROWS returns a non-negative integer, so `>= 1` is exactly the
+non-empty test (`countrows_at_least_one`). `NOT(ISEMPTY(t))` says the
+same thing. Both operand orders flag; other bounds stay silent.
+
 ### `SWITCH(TRUE(), TRUE(), x, ...)`
 When the value expression and the first case are both TRUE(), that case
 always matches and later cases are unreachable
@@ -529,3 +534,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `redundant_distinct` — DISTINCT(VALUES(col)) and VALUES(DISTINCT(col)) repeat a pass
 - `isblank_constant` — ISBLANK over a literal or BLANK() yields a compile-time constant
 - `duplicate_switch_case` — A repeated case expression in SWITCH makes later branches dead
+- `countrows_at_least_one` — `COUNTROWS(t) >= 1` is the same test as `COUNTROWS(t) > 0`

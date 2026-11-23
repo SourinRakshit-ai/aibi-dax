@@ -1263,3 +1263,17 @@ def test_duplicate_switch_case_leaves_distinct_cases_alone():
     assert flag("SWITCH([x], 1, 2, 1, 3)") is not None  # duplicate case, 3 is default
     assert flag("SWITCH([x], 1, 2, 3)") is None  # 3 is the default, not a case
     assert flag("SWITCH([x], 1, 2)") is None
+
+
+def test_countrows_at_least_one_flags_both_orders():
+    flag = antipattern.countrows_at_least_one
+    assert flag("IF(COUNTROWS('T') >= 1, 1, 2)") is not None
+    assert flag("IF(1 <= COUNTROWS('T'), 1, 2)") is not None
+
+
+def test_countrows_at_least_one_leaves_other_bounds_alone():
+    flag = antipattern.countrows_at_least_one
+    assert flag("COUNTROWS('T') >= 2") is None
+    assert flag("COUNTROWS('T') > 1") is None
+    assert flag("COUNTROWS('T') = 1") is None
+    assert flag("COUNTROWS(") is None

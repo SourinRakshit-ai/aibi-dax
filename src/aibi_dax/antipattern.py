@@ -2229,6 +2229,34 @@ def duplicate_switch_case(expr: str) -> str | None:
     return None
 
 
+_COUNTROWS_AT_LEAST_ONE_MSG = (
+    "COUNTROWS(t) >= 1 is a non-empty test — NOT(ISEMPTY(t)) says it "
+    "directly."
+)
+
+
+def countrows_at_least_one(expr: str) -> str | None:
+    """`COUNTROWS(t) >= 1` is the same test as `COUNTROWS(t) > 0`.
+
+    AST-driven: a COUNTROWS call compared with `>=` to the numeric
+    literal 1, or `1 <= COUNTROWS(...)`. Other bounds stay rule 25's
+    or no rule's territory.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for binary in _walk_binaries(tree):
+        left, right = binary.left, binary.right
+        if binary.op == ">=" and isinstance(left, Call) and left.name.upper() == "COUNTROWS" \
+                and _numeric_literal(right) == 1:
+            return _COUNTROWS_AT_LEAST_ONE_MSG
+        if binary.op == "<=" and _numeric_literal(left) == 1 \
+                and isinstance(right, Call) and right.name.upper() == "COUNTROWS":
+            return _COUNTROWS_AT_LEAST_ONE_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2296,4 +2324,5 @@ ALL_RULES: list[Rule] = [
     redundant_distinct,
     isblank_constant,
     duplicate_switch_case,
+    countrows_at_least_one,
 ]

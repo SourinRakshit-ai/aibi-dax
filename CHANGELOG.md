@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- Rule 67: `COUNTROWS(t) >= 1` (→ `NOT(ISEMPTY(t))`)
 - Rule 66: `SWITCH(x, k, a, k, b, …)` (→ later branch unreachable)
 - Rule 65: `ISBLANK(1)` / `ISBLANK(BLANK())` (→ `FALSE()` / `TRUE()`)
 - Rule 64: `DISTINCT(VALUES(c))` / `VALUES(DISTINCT(c))` (→ one call)
