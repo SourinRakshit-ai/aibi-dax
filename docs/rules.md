@@ -293,6 +293,12 @@ Multiplying by negative one is negation written the long way
 `BLANK() * -1` and `-BLANK()` agree. Either operand position flags;
 other multipliers and division by -1 stay silent.
 
+### `SUM(x) = SUM(x)`
+Comparing two copies of the same deterministic call is a constant, just
+as comparing a bare column to itself is (`self_call_comparison`). Only
+an allowlist of deterministic functions qualifies; volatile functions
+like NOW() and RAND() are never claimed constant.
+
 ### `SUMX(t, [col])` with a bare column
 A row iterator whose expression is a bare column reference pays for row
 context to do what a plain aggregate does (`single_column_iterator_bare`).
@@ -549,3 +555,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `countrows_at_least_one` — `COUNTROWS(t) >= 1` is the same test as `COUNTROWS(t) > 0`
 - `single_column_iterator_bare` — A row iterator over a bare column reference is a plain aggregate
 - `negated_multiplication` — `[x] * -1` is `-[x]`, BLANK included
+- `self_call_comparison` — An `=`/`<>` binary comparing identical deterministic calls is constant

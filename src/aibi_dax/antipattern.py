@@ -2331,6 +2331,42 @@ def negated_multiplication(expr: str) -> str | None:
     return None
 
 
+_SELF_CALL_COMPARISON_MSG = (
+    "{op} comparing two copies of the same deterministic call gives a "
+    "constant."
+)
+
+_VOLATILE = {"NOW", "TODAY", "RAND", "RANDBETWEEN", "GUID", "UTCNOW"}
+
+_DETERMINISTIC = {
+    "SUM", "MAX", "MIN", "COUNT", "COUNTA", "AVERAGE", "ABS", "ROUND",
+}
+
+
+def self_call_comparison(expr: str) -> str | None:
+    """An `=`/`<>` binary comparing identical deterministic calls is constant.
+
+    AST-driven: both operands are Call nodes with the same canonical
+    signature and the function name is in the deterministic allowlist.
+    Volatile functions (NOW, RAND, ...) are never claimed constant.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for binary in _walk_binaries(tree):
+        if binary.op not in {"=", "<>"}:
+            continue
+        left, right = binary.left, binary.right
+        if not isinstance(left, Call) or not isinstance(right, Call):
+            continue
+        if left.name.upper() in _VOLATILE or right.name.upper() in _VOLATILE:
+            continue
+        if left.name.upper() in _DETERMINISTIC and _canonical(left) == _canonical(right):
+            return _SELF_CALL_COMPARISON_MSG.format(op=binary.op)
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2401,4 +2437,5 @@ ALL_RULES: list[Rule] = [
     countrows_at_least_one,
     single_column_iterator_bare,
     negated_multiplication,
+    self_call_comparison,
 ]

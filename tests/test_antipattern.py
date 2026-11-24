@@ -1324,3 +1324,19 @@ def test_negated_multiplication_leaves_other_arithmetic_alone():
     assert flag("[x] * -2") is None
     assert flag("[x] + -1") is None
     assert flag("[x] / -1") is None  # division, rule 3
+
+
+def test_self_call_comparison_flags_deterministic_calls():
+    flag = antipattern.self_call_comparison
+    assert flag("SUM([x]) = SUM([x])") is not None
+    assert flag("IF(MAX([a], [b]) <> MAX([a], [b]), 1, 0)") is not None
+    assert flag("ABS([x]) = ABS([X])") is not None
+
+
+def test_self_call_comparison_never_flags_volatile_calls():
+    flag = antipattern.self_call_comparison
+    assert flag("NOW() = NOW()") is None
+    assert flag("RAND() <> RAND()") is None
+    assert flag("TODAY() = TODAY()") is None
+    assert flag("[x] = [x]") is None  # rule 47's shape
+    assert flag("SUM([x]) = SUM([y])") is None

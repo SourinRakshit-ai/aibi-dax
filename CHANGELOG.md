@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- Rule 70: `SUM(x) = SUM(x)` (→ constant)
 - Rule 69: `x * -1` (→ `-x`)
 - Rule 68: `SUMX(t, [c])` with a bare column (→ `SUM(t[c])`)
 - Rule 67: `COUNTROWS(t) >= 1` (→ `NOT(ISEMPTY(t))`)
