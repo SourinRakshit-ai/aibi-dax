@@ -810,3 +810,23 @@ def test_lint_model_sarif_table_filter_and_rule_filter(tmp_path, capsys):
     assert main(["lint-model", str(path), "--sarif", "--table", "CALENDAR"]) == 0
     doc = json.loads(capsys.readouterr().out)
     assert doc["runs"][0]["results"] == []
+
+
+def test_exclude_rule_filters_findings(capsys):
+    expr = "[a] / [b] + [x] = BLANK()"
+    assert main(["lint", expr, "--exclude-rule", "raw_division"]) == 1
+    assert "DIVIDE" not in capsys.readouterr().out
+    # the other rule still fires
+    assert main(["lint", expr, "--exclude-rule", "blank_comparison"]) == 1
+    out = capsys.readouterr().out
+    assert "DIVIDE" in out
+    assert "ISBLANK" not in out
+    # exclusions win over --rule
+    assert main(["lint", expr, "--rule", "raw_division",
+                 "--exclude-rule", "raw_division"]) == 0
+    assert capsys.readouterr().out.strip() == "no findings"
+
+
+def test_exclude_rule_unknown_exits_two(capsys):
+    assert main(["lint", "[x]", "--exclude-rule", "no_such_rule"]) == 2
+    assert "unknown rule" in capsys.readouterr().err

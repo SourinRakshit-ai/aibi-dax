@@ -182,7 +182,10 @@ Exit code is always 0 — findings live in the document; usage errors
 stay 2. `--sarif` is mutually exclusive with `--json` and `--summary`.
 `--rule NAME` runs one rule (function name) and may be repeated to run
 several — findings are the union; exit 2 with the rule list
-on stderr if any name is unknown. Both compose: a CI allow-list can
+on stderr if any name is unknown. `--exclude-rule NAME` is the inverse
+and may be repeated; exclusions win over `--rule`, so a noisy rule can be
+turned off without enumerating the rest of the inventory. It works on
+`lint` and `lint-model`. Both compose: a CI allow-list can
 upload only the rules it enforces, and the SARIF driver's rule
 inventory narrows to the same set:
 
