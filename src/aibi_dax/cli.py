@@ -119,6 +119,8 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     p_lint.add_argument("--rule", action="append", metavar="NAME",
                         help="run only this rule (function name; repeatable)")
+    p_lint.add_argument("--exclude-rule", action="append", metavar="NAME",
+                        help="run every rule except these (repeatable; wins over --rule)")
     p_lint.add_argument("--list-rules", action="store_true", help="print the rule inventory and exit")
 
     p_lint_model = sub.add_parser("lint-model", help="anti-pattern findings across a model dump")
@@ -130,6 +132,8 @@ def _build_parser() -> argparse.ArgumentParser:
     p_lint_model.add_argument("--table", help="restrict findings to one table")
     p_lint_model.add_argument("--rule", action="append", metavar="NAME",
                               help="run only this rule (function name; repeatable)")
+    p_lint_model.add_argument("--exclude-rule", action="append", metavar="NAME",
+                              help="run every rule except these (repeatable; wins over --rule)")
     p_lint_model.add_argument(
         "--summary", action="store_true", help="hit count per rule instead of per measure"
     )
@@ -268,29 +272,33 @@ def _only_table(model: Model, name: str) -> Model:
     }
 
 
-def _rules_for(names: list[str] | None) -> tuple[list[Rule] | None, int]:
-    """Resolve repeated `--rule` names to rules.
+def _rules_for(
+    names: list[str] | None, excluded: list[str] | None = None
+) -> tuple[list[Rule] | None, int]:
+    """Resolve repeated `--rule` / `--exclude-rule` names to rules.
 
     Returns `(rules, 0)` — `rules` is `None` when no filter was asked
-    for, so "run everything" stays distinguishable from an error — or
-    `(None, 2)` after naming every unknown rule on stderr. Repeating a
-    name runs that rule once.
+    for — or `(None, 2)` after naming every unknown rule on stderr.
+    Exclusions win over selections; repeating a name runs that rule once.
     """
-    if not names:
+    if not names and not excluded:
         return None, 0
     known = {rule.__name__: rule for rule in ALL_RULES}
-    unknown = [name for name in names if name not in known]
+    unknown = [name for name in (names or []) + (excluded or []) if name not in known]
     if unknown:
         inventory = ", ".join(rule.__name__ for rule in ALL_RULES)
         print(f"dxa: unknown rule {', '.join(unknown)} — one of: {inventory}",
               file=sys.stderr)
         return None, 2
-    picked: list[Rule] = []
-    for name in names:
-        rule = known[name]
-        if rule not in picked:
-            picked.append(rule)
-    return picked, 0
+    dropped = {known[name] for name in excluded or []}
+    if names:
+        picked: list[Rule] = []
+        for name in names:
+            rule = known[name]
+            if rule not in picked and rule not in dropped:
+                picked.append(rule)
+        return picked, 0
+    return [rule for rule in ALL_RULES if rule not in dropped], 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -426,7 +434,9 @@ def main(argv: list[str] | None = None) -> int:
         expr, code = _expression(args)
         if expr is None:
             return code
-        rules, code = _rules_for(getattr(args, "rule", None))
+        rules, code = _rules_for(
+            getattr(args, "rule", None), getattr(args, "exclude_rule", None)
+        )
         if code:
             return code
         if getattr(args, "sarif", False):
@@ -447,7 +457,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "lint-model":
-        rules, code = _rules_for(getattr(args, "rule", None))
+        rules, code = _rules_for(
+            getattr(args, "rule", None), getattr(args, "exclude_rule", None)
+        )
         if code:
             return code
         model, code = _model(args.model)
