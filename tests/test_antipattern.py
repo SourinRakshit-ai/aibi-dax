@@ -1353,3 +1353,18 @@ def test_nested_isblank_leaves_single_guards_alone():
     assert flag("ISBLANK([x])") is None
     assert flag("ISBLANK(SUM([x]))") is None
     assert flag("ISBLANK(") is None
+
+
+def test_abs_zero_comparison_flags_equality():
+    flag = antipattern.abs_zero_comparison
+    assert flag("ABS([x]) = 0") is not None
+    assert flag("0 = ABS([x])") is not None
+    assert flag("IF(ABS([x]) = 0, 1, 2)") is not None
+
+
+def test_abs_zero_comparison_leaves_other_bounds_alone():
+    flag = antipattern.abs_zero_comparison
+    assert flag("ABS([x]) = 1") is None
+    assert flag("ABS([x]) < 0") is None  # rule 15's shape
+    assert flag("ABS([x]) <= 0") is None
+    assert flag("ABS([x]) <> 0") is None

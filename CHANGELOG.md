@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- Rule 72: `ABS(x) = 0` (→ `x = 0`)
 - Rule 71: `ISBLANK(ISBLANK(x))` (→ `FALSE()`)
 - Rule 70: `SUM(x) = SUM(x)` (→ constant)
 - Rule 69: `x * -1` (→ `-x`)

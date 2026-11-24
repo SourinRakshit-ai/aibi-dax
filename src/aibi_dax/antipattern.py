@@ -2392,6 +2392,36 @@ def nested_isblank(expr: str) -> str | None:
     return None
 
 
+_ABS_ZERO_MSG = (
+    "ABS(x) = 0 is x = 0 — an absolute value is zero exactly when its "
+    "argument is."
+)
+
+
+def abs_zero_comparison(expr: str) -> str | None:
+    """`ABS(x) = 0` is `[x] = 0`; BLANK compares equal to 0 in DAX.
+
+    AST-driven: an `=` binary with a one-argument ABS call on one side
+    and the numeric literal 0 on the other. Other bounds stay silent
+    (rule 15 already handles ABS against impossible negative bounds).
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for binary in _walk_binaries(tree):
+        if binary.op != "=":
+            continue
+        left, right = binary.left, binary.right
+        left_abs = isinstance(left, Call) and left.name.upper() == "ABS" and len(left.args) == 1
+        right_abs = isinstance(right, Call) and right.name.upper() == "ABS" and len(right.args) == 1
+        if left_abs and _numeric_literal(right) == 0:
+            return _ABS_ZERO_MSG
+        if right_abs and _numeric_literal(left) == 0:
+            return _ABS_ZERO_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2464,4 +2494,5 @@ ALL_RULES: list[Rule] = [
     negated_multiplication,
     self_call_comparison,
     nested_isblank,
+    abs_zero_comparison,
 ]

@@ -304,6 +304,12 @@ ISBLANK returns TRUE or FALSE, never BLANK, so wrapping it in another
 ISBLANK is always FALSE (`nested_isblank`). A single guard over a column
 or another function stays silent.
 
+### `ABS(x) = 0`
+An absolute value is zero exactly when its argument is zero, and BLANK
+compares equal to 0 in DAX, so both forms agree on blanks
+(`abs_zero_comparison`). Either operand order flags; inequality and
+other bounds stay silent.
+
 ### `SUMX(t, [col])` with a bare column
 A row iterator whose expression is a bare column reference pays for row
 context to do what a plain aggregate does (`single_column_iterator_bare`).
@@ -562,3 +568,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `negated_multiplication` — `[x] * -1` is `-[x]`, BLANK included
 - `self_call_comparison` — An `=`/`<>` binary comparing identical deterministic calls is constant
 - `nested_isblank` — A nested ISBLANK is a constant FALSE test
+- `abs_zero_comparison` — `ABS(x) = 0` is `[x] = 0`; BLANK compares equal to 0 in DAX
