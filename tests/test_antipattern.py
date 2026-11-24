@@ -1340,3 +1340,16 @@ def test_self_call_comparison_never_flags_volatile_calls():
     assert flag("TODAY() = TODAY()") is None
     assert flag("[x] = [x]") is None  # rule 47's shape
     assert flag("SUM([x]) = SUM([y])") is None
+
+
+def test_nested_isblank_flags_double_guard():
+    flag = antipattern.nested_isblank
+    assert flag("ISBLANK(ISBLANK([x]))") is not None
+    assert flag("IF(ISBLANK(isblank([x])), 1, 2)") is not None
+
+
+def test_nested_isblank_leaves_single_guards_alone():
+    flag = antipattern.nested_isblank
+    assert flag("ISBLANK([x])") is None
+    assert flag("ISBLANK(SUM([x]))") is None
+    assert flag("ISBLANK(") is None

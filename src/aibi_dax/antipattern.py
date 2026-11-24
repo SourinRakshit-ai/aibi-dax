@@ -2367,6 +2367,31 @@ def self_call_comparison(expr: str) -> str | None:
     return None
 
 
+_NESTED_ISBLANK_MSG = (
+    "ISBLANK(ISBLANK(x)) is always FALSE — ISBLANK returns TRUE/FALSE, "
+    "never BLANK."
+)
+
+
+def nested_isblank(expr: str) -> str | None:
+    """A nested ISBLANK is a constant FALSE test.
+
+    AST-driven: an ISBLANK call whose argument is another ISBLANK call.
+    ISBLANK of a column or another function stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "ISBLANK" or len(call.args) != 1:
+            continue
+        inner = call.args[0]
+        if isinstance(inner, Call) and inner.name.upper() == "ISBLANK":
+            return _NESTED_ISBLANK_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2438,4 +2463,5 @@ ALL_RULES: list[Rule] = [
     single_column_iterator_bare,
     negated_multiplication,
     self_call_comparison,
+    nested_isblank,
 ]

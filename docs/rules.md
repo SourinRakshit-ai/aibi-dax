@@ -299,6 +299,11 @@ as comparing a bare column to itself is (`self_call_comparison`). Only
 an allowlist of deterministic functions qualifies; volatile functions
 like NOW() and RAND() are never claimed constant.
 
+### `ISBLANK(ISBLANK(x))`
+ISBLANK returns TRUE or FALSE, never BLANK, so wrapping it in another
+ISBLANK is always FALSE (`nested_isblank`). A single guard over a column
+or another function stays silent.
+
 ### `SUMX(t, [col])` with a bare column
 A row iterator whose expression is a bare column reference pays for row
 context to do what a plain aggregate does (`single_column_iterator_bare`).
@@ -556,3 +561,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `single_column_iterator_bare` — A row iterator over a bare column reference is a plain aggregate
 - `negated_multiplication` — `[x] * -1` is `-[x]`, BLANK included
 - `self_call_comparison` — An `=`/`<>` binary comparing identical deterministic calls is constant
+- `nested_isblank` — A nested ISBLANK is a constant FALSE test

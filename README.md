@@ -207,6 +207,7 @@ schema of aibi-toolkit), so one file feeds both tools.
 68. `SUMX(t, [c])` with a bare column (→ `SUM(t[c])`)
 69. `x * -1` (→ `-x`)
 70. `SUM(x) = SUM(x)` (→ constant)
+71. `ISBLANK(ISBLANK(x))` (→ `FALSE()`)
 53. `IF(x=k1, a, IF(x=k2, b, c))` (→ `SWITCH(x, …)`)
 52. `SELECTEDVALUE(col, BLANK())` (→ drop the fallback)
 51. `NOT(TRUE())` / `NOT(FALSE())` / `NOT(BLANK())` (→ constant)

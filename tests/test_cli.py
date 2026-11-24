@@ -158,7 +158,7 @@ def test_lint_list_rules(capsys):
     assert main(["lint", "--list-rules"]) == 0
     out = capsys.readouterr().out
     lines = out.strip().splitlines()
-    assert len(lines) == 70
+    assert len(lines) == 71
     assert lines[0].startswith("calculate_inside_iterator")
     assert any("single_column_iterator" in l for l in lines)
     assert any("abs_negative_comparison" in l for l in lines)
@@ -216,6 +216,7 @@ def test_lint_list_rules(capsys):
     assert any("single_column_iterator_bare" in l for l in lines)
     assert any("negated_multiplication" in l for l in lines)
     assert any("self_call_comparison" in l for l in lines)
+    assert any("nested_isblank" in l for l in lines)
     # every documented rule keeps its name column aligned
     assert all(len(l.split(maxsplit=1)[0]) <= 36 for l in lines)
 
@@ -348,7 +349,7 @@ def test_expression_resolver_errors_are_identical_across_commands(tmp_path, caps
 def test_lint_list_rules_json_is_tooling_friendly(capsys):
     assert main(["lint", "--list-rules", "--json"]) == 0
     payload = json.loads(capsys.readouterr().out)
-    assert isinstance(payload, list) and len(payload) == 70
+    assert isinstance(payload, list) and len(payload) == 71
     assert payload[0]["name"] == "calculate_inside_iterator"
     assert all(set(entry) == {"name", "summary"} for entry in payload)
     assert all(entry["summary"] for entry in payload)
@@ -663,7 +664,7 @@ def test_explain_without_argument_json_matches_list_rules(capsys):
     payload = json.loads(capsys.readouterr().out)
     assert main(["lint", "--list-rules", "--json"]) == 0
     assert payload == json.loads(capsys.readouterr().out)
-    assert len(payload) == 70
+    assert len(payload) == 71
     assert all({"name", "summary"} == set(item) for item in payload)
 
 
