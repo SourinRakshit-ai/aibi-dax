@@ -145,6 +145,31 @@ $ dxa lint "IF(TRUE(), [Sales], [Cost])"
 Write the surviving branch. The remaining branches are dead weight and
 distract from the calculation the measure actually performs.
 
+## Factoring a repeated subexpression into a VAR
+
+Some cleanups are a reviewer's call rather than a lint finding. A measure
+that repeats the same subtraction in its condition and its result computes
+it twice; a VAR names the value once:
+
+```
+$ dxa lint "IF([Sales] - [Cost] > 0, [Sales] - [Cost], 0)"
+no findings
+```
+
+Both forms pass the linter — dxa does not flag repeated subexpressions.
+The rewrite still makes the intent explicit and gives the engine one
+evaluation to work with:
+
+```
+$ dxa lint "VAR Margin = [Sales] - [Cost] RETURN IF(Margin > 0, Margin, 0)"
+no findings
+```
+
+The VAR rules that do fire are the opposite case: a dead binding or a
+binding immediately returned. Read `unused_variable` and `trivial_var` in
+the rule reference for those. This recipe is about the useful middle
+ground — a binding that is actually read more than once.
+
 ## Where to go next
 
 - [Anti-pattern rules](rules.md) — every rule, why it fires, and its
