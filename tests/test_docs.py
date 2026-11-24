@@ -134,7 +134,7 @@ def test_recipe_fences_replay(capsys: pytest.CaptureFixture[str]) -> None:
     """
     text = RECIPES.read_text(encoding="utf-8")
     blocks = re.findall(r"```\n(.*?)```", text, re.DOTALL)
-    assert len(blocks) == 14, "seven recipes, before and after each"
+    assert len(blocks) == 16, "eight recipes, before and after each"
     for block in blocks:
         fence = block.strip().splitlines()
         expr = _expr_of(fence)
