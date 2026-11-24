@@ -2307,6 +2307,30 @@ def single_column_iterator_bare(expr: str) -> str | None:
     return None
 
 
+_NEGATED_MULTIPLICATION_MSG = (
+    "x * -1 is -x — multiplying by negative one is scalar negation."
+)
+
+
+def negated_multiplication(expr: str) -> str | None:
+    """`[x] * -1` is `-[x]`, BLANK included.
+
+    AST-driven: a `*` binary with a numeric literal -1 on either side.
+    BLANK propagates through multiplication, so the rewrite holds for
+    every value. Division by -1 is rule 3's shape and stays silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for binary in _walk_binaries(tree):
+        if binary.op != "*":
+            continue
+        if _numeric_literal(binary.right) == -1 or _numeric_literal(binary.left) == -1:
+            return _NEGATED_MULTIPLICATION_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2376,4 +2400,5 @@ ALL_RULES: list[Rule] = [
     duplicate_switch_case,
     countrows_at_least_one,
     single_column_iterator_bare,
+    negated_multiplication,
 ]

@@ -287,6 +287,12 @@ COUNTROWS returns a non-negative integer, so `>= 1` is exactly the
 non-empty test (`countrows_at_least_one`). `NOT(ISEMPTY(t))` says the
 same thing. Both operand orders flag; other bounds stay silent.
 
+### `x * -1`
+Multiplying by negative one is negation written the long way
+(`negated_multiplication`): BLANK propagates through multiplication, so
+`BLANK() * -1` and `-BLANK()` agree. Either operand position flags;
+other multipliers and division by -1 stay silent.
+
 ### `SUMX(t, [col])` with a bare column
 A row iterator whose expression is a bare column reference pays for row
 context to do what a plain aggregate does (`single_column_iterator_bare`).
@@ -542,3 +548,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `duplicate_switch_case` — A repeated case expression in SWITCH makes later branches dead
 - `countrows_at_least_one` — `COUNTROWS(t) >= 1` is the same test as `COUNTROWS(t) > 0`
 - `single_column_iterator_bare` — A row iterator over a bare column reference is a plain aggregate
+- `negated_multiplication` — `[x] * -1` is `-[x]`, BLANK included

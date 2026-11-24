@@ -1309,3 +1309,18 @@ def test_divide_alternate_messages_name_the_third_argument():
     assert "always returns BLANK" in antipattern.zero_divisor("DIVIDE([x], 0)")
     assert "returns x" in antipattern.divide_by_one("DIVIDE([x], 1, 0)")
     assert "alternate" in antipattern.divide_by_one("DIVIDE([x], 1, 0)")
+
+
+def test_negated_multiplication_flags_minus_one():
+    flag = antipattern.negated_multiplication
+    assert flag("[x] * -1") is not None
+    assert flag("-1 * [x]") is not None
+    assert flag("SUMX('T', [a] * -1)") is not None
+
+
+def test_negated_multiplication_leaves_other_arithmetic_alone():
+    flag = antipattern.negated_multiplication
+    assert flag("[x] * 1") is None  # rule 34's shape
+    assert flag("[x] * -2") is None
+    assert flag("[x] + -1") is None
+    assert flag("[x] / -1") is None  # division, rule 3
