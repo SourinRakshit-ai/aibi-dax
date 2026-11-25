@@ -1382,3 +1382,17 @@ def test_blank_in_minmax_leaves_other_shapes_alone():
     assert flag("MIN([x], 0)") is None
     assert flag("MAX([x])") is None
     assert flag("MAX(") is None
+
+
+def test_if_repeats_condition_flags_repeated_test():
+    flag = antipattern.if_repeats_condition
+    assert flag("IF([x] > 0, 1, [x] > 0)") is not None
+    assert flag("SUMX('T', IF([a] = 1, 2, [a] = 1))") is not None
+
+
+def test_if_repeats_condition_leaves_live_conditions_alone():
+    flag = antipattern.if_repeats_condition
+    assert flag("IF([x] > 0, 1, [x] < 0)") is None
+    assert flag("IF([x], 1, [x])") is None  # bare condition, not a comparison
+    assert flag("IF(NOW() > [x], 1, NOW() > [x])") is None
+    assert flag("IF([x] > 0, 1, 0)") is None

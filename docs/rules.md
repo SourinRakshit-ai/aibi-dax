@@ -316,6 +316,12 @@ treats BLANK as the smallest value and always returns BLANK
 (`blank_in_minmax`). Either argument position flags; other shapes stay
 silent.
 
+### `IF(c, x, c)`
+When the else-branch repeats the IF's condition, the second evaluation
+must produce the same result as the first, so the outcome does not depend
+on it (`if_repeats_condition`). Only comparisons over bare references
+are considered; volatile calls are left alone.
+
 ### `SUMX(t, [col])` with a bare column
 A row iterator whose expression is a bare column reference pays for row
 context to do what a plain aggregate does (`single_column_iterator_bare`).
@@ -576,3 +582,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `nested_isblank` — A nested ISBLANK is a constant FALSE test
 - `abs_zero_comparison` — `ABS(x) = 0` is `[x] = 0`; BLANK compares equal to 0 in DAX
 - `blank_in_minmax` — MAX(x, BLANK()) is x; MIN(x, BLANK()) is BLANK()
+- `if_repeats_condition` — An IF whose else-branch repeats its condition has a constant result

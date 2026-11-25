@@ -2448,6 +2448,37 @@ def blank_in_minmax(expr: str) -> str | None:
     return None
 
 
+_IF_REPEATS_CONDITION_MSG = (
+    "IF(c, x, c) repeats the condition in the else branch — the test "
+    "cannot change between the branches; write x."
+)
+
+
+def if_repeats_condition(expr: str) -> str | None:
+    """An IF whose else-branch repeats its condition has a constant result.
+
+    AST-driven: a three-argument IF whose condition and else-branch
+    share a canonical subtree signature. Limited to comparisons over
+    bare identifiers/columns so volatile calls are never claimed constant.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    bare = (ColumnRef, Ident, QualifiedColumn)
+    for call in _walk_calls(tree):
+        if call.name.upper() != "IF" or len(call.args) != 3:
+            continue
+        cond, _, no = call.args
+        if not isinstance(cond, Binary) or cond.op not in {"=", "<>", "<", ">", "<=", ">="}:
+            continue
+        if not isinstance(cond.left, bare) or not isinstance(cond.right, (Literal, *bare)):
+            continue
+        if _canonical(cond) == _canonical(no):
+            return _IF_REPEATS_CONDITION_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2522,4 +2553,5 @@ ALL_RULES: list[Rule] = [
     nested_isblank,
     abs_zero_comparison,
     blank_in_minmax,
+    if_repeats_condition,
 ]
