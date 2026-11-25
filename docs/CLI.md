@@ -123,7 +123,8 @@ Anti-pattern findings for one expression. Exit code 0 when clean, 1 with
 when clean). `--rule NAME` runs one rule (function name) and may be
 repeated to run several — findings are the union; exit 2 with
 the rule list on stderr if any name is unknown. `--list-rules` prints the rule
-inventory with each rule's summary and exits 0. `--list-rules --json`
+inventory with each rule's summary and exits 0; `--rule NAME` (repeatable)
+narrows that inventory to the selected rules, with the same unknown-name exit 2. `--list-rules --json`
 prints that inventory as `[{"name": …, "summary": …}]` for editor
 plugins and CI allow-lists. `--file PATH` reads the
 expression from a file instead, so a measure copied from a model keeps

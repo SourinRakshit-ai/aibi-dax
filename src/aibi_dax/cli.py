@@ -421,13 +421,17 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "lint":
         if getattr(args, "list_rules", False):
+            inventory, code = _rules_for(getattr(args, "rule", None))
+            if code:
+                return code
+            shown = inventory if inventory is not None else ALL_RULES
             if getattr(args, "json", False):
                 print(json.dumps(
                     [{"name": rule.__name__, "summary": rule_summary(rule)}
-                     for rule in ALL_RULES]
+                     for rule in shown]
                 ))
                 return 0
-            for rule in ALL_RULES:
+            for rule in shown:
                 summary = rule_summary(rule)
                 print(f"{rule.__name__:36}{summary}")
             return 0
