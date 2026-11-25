@@ -7,7 +7,7 @@ the numbers are produced.
 
 ## Corpus
 
-`examples/bench_rules.py` defines a 22-expression corpus covering every
+`examples/bench_rules.py` defines a 56-expression corpus covering every
 rule's positive and negative form — plain aggregates, division shapes,
 BLANK comparisons, IF/SWITCH stairs, iterators (nested and single-column),
 VAR blocks, ALL filters, IFERROR, EARLIER, and lowercase calls. The model
