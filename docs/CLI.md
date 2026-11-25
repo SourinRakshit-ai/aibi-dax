@@ -217,7 +217,8 @@ $ dxa lint-model model.json --summary
 Reduces the expression to an AST (recursive descent; exit 2 on a
 genuinely unparseable sequence). `--json` prints the tree as JSON;
 `--file PATH` reads the expression from a file instead of the command
-line (`-` for stdin), so multiline measures keep their shape. `--tree` prints it one
+line (`-` for stdin), so multiline measures keep their shape.
+`--json` and `--tree` are mutually exclusive (exit 2). `--tree` prints it one
 node per line, children indented, with `field:`
 labels where position alone would not say what the child is:
 

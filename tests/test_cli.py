@@ -834,3 +834,10 @@ def test_exclude_rule_filters_findings(capsys):
 def test_exclude_rule_unknown_exits_two(capsys):
     assert main(["lint", "[x]", "--exclude-rule", "no_such_rule"]) == 2
     assert "unknown rule" in capsys.readouterr().err
+
+
+def test_parse_json_and_tree_conflict(capsys):
+    assert main(["parse", "[x] + 1", "--json", "--tree"]) == 2
+    assert "mutually exclusive" in capsys.readouterr().err
+    assert main(["parse", "[x] + 1", "--json"]) == 0
+    assert main(["parse", "[x] + 1", "--tree"]) == 0
