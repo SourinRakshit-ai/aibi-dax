@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- CLI: `dxa parse --json --tree` now exits 2 instead of silently ignoring `--tree`.
 - Rule 76: `SUMX(t, x + 0)` (→ `SUM(t[x])`)
 - Rule 75: `IF(ISBLANK(x), x, BLANK())` (→ `BLANK()`)
 - Rule 74: `IF(c, x, c)` (→ `x`)

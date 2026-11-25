@@ -504,6 +504,10 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     if args.command == "parse":
+        if getattr(args, "json", False) and getattr(args, "tree", False):
+            print("dxa: --json and --tree are mutually exclusive — pick one format",
+                  file=sys.stderr)
+            return 2
         expr, code = _expression(args)
         if expr is None:
             return code
