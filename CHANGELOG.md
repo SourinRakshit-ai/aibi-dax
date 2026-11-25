@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- CLI: `--list-rules --rule NAME` narrows the printed inventory to selected rules.
 - CLI: `dxa parse --json --tree` now exits 2 instead of silently ignoring `--tree`.
 - Rule 76: `SUMX(t, x + 0)` (→ `SUM(t[x])`)
 - Rule 75: `IF(ISBLANK(x), x, BLANK())` (→ `BLANK()`)

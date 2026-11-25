@@ -841,3 +841,19 @@ def test_parse_json_and_tree_conflict(capsys):
     assert "mutually exclusive" in capsys.readouterr().err
     assert main(["parse", "[x] + 1", "--json"]) == 0
     assert main(["parse", "[x] + 1", "--tree"]) == 0
+
+
+def test_list_rules_with_rule_filter(capsys):
+    assert main(["lint", "--list-rules", "--rule", "raw_division"]) == 0
+    out = capsys.readouterr().out.strip().splitlines()
+    assert len(out) == 1 and out[0].startswith("raw_division")
+
+    assert main(["lint", "--list-rules", "--rule", "raw_division", "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert len(payload) == 1 and payload[0]["name"] == "raw_division"
+
+    assert main(["lint", "--list-rules"]) == 0
+    assert len(capsys.readouterr().out.strip().splitlines()) == len(ALL_RULES)
+
+    assert main(["lint", "--list-rules", "--rule", "nope"]) == 2
+    assert "unknown rule" in capsys.readouterr().err
