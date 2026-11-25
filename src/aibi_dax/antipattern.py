@@ -2479,6 +2479,45 @@ def if_repeats_condition(expr: str) -> str | None:
     return None
 
 
+_IF_ALWAYS_BLANK_MSG = (
+    "IF(ISBLANK(x), x, BLANK()) returns BLANK either way — drop the IF."
+)
+
+
+def if_always_blank(expr: str) -> str | None:
+    """`IF(ISBLANK(x), x, BLANK())` and its NOT-mirror are always BLANK.
+
+    AST-driven: a three-argument IF where one branch is the tested
+    expression and the other is a zero-argument BLANK() call, with
+    ISBLANK or NOT(ISBLANK) as the condition. The tested expression must
+    be a bare column/identifier for the first cut.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    bare = (ColumnRef, Ident, QualifiedColumn)
+    for call in _walk_calls(tree):
+        if call.name.upper() != "IF" or len(call.args) != 3:
+            continue
+        cond, yes, no = call.args
+        tested: Node | None = None
+        if isinstance(cond, Call) and cond.name.upper() == "ISBLANK" and len(cond.args) == 1:
+            tested = cond.args[0]  # ISBLANK(x): x then BLANK()
+            if not (isinstance(yes, type(tested)) and _canonical(yes) == _canonical(tested)
+                    and _zero_arg_call(no, "BLANK")):
+                tested = None
+        if isinstance(cond, Unary) and cond.op.upper() == "NOT" \
+                and isinstance(cond.operand, Call) and cond.operand.name.upper() == "ISBLANK" \
+                and len(cond.operand.args) == 1:
+            tested = cond.operand.args[0]  # NOT(ISBLANK(x)): BLANK() then x
+            if not (_zero_arg_call(yes, "BLANK") and _canonical(no) == _canonical(tested)):
+                tested = None
+        if tested is not None and isinstance(tested, bare):
+            return _IF_ALWAYS_BLANK_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2554,4 +2593,5 @@ ALL_RULES: list[Rule] = [
     abs_zero_comparison,
     blank_in_minmax,
     if_repeats_condition,
+    if_always_blank,
 ]

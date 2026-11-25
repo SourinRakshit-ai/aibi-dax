@@ -1396,3 +1396,17 @@ def test_if_repeats_condition_leaves_live_conditions_alone():
     assert flag("IF([x], 1, [x])") is None  # bare condition, not a comparison
     assert flag("IF(NOW() > [x], 1, NOW() > [x])") is None
     assert flag("IF([x] > 0, 1, 0)") is None
+
+
+def test_if_always_blank_flags_both_arrangements():
+    flag = antipattern.if_always_blank
+    assert flag("IF(ISBLANK([x]), [x], BLANK())") is not None
+    assert flag("IF(NOT(ISBLANK([x])), BLANK(), [x])") is not None
+
+
+def test_if_always_blank_leaves_real_conditionals_alone():
+    flag = antipattern.if_always_blank
+    assert flag("IF(ISBLANK([x]), 0, [x])") is None  # rule 20's shape
+    assert flag("IF([x], BLANK(), [y])") is None
+    assert flag("IF(ISBLANK([x]), [y], BLANK())") is None
+    assert flag("IF(") is None

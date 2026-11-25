@@ -322,6 +322,12 @@ must produce the same result as the first, so the outcome does not depend
 on it (`if_repeats_condition`). Only comparisons over bare references
 are considered; volatile calls are left alone.
 
+### `IF(ISBLANK(x), x, BLANK())`
+Both branches of this IF are BLANK: when x is blank the first branch
+returns the blank value, and otherwise the second branch is BLANK
+(`if_always_blank`). The NOT(ISBLANK(x)) mirror behaves the same. Only
+bare tested expressions are considered.
+
 ### `SUMX(t, [col])` with a bare column
 A row iterator whose expression is a bare column reference pays for row
 context to do what a plain aggregate does (`single_column_iterator_bare`).
@@ -583,3 +589,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `abs_zero_comparison` — `ABS(x) = 0` is `[x] = 0`; BLANK compares equal to 0 in DAX
 - `blank_in_minmax` — MAX(x, BLANK()) is x; MIN(x, BLANK()) is BLANK()
 - `if_repeats_condition` — An IF whose else-branch repeats its condition has a constant result
+- `if_always_blank` — `IF(ISBLANK(x), x, BLANK())` and its NOT-mirror are always BLANK
