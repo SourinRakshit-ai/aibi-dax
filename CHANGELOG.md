@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- Rule 73: `MAX(x, BLANK())` (→ `x`), `MIN(x, BLANK())` (→ `BLANK()`)
 - CLI: repeatable `--exclude-rule NAME` on `lint` and `lint-model`; exclusions win over `--rule`.
 - Rule 72: `ABS(x) = 0` (→ `x = 0`)
 - Rule 71: `ISBLANK(ISBLANK(x))` (→ `FALSE()`)

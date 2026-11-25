@@ -310,6 +310,12 @@ compares equal to 0 in DAX, so both forms agree on blanks
 (`abs_zero_comparison`). Either operand order flags; inequality and
 other bounds stay silent.
 
+### `MAX(x, BLANK())` / `MIN(x, BLANK())`
+MAX ignores a BLANK argument and returns the non-blank value, while MIN
+treats BLANK as the smallest value and always returns BLANK
+(`blank_in_minmax`). Either argument position flags; other shapes stay
+silent.
+
 ### `SUMX(t, [col])` with a bare column
 A row iterator whose expression is a bare column reference pays for row
 context to do what a plain aggregate does (`single_column_iterator_bare`).
@@ -569,3 +575,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `self_call_comparison` — An `=`/`<>` binary comparing identical deterministic calls is constant
 - `nested_isblank` — A nested ISBLANK is a constant FALSE test
 - `abs_zero_comparison` — `ABS(x) = 0` is `[x] = 0`; BLANK compares equal to 0 in DAX
+- `blank_in_minmax` — MAX(x, BLANK()) is x; MIN(x, BLANK()) is BLANK()

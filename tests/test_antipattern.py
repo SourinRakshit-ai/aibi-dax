@@ -1368,3 +1368,17 @@ def test_abs_zero_comparison_leaves_other_bounds_alone():
     assert flag("ABS([x]) < 0") is None  # rule 15's shape
     assert flag("ABS([x]) <= 0") is None
     assert flag("ABS([x]) <> 0") is None
+
+
+def test_blank_in_minmax_flags_both_functions():
+    flag = antipattern.blank_in_minmax
+    assert flag("MAX([x], BLANK())") is not None
+    assert flag("MIN(BLANK(), [x])") is not None
+
+
+def test_blank_in_minmax_leaves_other_shapes_alone():
+    flag = antipattern.blank_in_minmax
+    assert flag("MAX([x], [y])") is None
+    assert flag("MIN([x], 0)") is None
+    assert flag("MAX([x])") is None
+    assert flag("MAX(") is None

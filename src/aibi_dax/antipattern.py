@@ -2422,6 +2422,32 @@ def abs_zero_comparison(expr: str) -> str | None:
     return None
 
 
+_BLANK_IN_MINMAX_MSG = (
+    "{fn}(x, BLANK()) is {result} — BLANK is ignored by MAX but is the "
+    "smallest value for MIN."
+)
+
+
+def blank_in_minmax(expr: str) -> str | None:
+    """MAX(x, BLANK()) is x; MIN(x, BLANK()) is BLANK().
+
+    AST-driven: a two-argument MIN or MAX call with a zero-argument
+    BLANK() call on either side. Other argument shapes stay silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        name = call.name.upper()
+        if name not in {"MIN", "MAX"} or len(call.args) != 2:
+            continue
+        if _zero_arg_call(call.args[0], "BLANK") or _zero_arg_call(call.args[1], "BLANK"):
+            result = "[x]" if name == "MAX" else "BLANK()"
+            return _BLANK_IN_MINMAX_MSG.format(fn=name, result=result)
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2495,4 +2521,5 @@ ALL_RULES: list[Rule] = [
     self_call_comparison,
     nested_isblank,
     abs_zero_comparison,
+    blank_in_minmax,
 ]
