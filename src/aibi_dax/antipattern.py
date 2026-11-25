@@ -2518,6 +2518,34 @@ def if_always_blank(expr: str) -> str | None:
     return None
 
 
+_SUMX_ADD_ZERO_MSG = (
+    "SUMX(t, x + 0) is SUM(t[x]) — adding zero per row is the row loop "
+    "form of a plain aggregate."
+)
+
+
+def sumx_add_zero(expr: str) -> str | None:
+    """SUMX over `x + 0` is the same aggregate written as a row loop.
+
+    AST-driven: a SUMX call whose second argument is a `+` binary with a
+    numeric literal 0 on one side. Other iterators and expressions stay
+    silent.
+    """
+    try:
+        tree = parse(expr)
+    except ParseError:
+        return None
+    for call in _walk_calls(tree):
+        if call.name.upper() != "SUMX" or len(call.args) != 2:
+            continue
+        inner = call.args[1]
+        if not isinstance(inner, Binary) or inner.op != "+":
+            continue
+        if _numeric_literal(inner.left) == 0 or _numeric_literal(inner.right) == 0:
+            return _SUMX_ADD_ZERO_MSG
+    return None
+
+
 ALL_RULES: list[Rule] = [
     calculate_inside_iterator,
     too_many_ifs,
@@ -2594,4 +2622,5 @@ ALL_RULES: list[Rule] = [
     blank_in_minmax,
     if_repeats_condition,
     if_always_blank,
+    sumx_add_zero,
 ]

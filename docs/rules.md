@@ -328,6 +328,12 @@ returns the blank value, and otherwise the second branch is BLANK
 (`if_always_blank`). The NOT(ISBLANK(x)) mirror behaves the same. Only
 bare tested expressions are considered.
 
+### `SUMX(t, x + 0)`
+Adding zero to each row changes BLANK to 0 in DAX, so the row loop is
+the same value as `SUM(t[x])` over the column (`sumx_add_zero`). The
+either-side literal form flags; other iterators and arithmetic operators
+stay silent.
+
 ### `SUMX(t, [col])` with a bare column
 A row iterator whose expression is a bare column reference pays for row
 context to do what a plain aggregate does (`single_column_iterator_bare`).
@@ -590,3 +596,4 @@ Machine-checked by the test suite: every rule in the linter appears here.
 - `blank_in_minmax` — MAX(x, BLANK()) is x; MIN(x, BLANK()) is BLANK()
 - `if_repeats_condition` — An IF whose else-branch repeats its condition has a constant result
 - `if_always_blank` — `IF(ISBLANK(x), x, BLANK())` and its NOT-mirror are always BLANK
+- `sumx_add_zero` — SUMX over `x + 0` is the same aggregate written as a row loop

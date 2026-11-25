@@ -212,6 +212,7 @@ schema of aibi-toolkit), so one file feeds both tools.
 73. `MAX(x, BLANK())` (→ `x`), `MIN(x, BLANK())` (→ `BLANK()`)
 74. `IF(c, x, c)` (→ `x`)
 75. `IF(ISBLANK(x), x, BLANK())` (→ `BLANK()`)
+76. `SUMX(t, x + 0)` (→ `SUM(t[x])`)
 53. `IF(x=k1, a, IF(x=k2, b, c))` (→ `SWITCH(x, …)`)
 52. `SELECTEDVALUE(col, BLANK())` (→ drop the fallback)
 51. `NOT(TRUE())` / `NOT(FALSE())` / `NOT(BLANK())` (→ constant)

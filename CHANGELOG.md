@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- Rule 76: `SUMX(t, x + 0)` (→ `SUM(t[x])`)
 - Rule 75: `IF(ISBLANK(x), x, BLANK())` (→ `BLANK()`)
 - Rule 74: `IF(c, x, c)` (→ `x`)
 - Rule 73: `MAX(x, BLANK())` (→ `x`), `MIN(x, BLANK())` (→ `BLANK()`)

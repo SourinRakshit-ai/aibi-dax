@@ -1410,3 +1410,18 @@ def test_if_always_blank_leaves_real_conditionals_alone():
     assert flag("IF([x], BLANK(), [y])") is None
     assert flag("IF(ISBLANK([x]), [y], BLANK())") is None
     assert flag("IF(") is None
+
+
+def test_sumx_add_zero_flags_identity_add():
+    flag = antipattern.sumx_add_zero
+    assert flag("SUMX('T', [a] + 0)") is not None
+    assert flag("SUMX('T', 0 + [a])") is not None
+    assert flag("CALCULATE(SUMX('T', [a] + 0))") is not None
+
+
+def test_sumx_add_zero_leaves_other_shapes_alone():
+    flag = antipattern.sumx_add_zero
+    assert flag("SUMX('T', [a] + 1)") is None
+    assert flag("SUMX('T', [a] * 1)") is None
+    assert flag("SUMX('T', [a] - 0)") is None
+    assert flag("SUM('T'[a])") is None
