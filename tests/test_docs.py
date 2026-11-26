@@ -242,6 +242,6 @@ def test_public_rule_counts_match_the_catalog() -> None:
     readme = Path("README.md").read_text(encoding="utf-8")
     index = Path("docs/index.md").read_text(encoding="utf-8")
     section = readme.split("<summary>", 1)[1].split("</details>", 1)[0]
-    numerals = [int(m.group(1)) for m in re.finditer(r"^(\d+)\. ", section, re.M)]
+    numerals = [int(m.group(1)) for m in re.finditer(r"^(\d+)\. ", section, re.MULTILINE)]
     assert numerals == list(range(1, len(ALL_RULES) + 1)), numerals[-5:]
     assert "seventy-six anti-pattern rules" in index

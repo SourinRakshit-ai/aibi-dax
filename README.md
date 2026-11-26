@@ -190,6 +190,14 @@ schema of aibi-toolkit), so one file feeds both tools.
 43. `c && c`, `c || c`, `AND(c, c)`, `OR(c, c)` (→ keep one)
 44. `SUMX(t, IF(c, 1, 0))` (→ `COUNTROWS(FILTER(t, c))`)
 45. `x || NOT(x)` / `x && NOT(x)` (→ `TRUE()` / `FALSE()`)
+46. `DIVIDE(x, 0)` (→ BLANK, or the alternate directly)
+47. `[x] = [x]` / `[x] <> [x]` (→ `TRUE()` / `FALSE()`)
+48. `[x] - [x]` (→ `0`)
+49. `VAR a = e RETURN a` (→ `e`)
+50. `MIN(x, x)` / `MAX(x, x)` (→ `x`)
+51. `NOT(TRUE())` / `NOT(FALSE())` / `NOT(BLANK())` (→ constant)
+52. `SELECTEDVALUE(col, BLANK())` (→ drop the fallback)
+53. `IF(x=k1, a, IF(x=k2, b, c))` (→ `SWITCH(x, …)`)
 54. `COUNTROWS(FILTER(t, FALSE()))` (→ `0`)
 55. `IF(c, IF(NOT(c), a, b), d)` (→ `IF(c, b, d)`)
 56. `DIVIDE(x, 1)` (→ `x`)
@@ -213,15 +221,6 @@ schema of aibi-toolkit), so one file feeds both tools.
 74. `IF(c, x, c)` (→ `x`)
 75. `IF(ISBLANK(x), x, BLANK())` (→ `BLANK()`)
 76. `SUMX(t, x + 0)` (→ `SUM(t[x])`)
-53. `IF(x=k1, a, IF(x=k2, b, c))` (→ `SWITCH(x, …)`)
-52. `SELECTEDVALUE(col, BLANK())` (→ drop the fallback)
-51. `NOT(TRUE())` / `NOT(FALSE())` / `NOT(BLANK())` (→ constant)
-50. `MIN(x, x)` / `MAX(x, x)` (→ `x`)
-49. `VAR a = e RETURN a` (→ `e`)
-48. `[x] - [x]` (→ `0`)
-47. `[x] = [x]` / `[x] <> [x]` (→ `TRUE()` / `FALSE()`)
-46. `DIVIDE(x, 0)` (→ BLANK, or the alternate directly)
-
 </details>
 
 ## What the weight measures
