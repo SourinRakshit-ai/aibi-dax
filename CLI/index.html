@@ -1,0 +1,922 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="DAX expression analysis — complexity metrics, anti-pattern detection, per-model ranking">
+      
+      
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../recipes/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
+    
+    
+      
+        <title>CLI reference - aibi-dax</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#cli-reference-dxa" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="aibi-dax" class="md-header__button md-logo" aria-label="aibi-dax" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            aibi-dax
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              CLI reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/SourinRakshit-ai/aibi-dax" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    SourinRakshit-ai/aibi-dax
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="aibi-dax" class="md-nav__button md-logo" aria-label="aibi-dax" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    aibi-dax
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/SourinRakshit-ai/aibi-dax" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    SourinRakshit-ai/aibi-dax
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI reference
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#global" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dxa-completions-bashzshfish" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dxa --completions bash|zsh|fish
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dxa-metrics-expr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dxa metrics "EXPR"
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dxa-rank-modeljson-top-n-min-weight-w" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dxa rank model.json [--top N] [--min-weight W]
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dxa-lint-expr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dxa lint "EXPR"
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dxa-explain-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dxa explain [RULE]
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dxa-lint-model-modeljson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dxa lint-model model.json
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cookbook
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Anti-pattern rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI integration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#global" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dxa-completions-bashzshfish" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dxa --completions bash|zsh|fish
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dxa-metrics-expr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dxa metrics "EXPR"
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dxa-rank-modeljson-top-n-min-weight-w" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dxa rank model.json [--top N] [--min-weight W]
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dxa-lint-expr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dxa lint "EXPR"
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dxa-explain-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dxa explain [RULE]
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dxa-lint-model-modeljson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dxa lint-model model.json
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="cli-reference-dxa">CLI reference — <code>dxa</code></h1>
+<h2 id="global">Global</h2>
+<pre><code>dxa --version        # dxa 0.2.2
+dxa --help
+</code></pre>
+<h2 id="dxa-completions-bashzshfish"><code>dxa --completions bash|zsh|fish</code></h2>
+<p>Prints a completion script on stdout and exits 0 — subcommands, every
+flag, and rule names after <code>--rule</code> / for <code>explain</code>. The scripts are
+generated from the parser itself, so they cannot drift from the real
+CLI. An unknown shell (or none) exits 2 with usage and the three names:</p>
+<pre><code>$ dxa --completions tcsh
+usage: dxa [-h] [--version] [--completions [SHELL]]
+           {metrics,rank,explain,lint,lint-model,parse} ...
+dxa: error: unsupported shell 'tcsh' — one of: bash, zsh, fish
+</code></pre>
+<p>Install by writing the script where the shell looks for it:</p>
+<ul>
+<li><strong>bash</strong> — <code>dxa --completions bash &gt; ~/.local/share/bash-completion/completions/dxa</code>
+  (needs <code>bash-completion</code> loaded)</li>
+<li><strong>zsh</strong> — <code>dxa --completions zsh &gt; ~/.zfunc/_dxa</code>, with <code>fpath=(~/.zfunc $fpath)</code>
+  before <code>compinit</code>; or straight into the current shell with
+  <code>source &lt;(dxa --completions zsh)</code></li>
+<li><strong>fish</strong> — <code>dxa --completions fish &gt; ~/.config/fish/completions/dxa.fish</code></li>
+</ul>
+<h2 id="dxa-metrics-expr"><code>dxa metrics "EXPR"</code></h2>
+<p>Prints six aligned metrics plus the composite weight:</p>
+<pre><code>$ dxa metrics &quot;SUMX('Sales', CALCULATE([Amount]))&quot;
+tokens      9
+lines       1
+chars       34
+functions   2
+depth       2
+iterators   1
+weight      45
+</code></pre>
+<p><code>--json</code> wraps the same payload: <code>{"metrics": {...}, "weight": 45}</code>.
+<code>--file PATH</code> reads the expression from a file (<code>-</code> for stdin), matching
+<code>dxa lint</code>.</p>
+<p>Several expressions may be given at once — one block each, in argument
+order, every one validated before anything is printed:</p>
+<pre><code>$ dxa metrics &quot;SUM('Sales'[Amount])&quot; &quot;SUMX('Sales', CALCULATE([Amount]))&quot;
+expr: SUM('Sales'[Amount])
+tokens      5
+lines       1
+chars       20
+functions   1
+depth       1
+iterators   0
+weight      13
+
+expr: SUMX('Sales', CALCULATE([Amount]))
+tokens      9
+lines       1
+chars       34
+functions   2
+depth       2
+iterators   1
+weight      45
+</code></pre>
+<p>With <code>--json</code> a multi-expression run emits <code>{"results": [{"expr",
+"metrics", "weight"}, ...]}</code> in argument order; a single expression
+keeps the one-object payload shown above. <code>--file</code> always supplies
+exactly one expression, and mixing it with positionals exits 2.</p>
+<p><code>--top N</code> keeps only the N heaviest expressions by weight and reports
+them heaviest-first (ties keep argument order), mirroring <code>dxa rank
+--top</code> — the "which of these costs the most" question:</p>
+<pre><code>$ dxa metrics &quot;SUM([x])&quot; &quot;IF(1, 2, 3)&quot; --top 1
+expr: IF(1, 2, 3)
+tokens      8
+lines       1
+chars       11
+functions   1
+depth       1
+iterators   0
+weight      16
+</code></pre>
+<p>A multi-expression run stays a multi-expression run in <code>--json</code>
+(<code>{"results": [...]}</code> even when one survives); a single expression's
+payload is unchanged. <code>N</code> below 1 exits 2 (<code>dxa: --top must be at
+least 1</code>); <code>N</code> larger than the count keeps everything.</p>
+<h2 id="dxa-rank-modeljson-top-n-min-weight-w"><code>dxa rank model.json [--top N] [--min-weight W]</code></h2>
+<p>Weighs every measure in a shared-schema model dump:</p>
+<pre><code>$ dxa rank model.json --top 3
+    57  Sales.Iterator Calc
+    34  Sales.If Stair
+    12  Sales.Clean Total
+</code></pre>
+<p><code>--min-weight 40</code> keeps only measures at or above that weight, which is
+the review question "what crosses the line"; <code>--top N</code> then applies to
+the filtered set. It composes with <code>--table</code> — which matches table
+names case-insensitively — and <code>--json</code>. The model
+path may be <code>-</code> to read the dump from stdin.</p>
+<h2 id="dxa-lint-expr"><code>dxa lint "EXPR"</code></h2>
+<p>Anti-pattern findings for one expression. Exit code 0 when clean, 1 with
+<code>-</code> lines per finding. <code>--json</code> prints the findings as a JSON list (<code>[]</code>
+when clean). <code>--rule NAME</code> runs one rule (function name) and may be
+repeated to run several — findings are the union; exit 2 with
+the rule list on stderr if any name is unknown. <code>--list-rules</code> prints the rule
+inventory with each rule's summary and exits 0; <code>--rule NAME</code> (repeatable)
+narrows that inventory to the selected rules, with the same unknown-name exit 2. <code>--list-rules --json</code>
+prints that inventory as <code>[{"name": …, "summary": …}]</code> for editor
+plugins and CI allow-lists. <code>--file PATH</code> reads the
+expression from a file instead, so a measure copied from a model keeps
+its newlines and quotes; <code>--file -</code> reads stdin, so
+<code>cat measure.dax | dxa lint --file -</code> works in a pipeline. Pass one
+source or the other, never both. <code>--sarif</code> prints a SARIF 2.1.0
+document for CI code scanning (GitHub's <code>upload-sarif</code> action, say):
+one <code>runs[]</code> entry whose <code>tool.driver</code> names <code>aibi-dax</code> and the
+current version, <code>driver.rules[]</code> mirroring the <code>--list-rules</code>
+summaries, and <code>results[]</code> carrying <code>ruleId</code>, <code>level: "warning"</code> and
+<code>message.text</code>. With <code>--sarif</code> the exit code is always 0 — findings
+travel inside the document, not the exit status; usage errors remain
+exit 2. <code>--json</code> and <code>--sarif</code> are mutually exclusive.
+<code>lint-model --sarif</code> is the whole-model equivalent, with one
+<code>locations[]</code> entry per finding; see below. See the
+<a href="../ci/">CI integration page</a> for the GitHub Actions recipe. A blank expression — nothing, or only
+whitespace, from any source — exits 2 with <code>got an empty expression
+from …</code> rather than passing silently:</p>
+<pre><code>$ dxa lint &quot;IF(a, 1, IF(b, 2, IF(c, 3, [D]/[E])))&quot;
+- 3 nested IF calls — SWITCH(TRUE(), ...) reads better and evaluates faster.
+- Raw '/' division — use DIVIDE(num, den) to absorb zero-denominator errors.
+(exit 1)
+</code></pre>
+<h2 id="dxa-explain-rule"><code>dxa explain [RULE]</code></h2>
+<p>Full documentation for one rule — its docstring, underlined. With no
+argument, prints the rule inventory (the same name + summary lines as
+<code>dxa lint --list-rules</code>) followed by a hint, and exits 0 — <code>--json</code>
+then emits the same JSON array <code>--list-rules --json</code> does. Exit 2 with
+the complete rule list on stderr if the name is unknown. Names match
+case-insensitively and ignore surrounding whitespace; the heading always
+prints the canonical lower-case name. <code>--json</code> emits
+<code>{"name", "summary", "doc"}</code> — the same summary as <code>--list-rules --json</code>
+and the docstring without the heading, for editor hovers:</p>
+<pre><code>$ dxa explain earlier_var
+earlier_var
+-----------
+EARLIER is superseded by VAR capture — flat and type-checkable.
+</code></pre>
+<h2 id="dxa-lint-model-modeljson"><code>dxa lint-model model.json</code></h2>
+<p>Groups findings by <code>table.measure</code>; <code>--table T</code> restricts to one table,
+matched case-insensitively. <code>--sarif</code> prints a SARIF 2.1.0 document
+with one result per finding, each carrying a <code>locations[]</code> entry:
+<code>physicalLocation.artifactLocation.uri</code> is the model path as passed
+to <code>--model</code> (<code>-</code> for stdin), followed by a JSON Pointer fragment
+into the measure — <code>model.json#/tables/Sales/measures/Iterator Calc</code>,
+with names escaped as RFC 6901 requires (<code>~</code> → <code>~0</code>, <code>/</code> → <code>~1</code>).
+Exit code is always 0 — findings live in the document; usage errors
+stay 2. <code>--sarif</code> is mutually exclusive with <code>--json</code> and <code>--summary</code>.
+<code>--rule NAME</code> runs one rule (function name) and may be repeated to run
+several — findings are the union; exit 2 with the rule list
+on stderr if any name is unknown. <code>--exclude-rule NAME</code> is the inverse
+and may be repeated; exclusions win over <code>--rule</code>, so a noisy rule can be
+turned off without enumerating the rest of the inventory. It works on
+<code>lint</code> and <code>lint-model</code>. Both compose: a CI allow-list can
+upload only the rules it enforces, and the SARIF driver's rule
+inventory narrows to the same set:</p>
+<pre><code>$ dxa lint-model model.json --rule raw_division --sarif
+{&quot;$schema&quot;: ..., &quot;runs&quot;: [{&quot;tool&quot;: {&quot;driver&quot;: {&quot;rules&quot;: [{&quot;id&quot;: &quot;raw_division&quot;, ...}]}}, &quot;results&quot;: [...]}]}
+``` Prints nothing and exits 0 for a clean model.
+Findings exit 1 with `- ` lines per finding; `--json` prints the findings
+map. Both model commands (`lint-model` and `rank`) share one loader, so
+a missing file, broken JSON or a non-object payload exits 2 with a
+single-line reason — `cannot read …`, `is not valid JSON: …`,
+`is not a model dump: …` — never a traceback. Passing `-` as the path
+reads the model JSON from stdin instead (`tmdlexport | dxa lint-model -`),
+and the same errors then name `stdin` rather than a path.
+
+`--summary` swaps the per-measure listing for a model-wide rule
+histogram — the count of measures each rule fires on, heaviest first.
+It respects `--table` and `--rule`, and `--json` emits the counts as an
+object. Exit 1 when anything fires, 0 with `model is clean` otherwise:
+
+</code></pre>
+<p>$ dxa lint-model model.json --summary
+    2  calculate_inside_iterator
+    1  raw_division</p>
+<pre><code>
+## `dxa parse &quot;EXPR&quot;`
+
+Reduces the expression to an AST (recursive descent; exit 2 on a
+genuinely unparseable sequence). `--json` prints the tree as JSON;
+`--file PATH` reads the expression from a file instead of the command
+line (`-` for stdin), so multiline measures keep their shape.
+`--json` and `--tree` are mutually exclusive (exit 2). `--tree` prints it one
+node per line, children indented, with `field:`
+labels where position alone would not say what the child is:
+
+</code></pre>
+<p>$ dxa parse "1 + [A]" --tree
+Binary op='+'
+  left:
+    Literal text='1'
+  right:
+    ColumnRef name='A'</p>
+<pre><code>
+</code></pre>
+<p>$ dxa parse "1 + [A]" --json
+{
+  "op": "+",
+  "left": {
+    "text": "1"
+  },
+  "right": {
+    "name": "A"
+  }
+}</p>
+<pre><code>
+Unparseable sequences exit 2 with a `parse error:` message on stderr.
+A missing quote or bracket names the delimiter and where it opened
+(`unterminated string starting at char 4`), and doubled delimiters are
+escapes, not closers (`&quot;a&quot;&quot;b&quot;`, `'T''x'`, `[A]]]]]`).
+
+The grammar covers `VAR … RETURN` blocks, calls, qualified columns,
+list literals, and the operator ladder `||`, `&amp;&amp;`, comparison/`IN`,
+`+ -`, `&amp;`, `* /`, `^` (right-associative, binds tighter than unary —
+so `-2 ^ 2` is `-(2 ^ 2)`), unary. `IN` binds with the comparisons, and its
+right side is usually a list. Unary operators are `- + !` and the
+keyword `NOT` (either case), so `NOT ISBLANK([x])`, `NOT ([a] = 1)`
+and `[a] &amp;&amp; NOT [b]` parse. Table qualifiers may be quoted or bare
+(`'Sales'[Amount]`, `Sales[Amount]`):
+
+</code></pre>
+<p>$ dxa parse "[k] IN {1, 2}" --tree
+Binary op='IN'
+  left:
+    ColumnRef name='k'
+  right:
+    List
+      Literal text='1'
+      Literal text='2'
+```</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>
