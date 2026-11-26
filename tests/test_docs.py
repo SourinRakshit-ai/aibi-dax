@@ -231,3 +231,17 @@ def test_lint_model_section_documents_sarif() -> None:
 def test_ci_page_mentions_lint_model_sarif() -> None:
     text = Path("docs/ci.md").read_text(encoding="utf-8")
     assert "lint-model model.json --sarif" in text
+
+
+def test_public_rule_counts_match_the_catalog() -> None:
+    """README's anti-pattern list and docs/index count match ALL_RULES."""
+    import re
+
+    from aibi_dax.antipattern import ALL_RULES
+
+    readme = Path("README.md").read_text(encoding="utf-8")
+    index = Path("docs/index.md").read_text(encoding="utf-8")
+    section = readme.split("<summary>", 1)[1].split("</details>", 1)[0]
+    numerals = [int(m.group(1)) for m in re.finditer(r"^(\d+)\. ", section, re.M)]
+    assert numerals == list(range(1, len(ALL_RULES) + 1)), numerals[-5:]
+    assert "seventy-six anti-pattern rules" in index

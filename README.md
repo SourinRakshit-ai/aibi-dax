@@ -143,7 +143,7 @@ Model dumps use the same JSON shape TMDL export produces (the shared
 schema of aibi-toolkit), so one file feeds both tools.
 
 <details>
-<summary>44 anti-pattern rules detected (click to expand)</summary>
+<summary>76 anti-pattern rules detected (click to expand)</summary>
 
 1. `CALCULATE` inside a row iterator (`SUMX`, `AVERAGEX`, …)
 2. Three or more nested `IF` calls (→ `SWITCH(TRUE(), …)`)
