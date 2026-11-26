@@ -1425,3 +1425,12 @@ def test_sumx_add_zero_leaves_other_shapes_alone():
     assert flag("SUMX('T', [a] * 1)") is None
     assert flag("SUMX('T', [a] - 0)") is None
     assert flag("SUM('T'[a])") is None
+
+
+def test_true_comparison_message_is_shape_aware():
+    msg = antipattern.true_comparison
+    assert "write the column directly" in (msg("[flag] = TRUE()") or "")
+    assert "write NOT col" in (msg("[flag] = FALSE()") or "")
+    assert "write NOT col" in (msg("[flag] <> TRUE()") or "")
+    assert "write the column directly" in (msg("[flag] <> FALSE()") or "")
+    assert "[flag] <> FALSE()" in (msg("IF([f] <> FALSE(), 1, 2)") or "")

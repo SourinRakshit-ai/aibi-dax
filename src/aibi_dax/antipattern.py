@@ -1038,18 +1038,18 @@ def double_negation(expr: str) -> str | None:
 
 
 _TRUE_COMPARISON_MSG = (
-    "[flag] = TRUE() compares a boolean against TRUE() — the column "
-    "is the test; drop the comparison (= FALSE() becomes NOT col)."
+    "[flag] {op} {literal}() — {rewrite}."
 )
 
 
 def true_comparison(expr: str) -> str | None:
-    """`[flag] = TRUE()` is `[flag]`; `[flag] = FALSE()` is `NOT [flag]`.
+    """A boolean column compared with TRUE()/FALSE() has a direct rewrite.
 
     AST-driven: an `=`/`<>` binary with a zero-argument TRUE() or
-    FALSE() call on either side. A TRUE()/FALSE() in any other position
-    (an IF branch, say) is not this pattern, and neither is a bare
-    `TRUE` identifier. Unparseable text stays silent.
+    FALSE() call on either side. The message names the exact rewrite
+    for the four shapes:
+      `[f] = TRUE()` -> `[f]`; `[f] = FALSE()` -> `NOT [f]`;
+      `[f] <> TRUE()` -> `NOT [f]`; `[f] <> FALSE()` -> `[f]`.
     """
     try:
         tree = parse(expr)
@@ -1059,8 +1059,19 @@ def true_comparison(expr: str) -> str | None:
         if binary.op not in {"=", "<>"}:
             continue
         for side in (binary.left, binary.right):
-            if _zero_arg_call(side, "TRUE") or _zero_arg_call(side, "FALSE"):
-                return _TRUE_COMPARISON_MSG
+            literal = None
+            if _zero_arg_call(side, "TRUE"):
+                literal = "TRUE"
+            elif _zero_arg_call(side, "FALSE"):
+                literal = "FALSE"
+            if literal is None:
+                continue
+            # = TRUE and <> FALSE yield the column; = FALSE and <> TRUE its negation
+            plain = (binary.op == "=" and literal == "TRUE") or (
+                binary.op == "<>" and literal == "FALSE"
+            )
+            rewrite = "write the column directly" if plain else "write NOT col"
+            return _TRUE_COMPARISON_MSG.format(op=binary.op, literal=literal, rewrite=rewrite)
     return None
 
 
