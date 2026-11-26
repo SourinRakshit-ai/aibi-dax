@@ -1,5 +1,16 @@
 # Changelog
 
+## unreleased
+
+- Rule 27 (`true_comparison`) now emits a shape-aware message for all four
+  TRUE()/FALSE() and =/<> combinations, naming the exact rewrite.
+- Rule 68 (`single_column_iterator_bare`) gained PRODUCTX; rule 76
+  (`sumx_add_zero`) now covers the full iterator family and `x - 0`, with
+  a shape-aware message.
+- CLI: `--list-rules --rule NAME` narrows the printed rule inventory.
+- Docs: README command table lists `--exclude-rule` and filtered
+  `--list-rules`; the 76-rule list and count are now pinned by a test.
+
 ## 0.2.2 - 2026-11-18
 
 - Published to PyPI via trusted publishing (OIDC) — `pip install
