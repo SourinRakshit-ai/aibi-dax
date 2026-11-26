@@ -470,7 +470,7 @@ def test_true_comparison_flags_boolean_against_literal():
 def test_true_comparison_message_says_drop_the_comparison():
     msg = antipattern.true_comparison("[f] = TRUE()")
     assert msg is not None
-    assert "NOT col" in msg  # names the FALSE() spelling too
+    assert "write the column directly" in msg  # shape-aware message
 
 
 def test_true_comparison_leaves_real_boolean_uses_alone():
