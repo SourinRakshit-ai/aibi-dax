@@ -22,7 +22,7 @@ python examples/bench_rules.py
 ## Per-rule cost
 
 Mean time per expression per rule, 50 rounds over the corpus
-(macOS, CPython 3.12, aibi-dax 0.2.1):
+(macOS, CPython 3.12, aibi-dax 0.2.2):
 
 | Rule                      | µs/expr |
 | ------------------------- | ------: |

@@ -245,3 +245,14 @@ def test_public_rule_counts_match_the_catalog() -> None:
     numerals = [int(m.group(1)) for m in re.finditer(r"^(\d+)\. ", section, re.MULTILINE)]
     assert numerals == list(range(1, len(ALL_RULES) + 1)), numerals[-5:]
     assert "seventy-six anti-pattern rules" in index
+
+
+def test_benchmark_page_version_matches_package() -> None:
+    import re
+
+    import aibi_dax
+
+    text = Path("docs/performance.md").read_text(encoding="utf-8")
+    match = re.search(r"aibi-dax (\d+\.\d+\.\d+)", text)
+    assert match, "docs/performance.md has no version pin"
+    assert match.group(1) == aibi_dax.__version__
