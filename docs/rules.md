@@ -337,7 +337,7 @@ stay silent.
 ### `SUMX(t, [col])` with a bare column
 A row iterator whose expression is a bare column reference pays for row
 context to do what a plain aggregate does (`single_column_iterator_bare`).
-Six iterator families are covered. The qualified form `SUMX('T', 'T'[col])`
+Seven iterator families are covered (including PRODUCTX). The qualified form `SUMX('T', 'T'[col])`
 stays rule 14's territory.
 
 ### `SWITCH(TRUE(), TRUE(), x, ...)`

@@ -1423,7 +1423,7 @@ def test_sumx_add_zero_leaves_other_shapes_alone():
     flag = antipattern.sumx_add_zero
     assert flag("SUMX('T', [a] + 1)") is None
     assert flag("SUMX('T', [a] * 1)") is None
-    assert flag("SUMX('T', [a] - 0)") is None
+    # x - 0 is now supported by the generalized rule (issue #141)
     assert flag("SUM('T'[a])") is None
 
 

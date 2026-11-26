@@ -10,6 +10,7 @@
 
 ## 0.2.1 - 2026-11-12
 
+- Rules 68/76: PRODUCTX added to the bare-column iterator family; the additive-identity iterator rule now covers the full family plus `x - 0`, with a shape-aware message.
 - CLI: `--list-rules --rule NAME` narrows the printed inventory to selected rules.
 - CLI: `dxa parse --json --tree` now exits 2 instead of silently ignoring `--tree`.
 - Rule 76: `SUMX(t, x + 0)` (→ `SUM(t[x])`)
