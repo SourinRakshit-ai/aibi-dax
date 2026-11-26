@@ -1434,3 +1434,21 @@ def test_true_comparison_message_is_shape_aware():
     assert "write NOT col" in (msg("[flag] <> TRUE()") or "")
     assert "write the column directly" in (msg("[flag] <> FALSE()") or "")
     assert "[flag] <> FALSE()" in (msg("IF([f] <> FALSE(), 1, 2)") or "")
+
+
+def test_plain_aggregate_family_includes_productx():
+    flag = antipattern.single_column_iterator_bare
+    assert flag("PRODUCTX('T', [a])") is not None
+    assert "PRODUCT" in (flag("PRODUCTX('T', [a])") or "")
+
+
+def test_iterator_add_identity_family_and_minus_zero():
+    flag = antipattern.sumx_add_zero
+    for name, plain in (("SUMX", "SUM"), ("MAXX", "MAX"), ("MINX", "MIN"),
+                        ("AVERAGEX", "AVERAGE"), ("COUNTX", "COUNT"),
+                        ("COUNTAX", "COUNTA"), ("PRODUCTX", "PRODUCT")):
+        msg = flag(f"{name}('T', [a] + 0)")
+        assert msg is not None and plain in msg, name
+    assert flag("SUMX('T', [a] - 0)") is not None
+    assert flag("SUMX('T', 0 - [a])") is None  # negation, not identity
+    assert flag("SUMX('T', [a] + 1)") is None

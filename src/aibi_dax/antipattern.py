@@ -2292,6 +2292,7 @@ _PLAIN_AGGREGATE = {
     "MAXX": "MAX",
     "COUNTX": "COUNT",
     "COUNTAX": "COUNTA",
+    "PRODUCTX": "PRODUCT",
 }
 
 
@@ -2530,30 +2531,35 @@ def if_always_blank(expr: str) -> str | None:
 
 
 _SUMX_ADD_ZERO_MSG = (
-    "SUMX(t, x + 0) is SUM(t[x]) — adding zero per row is the row loop "
-    "form of a plain aggregate."
+    "{name}(t, x +/- 0) is {plain}(t[x]) — adding or subtracting zero "
+    "per row is the row-loop form of a plain aggregate."
 )
 
 
 def sumx_add_zero(expr: str) -> str | None:
-    """SUMX over `x + 0` is the same aggregate written as a row loop.
+    """A row iterator over `x + 0` (or `x - 0`) is a plain aggregate.
 
-    AST-driven: a SUMX call whose second argument is a `+` binary with a
-    numeric literal 0 on one side. Other iterators and expressions stay
-    silent.
+    AST-driven: an iterator call from `_PLAIN_AGGREGATE` whose second
+    argument is a `+` binary with a numeric literal 0 on either side,
+    or a `-` binary with 0 on the right (`0 - x` is negation, not an
+    identity). BLANK converts to 0 in both operations, so the rewrite
+    is exact.
     """
     try:
         tree = parse(expr)
     except ParseError:
         return None
     for call in _walk_calls(tree):
-        if call.name.upper() != "SUMX" or len(call.args) != 2:
+        name = call.name.upper()
+        if name not in _PLAIN_AGGREGATE or len(call.args) != 2:
             continue
         inner = call.args[1]
-        if not isinstance(inner, Binary) or inner.op != "+":
+        if not isinstance(inner, Binary):
             continue
-        if _numeric_literal(inner.left) == 0 or _numeric_literal(inner.right) == 0:
-            return _SUMX_ADD_ZERO_MSG
+        zero_left = _numeric_literal(inner.left) == 0
+        zero_right = _numeric_literal(inner.right) == 0
+        if (inner.op == "+" and (zero_left or zero_right)) or (inner.op == "-" and zero_right):
+            return _SUMX_ADD_ZERO_MSG.format(name=name, plain=_PLAIN_AGGREGATE[name])
     return None
 
 
